@@ -1,0 +1,22 @@
+ ROOT Version: 5.32/00.
+ CMSSW environment is set up.
+32608 pts/119  00:00:00 root.exe
+ MIT root style REMIX($Author: KSUNG $$,$Modified by ksung $$).
+
+ Use: MakeCanvas(name,title)
+      InitSubPad(pad,nPad)
+      InitHist(hist,xTitle,yTitle,color)
+
+(class CPlot)143877568
+
+Processing boxCuts.C+("new.conf",2)...
+Selected ditau decay: jet-mu
+             HH 	 tt 	 BB 	 LL 
+ntuple     : 0.101323	4.95641	0.0149223	0.00403364
+preselect  : 0.0249468	0.470012	0.00194056	0.000826543
+m(tautau)  : 0.0192324	0.238435	0.000913005	0.000432401
+m(bb)      : 0.0116131	0.0674732	0.000197643	0.000105333
+m(bbtautau): 0.00682042	0.00430225	3.03801e-05	5.19944e-06
+mT2        : 0.00632886	0.00280194	2.15297e-05	4.56254e-06
+at 3/ab    : 18.9866	8.40582	0.064589	0.0136876
+S/sqrt(B)  : 6.51844
