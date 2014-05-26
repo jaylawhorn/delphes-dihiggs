@@ -6,7 +6,8 @@
     cout << " CMSSW environment has not been set up." << endl;
     foundIt=false;
   } else {
-    TString rfitpath("/afs/cern.ch/cms/slc5_amd64_gcc462/lcg/roofit/5.32.00-cms5/include");
+    //TString rfitpath("/afs/cern.ch/cms/slc5_amd64_gcc462/lcg/roofit/5.32.00-cms5/include");
+    TString rfitpath("/afs/cern.ch/cms/slc6_amd64_gcc472/lcg/roofit/5.32.03/include/");
     TString path = gSystem->GetIncludePath();
     path += "-I. -I$ROOTSYS/src -I";
     path += rfitpath;
@@ -18,10 +19,10 @@
       gSystem->SetMakeSharedLib(str);
     }
     cout << " CMSSW environment is set up." << endl;
-    gSystem->Load("/afs/cern.ch/user/k/klawhorn/Delphes-3.0.10/libDelphes.so");
-    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes-3.0.10");
-    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes-3.0.10/external");
-    gROOT->Macro("../Utils/MitStyleRemix.cc++");
+    gSystem->Load("/afs/cern.ch/user/k/klawhorn/Delphes/libDelphes.so");
+    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes");
+    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes/external");
+    gROOT->Macro("../Utils/HttStyles.cc++");
   }
   gInterpreter->ProcessLine(".! ps |grep root.exe");
 }

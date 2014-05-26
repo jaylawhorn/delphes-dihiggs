@@ -25,10 +25,6 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVecto
 Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
 void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHToBBTT_14TeV/HHToBBTT_14TeV_140.root", 
-	       //const TString inputfile="/afs/cern.ch/work/k/klawhorn/ttbar_nom_fake/delphes_0.root",
-	       //const TString inputfile="/afs/cern.ch/work/k/klawhorn/ttbar_big_fake/delphes_0.root",
-	       //const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToTTBB_14TeV/HHToTTBB_14TeV_1.root",
-	       //const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_99873512_PhaseII_Conf4v2_140PileUp.root",
 	       const Float_t xsec=1.0,
 	       const TString outputfile="test.root") {
 
@@ -205,8 +201,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       eventWeight*=event->Weight;
     }
     eventWeight *= xsec;
-    // comment out following line for di-higgs samples
-    //eventWeight *= event->Weight;
 
     // ********************
     // RECO OBJECTS

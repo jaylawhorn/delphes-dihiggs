@@ -1,31 +1,17 @@
  ROOT Version: 5.32/00.
  CMSSW environment is set up.
-31375 pts/144  00:00:00 root.exe
- MIT root style REMIX($Author: KSUNG $$,$Modified by ksung $$).
-
- Use: MakeCanvas(name,title)
-      InitSubPad(pad,nPad)
-      InitHist(hist,xTitle,yTitle,color)
-
-(class CPlot)244540864
+29593 pts/6    00:00:01 root.exe
+(class CPlot)40209104
 
 Processing newBoxCuts.C+("new.conf",4)...
 Selected ditau decay: mu-ele
-sample		 presel	 tau/b	 bb	 hh	 final
-HH	223.784	35.7611	12.3505	5.53007	5.34573
-HH	6.42272	2.5675	1.50885	1.00965	0.992678
-tt	0	0	0	0	0
-tt	0	0	0	0	0
-ZH	0	0	0	0	0
-ZH	0	0	0	0	0
-WH	0	0	0	0	0
-WH	0	0	0	0	0
-WW	0	0	0	0	0
-WW	0	0	0	0	0
-ZZ	0	0	0	0	0
-ZZ	0	0	0	0	0
-ZW	0	0	0	0	0
-ZW	0	0	0	0	0
-ETC	0	0	0	0	0
-ETC	0	0	0	0	0
-S/sqrt(B): inf	inf	inf	inf	inf
+Processing  /afs/cern.ch/work/k/klawhorn/new_ntuples/comb_sel_new.root ...
+ & $p_{T},ta$ cuts & $m(	au	au),m(bb)$ & $m(hh)$ & $m_{T,2}$ \\
+HH & 34 $\pm$ 2 & 12 $\pm$ 1 & 5 $\pm$ 1 & 5 $\pm$ 1 \\
+tt & 8811020 $\pm$ 15793 & 1167548 $\pm$ 6085 & 36630 $\pm$ 1189 & 19594 $\pm$ 893 \\
+ZH & 151 $\pm$ 15 & 19 $\pm$ 5 & 0 $\pm$ 0 & 0 $\pm$ 0 \\
+WH & 83 $\pm$ 13 & 3 $\pm$ 1 & 0 $\pm$ 0 & 0 $\pm$ 0 \\
+WW & 14830 $\pm$ 290 & 1603 $\pm$ 125 & 370 $\pm$ 49 & 163 $\pm$ 18 \\
+ZZ & 370 $\pm$ 70 & 22 $\pm$ 12 & 7 $\pm$ 6 & 7 $\pm$ 6 \\
+ZW & 1839 $\pm$ 135 & 96 $\pm$ 20 & 22 $\pm$ 4 & 20 $\pm$ 4 \\
+ETC & 22672 $\pm$ 4392 & 1202 $\pm$ 426 & 498 $\pm$ 307 & 279 $\pm$ 219 \\
