@@ -73,13 +73,13 @@ void newselect(const TString inputfile="root://eoscms.cern.ch//store/group/phys_
   TClonesArray *branchMuon = treeReader->UseBranch("Muon");
   TClonesArray *branchMET =treeReader->UseBranch("MissingET");
 
-  //TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
+  TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
   TClonesArray *branchEvent = treeReader->UseBranch("Event");
 
   //set up loop variables
   GenParticle *genParticle;
-  //Jet *genJet;
+  Jet *genJet;
   Jet *jet;
   Electron *ele;
   Muon *mu;
@@ -103,11 +103,13 @@ void newselect(const TString inputfile="root://eoscms.cern.ch//store/group/phys_
   Int_t eventType;
   Float_t eventWeight;
   Float_t met, metPhi;
+
   UInt_t tauCat1=0, tauCat2=0;
   UInt_t bTag1=0, bTag2=0;
-  LorentzVector *recoTau1=0, *recoTau2=0, *recoB1=0, *recoB2=0, *recoLeadJet=0, *recoExtraJet=0;
-  //LorentzVector *genTau1=0, *genTau2=0, *genDecayTau1=0, *genDecayTau2=0, *recoTau1=0, *recoTau2=0;
-  //LorentzVector *genB1=0, *genB2=0, *recoB1=0, *recoB2=0, *boostJet=0, *genBoostJet=0;
+
+  LorentzVector *recoTau1=0, *recoTau2=0, *recoB1=0, *recoB2=0, *recoExtraJet=0;
+  LorentzVector *genTau1=0, *genTau2=0, *genDecayTau1=0, *genDecayTau2=0;
+  LorentzVector *genB1=0, *genB2=0;
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 

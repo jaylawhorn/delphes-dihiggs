@@ -20,37 +20,29 @@
 #include "mt2.hh"
 #endif
 
-void getall(const Float_t xsec=2.92) { 
+void getall(const TString inputfile) { 
 
-  char inputfile[300];
+  Int_t totalEvents=0;
+  Int_t nEvents=0;
 
-  TChain chain("Delphes");
+  ifstream ifs;
+  ifs.open(inputfile.Data()); assert(ifs.is_open());
+  string line;
+  while(getline(ifs,line)) {
+    string fname;
+    stringstream ss(line);
+    ss >> fname;
 
-  for (Int_t i=0; i<175; i++) {
-    sprintf(inputfile,"root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToTTBB_14TeV/HHToTTBB_14TeV_%i.root",i);
-    chain.Add(inputfile);
+    TChain chain("Delphes");
+    chain.Add(TString(fname));
+    ExRootTreeReader treeReader(&chain);
+    nEvents=treeReader.GetEntries();
+    cout << nEvents << endl;
+    totalEvents+=nEvents;
+
   }
-  ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
-  Long64_t numberOfEntries = treeReader->GetEntries();
+  ifs.close();
 
-  Int_t nEvents;
-  Double_t eventWeight;
-  Double_t totalWeight;
-
-  for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
-    treeReader->ReadEntry(iEntry);
-
-    // comment out following line for di-higgs samples
-    //event = (LHEFEvent*) branchEvent->At(0);
-    eventWeight = 1;
-    eventWeight *= xsec;
-    // comment out following line for di-higgs samples
-    //eventWeight *= event->Weight;
-    totalWeight+=eventWeight;
-    nEvents+=1;
-  }
-  cout << numberOfEntries << " " << nEvents << endl;
-  cout << "Total cross section: " << totalWeight/float(nEvents) << endl;
-  cout << "At 3000/fb         : " << 3000*totalWeight/float(nEvents) << endl;
+  cout << totalEvents << endl;
 
 }

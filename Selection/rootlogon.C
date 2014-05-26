@@ -19,11 +19,11 @@
       gSystem->SetMakeSharedLib(str);
     }
     cout << " CMSSW environment is set up." << endl;
-    gSystem->Load("/afs/cern.ch/user/k/klawhorn/Delphes/libDelphes.so");
-    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes");
-    gROOT->ProcessLine(".include /afs/cern.ch/user/k/klawhorn/Delphes/external");
-    gROOT->Macro("/afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Utils/HttStyles.cc+");
-    gROOT->Macro("/afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Utils/CPlot.cc+");
+    gSystem->Load("/afs/cern.ch/user/j/jlawhorn/Delphes/libDelphes.so");
+    gROOT->ProcessLine(".include /afs/cern.ch/user/j/jlawhorn/Delphes");
+    gROOT->ProcessLine(".include /afs/cern.ch/user/j/jlawhorn/Delphes/external");
+    gROOT->Macro("../Utils/HttStyles.cc+");
+    gROOT->Macro("../Utils/CPlot.cc+");
   }
   gInterpreter->ProcessLine(".! ps |grep root.exe");
 }
