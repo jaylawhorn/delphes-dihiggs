@@ -17,23 +17,35 @@ root_script=$1
   conf_file=$2
  output_loc=$3
 
+conf=PhaseII/Configuration4v2
+
 while read line #loop over lines in ${conf_file}
 do
   array=($line)
-  #for conf in PhaseI/Configuration0 PhaseII/Configuration3 PhaseII/Configuration4v2 # to process all three configurations
-  for conf in PhaseII/Configuration4v2 # or just one configuration
-  do
-    if [ "${array[0]}" != "#" ]; then 
-	# get list of files in eos for that sample+configuration combination
-	filelist=`/afs/cern.ch/project/eos/installation/0.3.4/bin/eos.select ls /store/group/phys_higgs/upgrade/${conf}/140PileUp/${array[0]}/`
-	for file in $filelist
-	do 
-	  if [[ "${file}" == *root* ]]; then # skip text files in eos
-	      echo "   bsub -q 8nh -W 120 -J $file run.sh ${root_script} ${conf} ${array[0]} ${file} ${array[1]} ${output_loc}" 
-	      bsub -q 8nh -W 120 -J $file run.sh ${root_script} ${conf} ${array[0]} ${file} ${array[1]} ${output_loc} # submit to lxbtch
-	      #./run.sh ${root_script} ${conf} ${array[0]} ${file} ${array[1]} ${output_loc} # run locally
-	  fi
-	done
-    fi
-  done
+  if [ "${array[0]}" != "#" ]; then 
+      filelist=(`/afs/cern.ch/project/eos/installation/0.3.4/bin/eos.select ls /store/group/phys_higgs/upgrade/${conf}/140PileUp/${array[0]}/`)
+      for ((i=0; i<${#filelist[@]}/100+1; i++)) 
+      do
+	  outarray=()
+	  for ((j=0; j<100; j++))
+	  do 
+	      if [[ ${filelist[100*$i+$j]} == *root ]]; then
+		  outarray+=(${filelist[100*$i+$j]})
+	      fi
+	  done
+	  #echo "./run.sh ${root_script} ${conf} ${array[0]} ${array[1]} ${output_loc} ${outarray[@]}"
+	  #./run.sh ${root_script} ${conf} ${array[0]} ${array[1]} ${output_loc} ${outarray[@]}
+	  echo " bsub -q 8nh -W 120 -J ${array[0]}_$i run.sh ${root_script} ${conf} ${array[0]} ${array[1]} ${output_loc} ${outarray[@]}"
+	  bsub -q 8nh -W 120 -J ${array[0]}_$i run.sh ${root_script} ${conf} ${array[0]} ${array[1]} ${output_loc} ${outarray[@]}
+      done
+
+      #for file in $filelist
+      #do 
+	  #if [[ "${file}" == *root* ]]; then # skip text files in eos
+	      #echo $file
+	      #echo "   bsub -q 8nh -W 120 -J $file run.sh ${root_script} ${conf} ${array[0]} ${file} ${array[1]} ${output_loc}" 
+	      #bsub -q 8nh -W 120 -J $file run.sh ${root_script} ${conf} ${array[0]} ${file} ${array[1]} ${output_loc} # submit to lxbtch
+	  #fi
+      #done
+  fi
 done < ${conf_file}

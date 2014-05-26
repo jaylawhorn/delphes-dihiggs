@@ -40,6 +40,8 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   UInt_t tauCat1=0, tauCat2=0;
   UInt_t bTag1=0, bTag2=0;
 
+  Double_t mt2;
+
   LorentzVector *sRecoTau1=0, *sRecoTau2=0;
   LorentzVector *sGenJetTau1=0, *sGenJetTau2=0;
   LorentzVector *sGenTau1=0, *sGenTau2=0;
@@ -48,10 +50,10 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   LorentzVector *sGenJetB1=0, *sGenJetB2=0;
   LorentzVector *sGenB1=0, *sGenB2=0;
 
-  LorentzVector *sRecoExtra=0;
+  LorentzVector *sRecoJet=0;
 
   TFile* infile = new TFile(infilename); assert(infile);
-  TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
+  TTree* inTree = (TTree*) infile->Get("Events"); assert(inTree);
 
   inTree->SetBranchAddress("eventWeight",    &eventWeight);   // event weight from cross-section and Event->Weight
   inTree->SetBranchAddress("eventType",      &eventType);     // event type (0=signal, 1=tt, 2=zh, 3=other)
@@ -59,7 +61,7 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   inTree->SetBranchAddress("tauCat2",        &tauCat2);       // second tau final state - jet, muon, electron
   inTree->SetBranchAddress("bTag1",          &bTag1);         // leading b-jet tag from delphes
   inTree->SetBranchAddress("bTag2",          &bTag2);         // second b-jet tag from delphes
-  inTree->SetBranchAddress("met",            &met,);          // missing transverse energy
+  inTree->SetBranchAddress("met",            &met);           // missing transverse energy
   inTree->SetBranchAddress("metPhi",         &metPhi);        // missing transverse energy phi
   inTree->SetBranchAddress("mt2",            &mt2);           // "stransverse mass"
   inTree->SetBranchAddress("sGenTau1",       &sGenTau1);      // 4-vector for generator leading tau
@@ -74,7 +76,7 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   inTree->SetBranchAddress("sRecoTau2",      &sRecoTau2);     // 4-vector for reconstructed second tau
   inTree->SetBranchAddress("sRecoB1",        &sRecoB1);       // 4-vector for reconstructed leading b-jet
   inTree->SetBranchAddress("sRecoB2",        &sRecoB2);       // 4-vector for reconstructed second b-jet
-  inTree->SetBranchAddress("sRecoExtra",     &sRecoExtra);    // 4-vector for reconstructed extra jet
+  inTree->SetBranchAddress("sRecoJet",       &sRecoJet);      // 4-vector 
 
   TTree* infotree = (TTree*) infile->Get("Info"); assert(infotree);
   infotree->SetBranchAddress("nEvents",      &nEvents);
@@ -111,10 +113,10 @@ void cleanUpMergedFiles(TString infilename="/afs/cern.ch/work/k/klawhorn/Snowmas
   outTree->Branch("sRecoTau2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau2);     // 4-vector for reconstructed second tau
   outTree->Branch("sRecoB1",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB1);       // 4-vector for reconstructed leading b-jet
   outTree->Branch("sRecoB2",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB2);       // 4-vector for reconstructed second b-jet
-  outTree->Branch("sRecoExtra",     "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoExtra);    // 4-vector for reconstructed extra jet
+  outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector 
 
-  for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // entry loop
-    intree->GetEntry(iEntry);
+  for(UInt_t iEntry=0; iEntry<inTree->GetEntries(); iEntry++) { // entry loop
+    inTree->GetEntry(iEntry);
 
     eventWeight=eventWeight/Float_t(totalEvents);
 

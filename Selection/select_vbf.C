@@ -24,11 +24,7 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVecto
 
 Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
-void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHToBBTT_14TeV/HHToBBTT_14TeV_140.root", 
-	       //const TString inputfile="/afs/cern.ch/work/k/klawhorn/ttbar_nom_fake/delphes_0.root",
-	       //const TString inputfile="/afs/cern.ch/work/k/klawhorn/ttbar_big_fake/delphes_0.root",
-	       //const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/HHToTTBB_14TeV/HHToTTBB_14TeV_1.root",
-	       //const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_99873512_PhaseII_Conf4v2_140PileUp.root",
+void select_vbf(const TString inputfile="root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/Bjj-vbf-4p-0-700-v1510_14TEV/Bjj-vbf-4p-0-700-v1510_14TEV_265719429_PhaseII_Conf4v2_140PileUp.root",
 	       const Float_t xsec=1.0,
 	       const TString outputfile="test.root") {
 
@@ -51,18 +47,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 
   // tau decay modes
   enum { hadron=1, electron, muon };
-
-  // setup mt2 minimizer
-  ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
-  min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-  min->SetTolerance(10.0);
-  min->SetPrintLevel(0);
-
-  TVector2 tau1(0,0), tau2(0,0), mpt(0,0);
-  TVector2 b1(0,0), b2(0,0);
-  Float_t mTau1=0, mTau2=0;
-  Float_t mB1=0, mB2=0;
-  Double_t mt2=0;
 
   // read input input file
   TChain chain("Delphes");
@@ -97,7 +81,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   GenParticle *genB1=0, *genB2=0;
   Jet *genJetB1=0, *genJetB2=0;
   Jet *genJetTau1=0, *genJetTau2=0;
-  Jet *extraJet=0;
 
   Int_t iB1=-1,         iB2=-1;
   Int_t iT1=-1,         iT2=-1;
@@ -105,7 +88,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   Int_t iGenB1=-1,      iGenB2=-1;
   Int_t iGenJetTau1=-1, iGenJetTau2=-1;
   Int_t iGenJetB1=-1,   iGenJetB2=-1;
-  Int_t iExtra=-1;
 
   // set up output variables and file
   Int_t nEvents;
@@ -125,8 +107,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   LorentzVector *sGenJetB1=0, *sGenJetB2=0;
   LorentzVector *sGenB1=0, *sGenB2=0;
 
-  LorentzVector *sRecoJet=0;
-
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
   // tree to hold the number of events in the file before selection
@@ -145,7 +125,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   outTree->Branch("bTag2",          &bTag2,          "bTag2/i");        // second b-jet tag from delphes
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
-  outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
   outTree->Branch("sGenTau1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau1);      // 4-vector for generator leading tau
   outTree->Branch("sGenTau2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau2);      // 4-vector for generator second tau
   outTree->Branch("sGenB1",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB1);        // 4-vector for generator leading b-jet
@@ -158,16 +137,11 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   outTree->Branch("sRecoTau2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau2);     // 4-vector for reconstructed second tau
   outTree->Branch("sRecoB1",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB1);       // 4-vector for reconstructed leading b-jet
   outTree->Branch("sRecoB2",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB2);       // 4-vector for reconstructed second b-jet
-  outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector for reconstructed extra jets
 
   // define placeholder vector for things that don't exist
   LorentzVector nothing(999,999,0,999);
 
-  Float_t fake=0;
-  Float_t notfake=0;
-
-  Float_t fake2=0;
-  Float_t notfake2=0;
+  Float_t select=0;
 
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
@@ -181,32 +155,26 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     iGenB1=-1;      iGenB2=-1;
     iGenJetTau1=-1; iGenJetTau2=-1;
     iGenJetB1=-1;   iGenJetB2=-1;
-    iExtra=-1;
     tauCat1=-1; tauCat2=-1; bTag1=-1; bTag2=-1;
     eventType=-1;
 
     jetTau1=0; jetTau2=0; eleTau=0; muTau=0;
-    jetB1=0;   jetB2=0; extraJet=0;
+    jetB1=0;   jetB2=0;
     genTau1=0; genTau2=0; genB1=0;  genB2=0;
     genJetB1=0; genJetB2=0; genJetTau1=0; genJetTau2=0;
     sGenTau1=0; sGenTau2=0; sGenB1=0;  sGenB2=0;
     sGenJetB1=0; sGenJetB2=0; sGenJetTau1=0; sGenJetTau2=0;
-    sRecoJet=0;
 
     // ********************
     // EVENT WEIGHT
     // ********************
 
-    // comment out following line for di-higgs samples
-    //event = (LHEFEvent*) branchEvent->At(0);
     eventWeight = 1;
     if (branchEvent) {
       event = (LHEFEvent*) branchEvent->At(0);
       eventWeight*=event->Weight;
     }
     eventWeight *= xsec;
-    // comment out following line for di-higgs samples
-    //eventWeight *= event->Weight;
 
     // ********************
     // RECO OBJECTS
@@ -216,6 +184,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
+      if (jet->PT < 30) continue;
+      if (fabs(jet->Eta)>2.5) continue;
       if (jet->TauTag==0) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -248,7 +218,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
-      if (jet->BTag==0) continue;
+      if (jet->PT < 30) continue;
+      if (fabs(jet->Eta)>4.7) continue;
+      //if (jet->BTag==0) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
 
@@ -276,11 +248,13 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 	bTag2=jetB2->BTag;
       }
     }
-
+    
     if ((iT1==-1) || (iT2==-1)) {
       // get muonic taus
       for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { // reco muon loop
 	mu = (Muon*) branchMuon->At(iMuon);
+	if (fabs(mu->Eta)>2.5) continue;
+	if (mu->PT < 30) continue;
 
 	if ((jetTau1)&&(deltaR(mu->Eta, jetTau1->Eta, mu->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(mu->Eta, jetTau2->Eta, mu->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -313,6 +287,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       for (Int_t iEle=0; iEle<branchElectron->GetEntries(); iEle++) { // reco ele loop
 	ele = (Electron*) branchElectron->At(iEle);
 
+	if (ele->PT < 30) continue;
+	if (fabs(ele->Eta)>2.5) continue;
 	if ((jetTau1)&&(deltaR(ele->Eta, jetTau1->Eta, ele->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(ele->Eta, jetTau2->Eta, ele->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
 	
@@ -340,26 +316,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 	}
       }
     }
-
+      
     if ((iT1==-1)||(iT2==-1)||(iB1==-1)||(iB2==-1)) continue;
-
-    for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
-      jet = (Jet*) branchJet->At(iJet);
-
-      if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetB1)&&(deltaR(jet->Eta, jetB1->Eta, jet->Phi, jetB1->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetB2)&&(deltaR(jet->Eta, jetB2->Eta, jet->Phi, jetB2->Phi) < MAX_MATCH_DIST)) continue;
-
-      if (iExtra==-1) {
-	iExtra=iJet;
-	extraJet=(Jet*)branchJet->At(iExtra);
-      }
-      else if (jet->PT > extraJet->PT) {
-	iExtra=iJet;
-	extraJet=(Jet*)branchJet->At(iExtra);
-      }
-    }
 
     // fill 4-vector for leading b-jet
     LorentzVector vRecoB1(0,0,0,0);
@@ -381,7 +339,29 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       sRecoB2 = &vRecoB2;
     }
     else sRecoB2 = &nothing;
-    
+
+    LorentzVector dijet=vRecoB1+vRecoB2;
+    if (dijet.M() < 500) continue;
+
+    if (fabs(vRecoB1.Eta()-vRecoB2.Eta())<3.5) continue;
+
+    Int_t centJet=0;
+
+    for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
+      jet = (Jet*) branchJet->At(iJet);
+
+      if (jet->PT < 30) continue;
+      if (fabs(jet->Eta)>4.7) continue;
+      if ((iJet==iB1)||(iJet==iB2)) continue;
+      if ((jetTau1)&&(deltaR(mu->Eta, jetTau1->Eta, mu->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
+      if ((jetTau2)&&(deltaR(mu->Eta, jetTau2->Eta, mu->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
+
+      if ((jetB1->Eta > jetB2->Eta) && (jet->Eta > jetB2->Eta) && (jet->Eta < jetB2->Eta)) centJet++;
+      else if ((jetB2->Eta > jetB1->Eta) && (jet->Eta > jetB1->Eta) && (jet->Eta < jetB2->Eta)) centJet++;
+    }
+
+    if (centJet!=0) continue;
+
     // fill 4-vector for leading tau
     LorentzVector vRecoTau1(0,0,0,0);
     if (jetTau1) {
@@ -432,17 +412,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     }
     else sRecoTau2 = &nothing;
 
-    LorentzVector vRecoJet(0,0,0,0);
-    if (extraJet) {
-      vRecoJet.SetPt(extraJet->PT);
-      vRecoJet.SetEta(extraJet->Eta);
-      vRecoJet.SetPhi(extraJet->Phi);
-      vRecoJet.SetM(extraJet->Mass);
-      sRecoJet = &vRecoJet;
-    }
-    else sRecoJet = &nothing;
-
-
     // ********************
     // GEN PARTICLES
     // ********************
@@ -468,7 +437,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 	  genTau2 = (GenParticle*) branchParticle->At(iGenTau2);
 	}
       }
-
+      /*
       if ( fabs(genParticle->PID) == B_ID_CODE ) { // b switch
 
 	if ( (bTag1 != -1) && ( deltaR(genParticle->Eta, vRecoB1.Eta(), genParticle->Phi, vRecoB1.Phi()) < MAX_MATCH_DIST )) {
@@ -488,6 +457,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 	  genB2 = (GenParticle*) branchParticle->At(iGenB2);
 	}
       }
+      */
     }
 
     LorentzVector vGenTau1(0,0,0,0);
@@ -509,18 +479,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       sGenTau2 = &vGenTau2;
     }
     else sGenTau2 = &nothing;
-
-    if ((tauCat1==1)&& (genTau1)) {notfake+=1;}
-    else if ((tauCat1==1)) {fake+=1; }
-
-    if ((tauCat2==1)&& (genTau2)) {notfake+=1; }
-    else if ((tauCat2==1)) { fake+=1; }
-
-    if ((sGenTau1->Pt()!=999)&&(tauCat1==1)) { notfake2+=1; }
-    else if (tauCat1==1) fake2+=1;
-
-    if ((sGenTau2->Pt()!=999)&&(tauCat2==1)) { notfake2+=1; }
-    else if (tauCat2==1) { fake2+=1; }
 
     LorentzVector vGenB1(0,0,0,0);
     if (genB1) {
@@ -617,49 +575,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     met=missET->MET;
     metPhi=missET->Phi;
 
-    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
-
-      tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
-      tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());
-      mTau1=sRecoTau1->M();
-      mTau2=sRecoTau2->M();
-      
-      b1.SetMagPhi(sRecoB1->Pt(), sRecoB1->Phi());
-      b2.SetMagPhi(sRecoB2->Pt(), sRecoB2->Phi());
-      mB1=sRecoB1->M();
-      mB2=sRecoB2->M();
-      
-      mpt.SetMagPhi(met, metPhi);
-      
-      TVector2 sumPt = tau1+tau2+mpt;
-      
-      smT2 testing = smT2();
-      testing.SetB1(b1);
-      testing.SetB2(b2);
-      testing.SetMPT(sumPt);
-      testing.SetMB1(mB1);
-      testing.SetMB2(mB2);
-      testing.SetMT1(mTau1);
-      testing.SetMT2(mTau2);
-      
-      TVector2 c1=sumPt;
-      TVector2 c2=sumPt-c1;
-      
-      ROOT::Math::Functor f(testing,2);
-      double step[2] = {0.1, 0.1};
-      double variable[2] = { 0.5*c1.Mod(), 0.0 };
-      
-      min->SetFunction(f);
-      min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, sumPt.Mod());
-      min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
-      
-      min->Minimize();
-      
-      mt2 = min->MinValue();
-    }
-    
-    else { mt2 = -1; }
-
     // ********************
     // BKGD SORTING
     // ********************
@@ -682,15 +597,13 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     else if (nW>1) eventType=WW;
     else eventType=ETC;
 
+    select+=eventWeight;
+
     outTree->Fill();
 
   } // end event loop
 
-  cout << fake << " " << notfake << " " << fake+notfake << endl;
-  cout << 100*fake/(fake+notfake) << "% " << endl;
-  cout << endl;
-  cout << fake2 << " " << notfake2 << " " << fake2+notfake2 << endl;
-  cout << 100*fake2/(fake2+notfake2) << "%" << endl;
+  cout << select << " of " << numberOfEntries << endl;
 
   outFile->Write();
   outFile->Save();

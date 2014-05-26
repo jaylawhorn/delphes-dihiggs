@@ -1,7 +1,7 @@
-B#!/bin/bash
+#!/bin/bash
 #---------------------------------------------------------------------------------------------------
 # Execute one job (works interactively and when executed in lxbtch)
-#1;2c
+#
 # example local command
 # ./run.sh selectDelphes.C PhaseII/Configuration4v2 LL-4p-0-100-v1510_14TEV LL-4p-0-100-v1510_14TEV_100005594_PhaseII_Conf4v2_140PileUp.root 1341.36923 /afs/cern.ch/work/k/klawhorn/SnowmassSamples
 #
@@ -11,21 +11,14 @@ B#!/bin/bash
 # Jay Lawhorn 11/4/13
 #---------------------------------------------------------------------------------------------------
 
- input_array=("$@")
- root_script=${input_array[0]}
-delphes_conf=${input_array[1]}
- sample_name=${input_array[2]}
-   cross_sec=${input_array[3]}
-  output_loc=${input_array[4]}
-
 h=`basename $0`
 echo "Script:    $h"
 echo "Arguments: $*"
 
-cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/${root_script}.C .
-cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/${root_script}_C.* .
+cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/select_all.C .
+cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/select_all_C.* .
 cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/rootlogon.C .
-cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/mt2.hh .
+cp /afs/cern.ch/user/k/klawhorn/DelphesDiHiggs/Selection/big_ttbar_list.txt .
 
 # some basic printing
 echo " "; echo "${h}: Show who and where we are";
@@ -43,11 +36,11 @@ cd   $CMSSW_BASE
 eval `scram runtime -sh`
 cd -
 
-for ((i=5; i<${#input_array[@]}; i++))
-do
-echo root -b -l -q rootlogon.C ${root_script}.C+\(\"root://eoscms.cern.ch//store/group/phys_higgs/upgrade/${delphes_conf}/140PileUp/${sample_name}/${input_array[$i]}\",${cross_sec},\"${output_loc}/${input_array[$i]}\"\)
-root -b -l -q rootlogon.C ${root_script}.C+\(\"root://eoscms.cern.ch//store/group/phys_higgs/upgrade/${delphes_conf}/140PileUp/${sample_name}/${input_array[$i]}\",${cross_sec},\"${output_loc}/${input_array[$i]}\"\)
-done
+# get ready to run
+echo " "; echo "${h}: Starting root job now"; echo " ";
+
+  root -b -l -q rootlogon.C \
+      select_all.C+\(\"big_ttbar_list.txt\"\)
 
 # get the return code from the root job
 status=`echo $?`
