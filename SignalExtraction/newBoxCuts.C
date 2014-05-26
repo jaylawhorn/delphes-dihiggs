@@ -21,8 +21,8 @@
 #include <TGaxis.h>
 #include <TLorentzVector.h>
 #include "Math/LorentzVector.h"
-#include "../../MitStyleRemix.hh"
-#include "../CPlot.hh"
+#include "../Utils/HttStyles.h"
+#include "../Utils/CPlot.hh"
 
 #endif
 
@@ -35,7 +35,7 @@ Double_t deltaPhi(const Double_t phi1, const Double_t phi2);
 
 void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 
-  TGaxis::SetMaxDigits(3);
+  //TGaxis::SetMaxDigits(3);
 
   // tau decay modes
   enum { hadron=1, electron, muon };
@@ -52,8 +52,8 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     CPlot::sOutDir = "all";     
   }
   else if (tauType==1) {
-    cout << "dijet" << endl;
-    CPlot::sOutDir = "dijet"; 
+    cout << "dijet45" << endl;
+    CPlot::sOutDir = "dijet45"; 
   }
   else if (tauType==2) {
     cout << "jet-mu" << endl;
@@ -67,6 +67,10 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     cout << "mu-ele" << endl;
     CPlot::sOutDir = "muele"; 
   }
+  else if (tauType==5) {
+    cout << "dijet30" << endl;
+    CPlot::sOutDir = "dijet30"; 
+  }
 
   // read in file names
   vector<TString> sampleNames;
@@ -77,6 +81,8 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
   // define pre-selection variables
   const Float_t TAU_PT_MIN_H = 30;
   const Float_t TAU_PT_MIN_L = 20;
+  Float_t TAU_PT_MIN_HH = 45;
+  if (tauType==5) TAU_PT_MIN_HH = 30;
   const Float_t B_PT_MIN = 30;
   
   const Float_t TAU_ETA_MAX = 2.5;
@@ -116,24 +122,24 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     preselectXsecUnc.push_back(0); kineCutsXsecUnc.push_back(0);
     bbCutsXsecUnc.push_back(0); hhCutsXsecUnc.push_back(0);    finalXsecUnc.push_back(0);
 
-    sprintf(hname, "hTpt1_%i",isam); hTpt1.push_back(new TH1D(hname, processType[isam], 100, 0, 300)); hTpt1[isam]->Sumw2(); 
-    sprintf(hname, "hTpt2_%i",isam); hTpt2.push_back(new TH1D(hname, processType[isam], 100, 0, 300)); hTpt2[isam]->Sumw2(); 
-    sprintf(hname, "hBpt1_%i",isam); hBpt1.push_back(new TH1D(hname, processType[isam], 100, 0, 300)); hBpt1[isam]->Sumw2(); 
-    sprintf(hname, "hBpt2_%i",isam); hBpt2.push_back(new TH1D(hname, processType[isam], 100, 0, 300)); hBpt2[isam]->Sumw2(); 
+    sprintf(hname, "hTpt1_%i",isam); hTpt1.push_back(new TH1D(hname, processType[isam], 20, 0, 300)); hTpt1[isam]->Sumw2(); 
+    sprintf(hname, "hTpt2_%i",isam); hTpt2.push_back(new TH1D(hname, processType[isam], 20, 0, 300)); hTpt2[isam]->Sumw2(); 
+    sprintf(hname, "hBpt1_%i",isam); hBpt1.push_back(new TH1D(hname, processType[isam], 20, 0, 300)); hBpt1[isam]->Sumw2(); 
+    sprintf(hname, "hBpt2_%i",isam); hBpt2.push_back(new TH1D(hname, processType[isam], 20, 0, 300)); hBpt2[isam]->Sumw2(); 
 
-    sprintf(hname, "hBBdR_%i",isam); hBBdR.push_back(new TH1D(hname, processType[isam], 16, 0, 8.0)); hBBdR[isam]->Sumw2(); 
+    sprintf(hname, "hBBdR_%i",isam); hBBdR.push_back(new TH1D(hname, processType[isam], 10, 0, 8.0)); hBBdR[isam]->Sumw2(); 
 
-    sprintf(hname, "hTeta1_%i",isam); hTeta1.push_back(new TH1D(hname, processType[isam], 16, -2.5, 2.5)); hTeta1[isam]->Sumw2(); 
-    sprintf(hname, "hTeta2_%i",isam); hTeta2.push_back(new TH1D(hname, processType[isam], 16, -2.5, 2.5)); hTeta2[isam]->Sumw2(); 
-    sprintf(hname, "hBeta1_%i",isam); hBeta1.push_back(new TH1D(hname, processType[isam], 16, -2.5, 2.5)); hBeta1[isam]->Sumw2(); 
-    sprintf(hname, "hBeta2_%i",isam); hBeta2.push_back(new TH1D(hname, processType[isam], 16, -2.5, 2.5)); hBeta2[isam]->Sumw2(); 
+    sprintf(hname, "hTeta1_%i",isam); hTeta1.push_back(new TH1D(hname, processType[isam], 10, -2.5, 2.5)); hTeta1[isam]->Sumw2(); 
+    sprintf(hname, "hTeta2_%i",isam); hTeta2.push_back(new TH1D(hname, processType[isam], 10, -2.5, 2.5)); hTeta2[isam]->Sumw2(); 
+    sprintf(hname, "hBeta1_%i",isam); hBeta1.push_back(new TH1D(hname, processType[isam], 10, -2.5, 2.5)); hBeta1[isam]->Sumw2(); 
+    sprintf(hname, "hBeta2_%i",isam); hBeta2.push_back(new TH1D(hname, processType[isam], 10, -2.5, 2.5)); hBeta2[isam]->Sumw2(); 
 
-    sprintf(hname, "hTTMass_%i",isam); hTTMass.push_back(new TH1D(hname, processType[isam], 100, 0, 400)); hTTMass[isam]->Sumw2(); 
-    sprintf(hname, "hBBMass_%i",isam); hBBMass.push_back(new TH1D(hname, processType[isam], 100, 0, 400)); hBBMass[isam]->Sumw2(); 
-    sprintf(hname, "hTTBBMass_%i",isam); hTTBBMass.push_back(new TH1D(hname, processType[isam], 100, 0, 1200)); hTTBBMass[isam]->Sumw2(); 
-    sprintf(hname, "hTTAngle_%i",isam); hTTAngle.push_back(new TH1D(hname, processType[isam], 20, 0, TMath::Pi())); hTTAngle[isam]->Sumw2(); 
-    sprintf(hname, "hBBAngle_%i",isam); hBBAngle.push_back(new TH1D(hname, processType[isam], 20, 0, TMath::Pi())); hBBAngle[isam]->Sumw2(); 
-    sprintf(hname, "hMt2_%i",isam); hMt2.push_back(new TH1D(hname, processType[isam], 50, 0, 500)); hMt2[isam]->Sumw2(); 
+    sprintf(hname, "hTTMass_%i",isam); hTTMass.push_back(new TH1D(hname, processType[isam], 12, 0, 300)); hTTMass[isam]->Sumw2(); 
+    sprintf(hname, "hBBMass_%i",isam); hBBMass.push_back(new TH1D(hname, processType[isam], 12, 0, 300)); hBBMass[isam]->Sumw2(); 
+    sprintf(hname, "hTTBBMass_%i",isam); hTTBBMass.push_back(new TH1D(hname, processType[isam], 12, 0, 1200)); hTTBBMass[isam]->Sumw2(); 
+    sprintf(hname, "hTTAngle_%i",isam); hTTAngle.push_back(new TH1D(hname, processType[isam], 10, 0, TMath::Pi())); hTTAngle[isam]->Sumw2(); 
+    sprintf(hname, "hBBAngle_%i",isam); hBBAngle.push_back(new TH1D(hname, processType[isam], 10, 0, TMath::Pi())); hBBAngle[isam]->Sumw2(); 
+    sprintf(hname, "hMt2_%i",isam); hMt2.push_back(new TH1D(hname, processType[isam], 8, 0, 400)); hMt2[isam]->Sumw2(); 
   }
 
   Float_t eventWeight=1;
@@ -157,7 +163,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
   for (UInt_t isam=0; isam<sampleNames.size(); isam++) { // sample loop
 
     TString infilename = sampleNames[isam];
-    //cout << "Processing  " << infilename << " ..." << endl;
+    cout << "Processing  " << infilename << " ..." << endl;
     infile = new TFile(infilename); assert(infile);
     intree = (TTree*) infile->Get("Events"); assert(intree);
 
@@ -170,11 +176,11 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     intree->SetBranchAddress("met",            &met);
     intree->SetBranchAddress("metPhi",         &metPhi);
     intree->SetBranchAddress("mt2",            &mt2);
-    intree->SetBranchAddress("recoTau1",       &recoTau1);     // 4-vector for reconstructed leading tau
-    intree->SetBranchAddress("recoTau2",       &recoTau2);     // 4-vector for reconstructed second tau
-    intree->SetBranchAddress("recoB1",         &recoB1);       // 4-vector for reconstructed leading b-jet
-    intree->SetBranchAddress("recoB2",         &recoB2);       // 4-vector for reconstructed second b-jet
-    intree->SetBranchAddress("recoExtraJet",   &recoExtraJet); // 4-vector for reconstructed extra jet
+    intree->SetBranchAddress("sRecoTau1",      &recoTau1);     // 4-vector for reconstructed leading tau
+    intree->SetBranchAddress("sRecoTau2",      &recoTau2);     // 4-vector for reconstructed second tau
+    intree->SetBranchAddress("sRecoB1",        &recoB1);       // 4-vector for reconstructed leading b-jet
+    intree->SetBranchAddress("sRecoB2",        &recoB2);       // 4-vector for reconstructed second b-jet
+    //intree->SetBranchAddress("recoExtraJet",   &recoExtraJet); // 4-vector for reconstructed extra jet
 
     for(UInt_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // entry loop
       intree->GetEntry(iEntry);
@@ -251,18 +257,20 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 	tauEta2 = recoTau2->Eta();
       }
 
-      preselectXsec[eventType]+=eventWeight;
-      preselectXsecUnc[eventType]+=eventWeight*eventWeight;
+      //preselectXsec[eventType]+=eventWeight;
+      //preselectXsecUnc[eventType]+=eventWeight*eventWeight;
 
       hBBdR[eventType]->Fill(deltaR(recoB1->Eta(), recoB2->Eta(), recoB1->Phi(), recoB2->Phi()), eventWeight);
 
       // tau kinematics
       if ( ( fabs( recoTau1->Eta() ) > TAU_ETA_MAX ) || ( fabs(recoTau2->Eta() ) > TAU_ETA_MAX ) ) continue;
 
-      if (( tauCat1 == hadron ) && (tauPt1 < TAU_PT_MIN_H )) continue;
+      if ((tauCat1==hadron) && (tauCat2==hadron)) {
+	if ((tauPt1<TAU_PT_MIN_HH)||(tauPt2<TAU_PT_MIN_HH)) continue;
+      }
+      else if (( tauCat1 == hadron ) && (tauPt1 < TAU_PT_MIN_H )) continue;
       else if (( tauCat1 != hadron ) && (tauPt1 < TAU_PT_MIN_L )) continue;
-
-      if (( tauCat2 == hadron ) && (tauPt2 < TAU_PT_MIN_H )) continue;
+      else if (( tauCat2 == hadron ) && (tauPt2 < TAU_PT_MIN_H )) continue;
       else if (( tauCat2 != hadron ) && (tauPt2 < TAU_PT_MIN_L )) continue;
 
       // b kinematics
@@ -272,9 +280,6 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 
       kineCutsXsec[eventType]+=eventWeight;
       kineCutsXsecUnc[eventType]+=eventWeight*eventWeight;
-
-      // require boost of at least 50 GeV
-      //if ( (recoExtraJet->Pt()!=999) && (recoExtraJet->Pt()>50) ) continue;
 
       hTpt1[eventType]->Fill(tauPt1, eventWeight);
       hTpt2[eventType]->Fill(tauPt2, eventWeight);
@@ -296,6 +301,14 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 
       LorentzVector vHH = vTauHiggs + vBHiggs;
 
+      hTTMass[eventType]->Fill(vTauHiggs.M(),eventWeight);
+      hBBMass[eventType]->Fill(vBHiggs.M(),eventWeight);
+      hTTBBMass[eventType]->Fill(vHH.M(),eventWeight);
+      hMt2[eventType]->Fill(mt2,eventWeight);
+      hTTAngle[eventType]->Fill(deltaPhi(recoTau1->Phi(), recoTau2->Phi()),eventWeight);
+      hBBAngle[eventType]->Fill(deltaPhi(recoB1->Phi(), recoB2->Phi()),eventWeight);
+
+      /*
       for (Int_t c=0; c<6; c++) {
 
 	if ( (c!=0) && ((vTauHiggs.M()<50) || (vTauHiggs.M()>120)) ) continue;
@@ -311,7 +324,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 	else if (c==5) hBBAngle[eventType]->Fill(deltaPhi(recoB1->Phi(), recoB2->Phi()),eventWeight);
 
       }
-
+      */
       if ( (vTauHiggs.M()<50) || (vTauHiggs.M()>120) ) continue;
 
       tautauCutsXsec[eventType]+=eventWeight;
@@ -320,7 +333,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 
       bbCutsXsec[eventType]+=eventWeight;
       bbCutsXsecUnc[eventType]+=eventWeight*eventWeight;
-      
+            
       if ( vHH.M()<360 ) continue;
 
       hhCutsXsec[eventType]+=eventWeight;
@@ -342,28 +355,33 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     totalBackgrounds.push_back(0);
   }
 
-  cout << "sample\t\t presel\t tau/b\t bb\t hh\t final" << endl;
+  cout << setprecision(0) << fixed; 
+
+  cout << " & $p_{T},\eta$ cuts & $m(\tau\tau),m(bb)$ & $m(hh)$ & $m_{T,2}$ \\\\" << endl;
 
   for (UInt_t i=0; i<processType.size(); i++) {
-    cout << processType[i] << "\t" << preselectXsec[i]*3000 << "\t" <<  kineCutsXsec[i]*3000 << "\t" << bbCutsXsec[i]*3000 << "\t";
-    cout << hhCutsXsec[i]*3000 << "\t" << finalXsec[i]*3000 << endl;
-    cout << processType[i] << "\t" << TMath::Sqrt(preselectXsecUnc[i])*3000 << "\t" <<  TMath::Sqrt(kineCutsXsecUnc[i])*3000 << "\t" << TMath::Sqrt(bbCutsXsecUnc[i])*3000 << "\t";
-    cout << TMath::Sqrt(hhCutsXsecUnc[i])*3000 << "\t" << TMath::Sqrt(finalXsecUnc[i])*3000 << endl;
 
-    if (i!=0) {
-      totalBackgrounds[0]+=totalXsec[i]; totalBackgrounds[1]+=preselectXsec[i]; totalBackgrounds[2]+=kineCutsXsec[i]; totalBackgrounds[3]+=tautauCutsXsec[i]; 
-      totalBackgrounds[4]+=bbCutsXsec[i]; totalBackgrounds[5]+=hhCutsXsec[i]; totalBackgrounds[6]+=finalXsec[i];
-    }
+    cout << processType[i] << " & ";
+    cout << kineCutsXsec[i]*3000 << " $\\pm$ " << TMath::Sqrt(kineCutsXsecUnc[i])*3000 << " & ";
+    cout << bbCutsXsec[i]*3000 << " $\\pm$ " << TMath::Sqrt(bbCutsXsecUnc[i])*3000 << " & ";
+    cout << hhCutsXsec[i]*3000 << " $\\pm$ " << TMath::Sqrt(hhCutsXsecUnc[i])*3000 << " & ";
+    cout << finalXsec[i]*3000 << " $\\pm$ " << TMath::Sqrt(finalXsecUnc[i])*3000 << " \\\\" << endl;
+
+    //if (i!=0) {
+    //totalBackgrounds[0]+=totalXsec[i]; totalBackgrounds[1]+=preselectXsec[i]; totalBackgrounds[2]+=kineCutsXsec[i]; totalBackgrounds[3]+=tautauCutsXsec[i]; 
+    //totalBackgrounds[4]+=bbCutsXsec[i]; totalBackgrounds[5]+=hhCutsXsec[i]; totalBackgrounds[6]+=finalXsec[i];
+    //}
   }
 
-  cout << "S/sqrt(B): " << TMath::Sqrt(3000)*totalXsec[0]/TMath::Sqrt(totalBackgrounds[0]) << "\t" << TMath::Sqrt(3000)*kineCutsXsec[0]/TMath::Sqrt(totalBackgrounds[2]) << "\t";
-  cout << TMath::Sqrt(3000)*bbCutsXsec[0]/TMath::Sqrt(totalBackgrounds[4]) << "\t" << TMath::Sqrt(3000)*hhCutsXsec[0]/TMath::Sqrt(totalBackgrounds[5]) << "\t" << TMath::Sqrt(3000)*finalXsec[0]/TMath::Sqrt(totalBackgrounds[6]) << endl;
+  //cout << "S/sqrt(B): " << TMath::Sqrt(3000)*totalXsec[0]/TMath::Sqrt(totalBackgrounds[0]) << "\t" << TMath::Sqrt(3000)*kineCutsXsec[0]/TMath::Sqrt(totalBackgrounds[2]) << "\t";
+  //cout << TMath::Sqrt(3000)*bbCutsXsec[0]/TMath::Sqrt(totalBackgrounds[4]) << "\t" << TMath::Sqrt(3000)*hhCutsXsec[0]/TMath::Sqrt(totalBackgrounds[5]) << "\t" << TMath::Sqrt(3000)*finalXsec[0]/TMath::Sqrt(totalBackgrounds[6]) << endl;
 
+  Float_t scale;
   /*
   Float_t L = 3000;
   Float_t hhxsec = 2.92;
 
-  Float_t scale = 40.0/hhxsec;
+  scale = 40.0/hhxsec;
 
   Float_t N = hhCount*L;
   Float_t dN = TMath::Sqrt(hhCount*L);
@@ -376,36 +394,14 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
 
   cout << xsec << " +- " << dxsec << " fb" << endl;
   cout << xsec*scale << " +- " << dxsec*scale << " fb" << endl;
-
+  */
   //p0    : 68.5935 +/- 0.187739
   //p1    : -44.6022 +/- 0.0552735
   //p2    : 9.13082 +/- 0.0204945
-  */
-  TCanvas *c = MakeCanvas("c", "c", 600, 600);
   /*
-  TF1 *smcurve = new TF1("smcurve", "[0]*(68.5935-44.6022*x+9.13082*x*x)",0,5);
-  smcurve->SetParameter(0,1.0);
-  cout << smcurve->Eval(1.0) << endl;
-  smcurve->SetParameter(0,40/smcurve->Eval(1.0));
-  cout << smcurve->Eval(1.0) << endl;
+  TCanvas *c = MakeCanvas("c", "c", 600, 600);
 
-  smcurve->SetTitle("");
-  smcurve->GetXaxis()->SetTitle("#lambda");
-  smcurve->GetYaxis()->SetTitle("#sigma");
-  
-  smcurve->SetLineColor(kBlue);
-  smcurve->Draw();
-  
-  TF1 *fxsec = new TF1("fxsec", "[0]", 0, 5);
-  fxsec->SetParameter(0,xsec*scale+2*dxsec*scale);
-  fxsec->SetLineColor(kRed);
-  fxsec->Draw("same");
-
-  cout << smcurve->GetX((xsec+2*dxsec)*scale,1,5) << endl;
-  cout << smcurve->GetX((xsec+2*dxsec)*scale,0,1) << endl;
-  */
-
-  Float_t scale=1;
+  scale=1;
 
   CPlot plotBBdR("bb_dr", "", "#Deltar(bb)","Events");
   for (Int_t i=0; i<sampleNames.size(); i++) {
@@ -413,17 +409,17 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBBdR[i]->Scale(1/scale);
     plotBBdR.AddHist1D(hBBdR[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBBdR.TransLegend(0.0,0);
+  plotBBdR.TransLegend(0.1,0.0);
   plotBBdR.Draw(c, kTRUE,"png",1);
 
-  /*
+
   CPlot plotTpt1("t_pt1", "", "Leading #tau p_{T} [GeV/c]","Events");
   for (Int_t i=0; i<sampleNames.size(); i++) {
     scale=hTpt1[i]->Integral();
     hTpt1[i]->Scale(1/scale);
     plotTpt1.AddHist1D(hTpt1[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotTpt1.TransLegend(0.0,0);
+  plotTpt1.TransLegend(0.1,0);
   plotTpt1.Draw(c, kTRUE,"png",1);
 
   CPlot plotTpt2("t_pt2", "", "Second #tau p_{T} [GeV/c]","Events");
@@ -432,7 +428,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTpt2[i]->Scale(1/scale);
     plotTpt2.AddHist1D(hTpt2[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotTpt2.TransLegend(0.0,0);
+  plotTpt2.TransLegend(0.1,0);
   plotTpt2.Draw(c, kTRUE,"png",1);
 
 
@@ -442,7 +438,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBpt1[i]->Scale(1/scale);
     plotBpt1.AddHist1D(hBpt1[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBpt1.TransLegend(0.0,0);
+  plotBpt1.TransLegend(0.1,0);
   plotBpt1.Draw(c, kTRUE,"png",1);
 
   CPlot plotBpt2("b_pt2", "", "Second b p_{T} [GeV/c]","Events");
@@ -451,7 +447,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBpt2[i]->Scale(1/scale);
     plotBpt2.AddHist1D(hBpt2[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBpt2.TransLegend(0.0,0);
+  plotBpt2.TransLegend(0.1,0);
   plotBpt2.Draw(c, kTRUE,"png",1);
 
   CPlot plotTeta1("t_eta1", "", "Leading #tau |#eta|","Events");
@@ -460,7 +456,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTeta1[i]->Scale(1/scale);
     plotTeta1.AddHist1D(hTeta1[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotTeta1.TransLegend(0.0,0);
+  plotTeta1.TransLegend(0.1,0);
   plotTeta1.Draw(c, kTRUE,"png",1);
 
   CPlot plotTeta2("t_eta2", "", "Second #tau |#eta|","Events");
@@ -469,7 +465,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTeta2[i]->Scale(1/scale);
     plotTeta2.AddHist1D(hTeta2[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotTeta2.TransLegend(0.0,0);
+  plotTeta2.TransLegend(0.1,0);
   plotTeta2.Draw(c, kTRUE,"png",1);
 
   CPlot plotBeta1("b_eta1", "", "Leading b |#eta|","Events");
@@ -478,7 +474,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBeta1[i]->Scale(1/scale);
     plotBeta1.AddHist1D(hBeta1[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBeta1.TransLegend(0.0,0);
+  plotBeta1.TransLegend(0.1,0);
   plotBeta1.Draw(c, kTRUE,"png",1);
 
   CPlot plotBeta2("b_eta2", "", "Second b |#eta|","Events");
@@ -487,7 +483,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBeta2[i]->Scale(1/scale);
     plotBeta2.AddHist1D(hBeta2[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBeta2.TransLegend(0.0,0);
+  plotBeta2.TransLegend(0.1,0);
   plotBeta2.Draw(c, kTRUE,"png",1);
 
   CPlot plotHtt("m_tt", "", "M(#tau#tau) [GeV/c^{2}]","Events");
@@ -496,7 +492,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTTMass[i]->Scale(1/scale);
     plotHtt.AddHist1D(hTTMass[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotHtt.TransLegend(0.0,0);
+  plotHtt.TransLegend(0.1,0);
   plotHtt.Draw(c, kTRUE,"png",1);
 
   CPlot plotHbb("m_bb", "", "M(bb) [GeV/c^{2}]","Events");
@@ -505,7 +501,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBBMass[i]->Scale(1/scale);
     plotHbb.AddHist1D(hBBMass[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotHbb.TransLegend(0.0,0);
+  plotHbb.TransLegend(0.1,0);
   plotHbb.Draw(c, kTRUE, "png", 1);
 
   CPlot plotHttbb("m_ttbb", "", "M(#tau#taubb) [GeV/c^{2}]","Events");
@@ -514,7 +510,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTTBBMass[i]->Scale(1/scale);
     plotHttbb.AddHist1D(hTTBBMass[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotHttbb.TransLegend(0.0,0);
+  plotHttbb.TransLegend(0.1,0);
   plotHttbb.Draw(c, kTRUE,"png",1);
 
   CPlot plotMt2("mt2", "", "mT2","Events");
@@ -523,7 +519,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hMt2[i]->Scale(1/scale);
     plotMt2.AddHist1D(hMt2[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotMt2.TransLegend(0.0,0);
+  plotMt2.TransLegend(0.1,0);
   plotMt2.Draw(c, kTRUE,"png",1);
 
   CPlot plotTTangle("ang_tt", "", "#Delta#phi(#tau#tau)","Events");
@@ -532,7 +528,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hTTAngle[i]->Scale(1/scale);
     plotTTangle.AddHist1D(hTTAngle[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotTTangle.TransLegend(0.0,0);
+  plotTTangle.TransLegend(0.1,0);
   plotTTangle.Draw(c, kTRUE,"png",1);
   
   CPlot plotBBangle("ang_bb", "", "#Delta#phi(bb)","Events");
@@ -541,7 +537,7 @@ void newBoxCuts(const TString conf="new.conf", Int_t tauType=0) {
     hBBAngle[i]->Scale(1/scale);
     plotBBangle.AddHist1D(hBBAngle[i], sampleTitles[i],"hist",sampleColors[i]);
   }
-  plotBBangle.TransLegend(0.0,0);
+  plotBBangle.TransLegend(0.1,0);
   plotBBangle.Draw(c, kTRUE,"png",1);
   */
 }

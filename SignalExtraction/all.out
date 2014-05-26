@@ -1,31 +1,19 @@
  ROOT Version: 5.32/00.
  CMSSW environment is set up.
-31030 pts/144  00:00:00 root.exe
- MIT root style REMIX($Author: KSUNG $$,$Modified by ksung $$).
+ 7139 pts/1    00:00:09 root.exe
+(class CPlot)49204752
 
- Use: MakeCanvas(name,title)
-      InitSubPad(pad,nPad)
-      InitHist(hist,xTitle,yTitle,color)
-
-(class CPlot)239789504
-
-Processing newBoxCuts.C+("new.conf",0)...
+Processing newBoxCuts.C+("merged.conf",0)...
 Selected ditau decay: all
-sample		 presel	 tau/b	 bb	 hh	 final
-HH	1497.54	291.25	138.989	85.7161	79.633
-HH	16.6148	7.3272	5.06168	3.97499	3.83135
-tt	0	0	0	0	0
-tt	0	0	0	0	0
-ZH	0	0	0	0	0
-ZH	0	0	0	0	0
-WH	0	0	0	0	0
-WH	0	0	0	0	0
-WW	0	0	0	0	0
-WW	0	0	0	0	0
-ZZ	0	0	0	0	0
-ZZ	0	0	0	0	0
-ZW	0	0	0	0	0
-ZW	0	0	0	0	0
-ETC	0	0	0	0	0
-ETC	0	0	0	0	0
-S/sqrt(B): inf	inf	inf	inf	inf
+Processing  /afs/cern.ch/work/k/klawhorn/hhttbb_ntuples/hhttbb_select.root ...
+Processing  /afs/cern.ch/work/k/klawhorn/hhttbb_ntuples/tt_select.root ...
+Processing  /afs/cern.ch/work/k/klawhorn/hhttbb_ntuples/ewk_select.root ...
+sample		 presel	 tau/b	 bb	 hh	 mt2
+HH	1701.05 \pm 2259.02	247.378 \pm 6.75283	115.025 \pm 4.6047	73.9186 \pm 3.69132	69.6789 \pm 3.5839
+tt	82023.2 \pm 15686.6	14335.1 \pm 22.7291	1905.29 \pm 8.8512	135.602 \pm 2.74911	84.9007 \pm 2.13492
+ZH	32.5162 \pm 312.327	0.776431 \pm 0.0379041	0.182668 \pm 0.019036	0.0508338 \pm 0.00825414	0.0440976 \pm 0.00756716
+WH	13.9706 \pm 204.724	0.454505 \pm 0.0348322	0.0821068 \pm 0.0151307	0.00888455 \pm 0.00438126	0.00253816 \pm 0.000663582
+WW	312.535 \pm 968.3	26.0751 \pm 0.422532	2.44487 \pm 0.161879	0.582899 \pm 0.0632794	0.323902 \pm 0.0396726
+ZZ	317.911 \pm 976.593	3.71021 \pm 0.252238	0.534891 \pm 0.115017	0.178638 \pm 0.0562543	0.126345 \pm 0.0418169
+ZW	279.308 \pm 915.383	8.95325 \pm 0.321474	0.640296 \pm 0.101052	0.224386 \pm 0.0427955	0.125826 \pm 0.0191865
+ETC	94987.3 \pm 16880.8	318.722 \pm 50.4724	70.9938 \pm 46.0522	5.5961 \pm 0.811869	4.31856 \pm 0.702257
