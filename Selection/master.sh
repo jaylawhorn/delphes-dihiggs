@@ -2,15 +2,18 @@
 
 #master run script for pre-processing
 
-if [ ${#} -lt "1" ]; then
+if [ ${#} -lt "2" ]; then
     echo "Please use the following syntax: " 
-    echo "    ./master.sh <conf_file>"
+    echo "    ./master.sh <conf_file> <submit>"
     echo " "
     echo "<conf_file> is a text file containing the names of all samples"
+    echo "<submit> is either 0 if you want to submit the jobs by hand or"
+    echo "         1 if you want the jobs to be automatically submitted"
     exit
 fi
 
 conf_file=$1
+submit=$2
 
 while read line #loop over lines in ${conf_file}
 do
@@ -63,7 +66,9 @@ do
       tail -3 run_outline.sh >> ${array[0]}_run.sh
       chmod u+x ${array[0]}_run.sh
 
-      bsub -q 1nd ${array[0]}_run.sh
+      if [ ${submit} -eq "1" ]; then
+	  bsub -q 1nd ${array[0]}_run.sh
+      fi
   fi
 done < ${conf_file}
 
