@@ -11,13 +11,13 @@
 #include <TCanvas.h>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <fstream>
 #include "Math/LorentzVector.h"
 #include "modules/Delphes.h"
 #include "ExRootAnalysis/ExRootTreeReader.h"
 #include "classes/DelphesClasses.h"
-#include "mt2.hh"
 #endif
 
 void getall(const TString inputfile) { 
@@ -37,7 +37,6 @@ void getall(const TString inputfile) {
     chain.Add(TString(fname));
     ExRootTreeReader treeReader(&chain);
     nEvents=treeReader.GetEntries();
-    cout << nEvents << endl;
     totalEvents+=nEvents;
 
   }

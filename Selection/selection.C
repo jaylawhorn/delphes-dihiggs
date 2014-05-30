@@ -24,9 +24,14 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVecto
 
 Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
-void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHToBBTT_14TeV/HHToBBTT_14TeV_140.root", 
+Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
+
+void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHToTTBB_14TeV/HHToTTBB_14TeV_0.root",
 	       const Float_t xsec=1.0,
+	       const Float_t totalEvents=100,
 	       const TString outputfile="test.root") {
+
+  cout << inputfile << " " << xsec << " " << totalEvents << " " << outputfile << endl;
 
   // declare constants
   const Double_t MUON_MASS = 0.105658369;
@@ -103,15 +108,14 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   Int_t iGenJetB1=-1,   iGenJetB2=-1;
   Int_t iExtra=-1;
 
-  // set up output variables and file
-  Int_t nEvents;
-  Float_t eventWeight;
-
-  Float_t met, metPhi;
-
   Int_t eventType;
-  UInt_t tauCat1=0, tauCat2=0;
-  UInt_t bTag1=0, bTag2=0;
+  Float_t eventWeight;
+  Float_t met, metPhi;
+  Int_t tauCat1=0, tauCat2=0;
+  Int_t bTag1=0, bTag2=0;
+
+  Int_t tFake1=0, tFake2=0;
+  Int_t bFake1=0, bFake2=0;
 
   LorentzVector *sRecoTau1=0, *sRecoTau2=0;
   LorentzVector *sGenJetTau1=0, *sGenJetTau2=0;
@@ -125,12 +129,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
-  // tree to hold the number of events in the file before selection
-  TTree *sampTree = new TTree("Info", "Info");
-  sampTree->Branch("nEvents",       &nEvents,        "nEvents/i");
-  nEvents=numberOfEntries;
-  sampTree->Fill();
-
   // tree to hold information about selected events
   TTree *outTree = new TTree("Events", "Events");
   outTree->Branch("eventWeight",    &eventWeight,    "eventWeight/f");  // event weight from cross-section and Event->Weight
@@ -139,6 +137,10 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
   outTree->Branch("bTag1",          &bTag1,          "bTag1/i");        // leading b-jet tag from delphes
   outTree->Branch("bTag2",          &bTag2,          "bTag2/i");        // second b-jet tag from delphes
+  outTree->Branch("tFake1",         &tFake1,         "tFake1/i");    
+  outTree->Branch("tFake2",         &tFake2,         "tFake2/i");    
+  outTree->Branch("bFake1",         &bFake1,         "bFake1/i");    
+  outTree->Branch("bFake2",         &bFake2,         "bFake2/i");    
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
@@ -154,16 +156,10 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
   outTree->Branch("sRecoTau2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau2);     // 4-vector for reconstructed second tau
   outTree->Branch("sRecoB1",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB1);       // 4-vector for reconstructed leading b-jet
   outTree->Branch("sRecoB2",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB2);       // 4-vector for reconstructed second b-jet
-  outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector for reconstructed extra jets
+  outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector for reconstructed extra jet
 
   // define placeholder vector for things that don't exist
   LorentzVector nothing(999,999,0,999);
-
-  Float_t fake=0;
-  Float_t notfake=0;
-
-  Float_t fake2=0;
-  Float_t notfake2=0;
 
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
@@ -179,6 +175,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     iGenJetB1=-1;   iGenJetB2=-1;
     iExtra=-1;
     tauCat1=-1; tauCat2=-1; bTag1=-1; bTag2=-1;
+    tFake1=2; tFake2=2; bFake1=2; bFake2=2;
     eventType=-1;
 
     jetTau1=0; jetTau2=0; eleTau=0; muTau=0;
@@ -201,6 +198,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       eventWeight*=event->Weight;
     }
     eventWeight *= xsec;
+    eventWeight /= totalEvents;
 
     // ********************
     // RECO OBJECTS
@@ -209,6 +207,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     // get reconstructed hadronic taus
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
+
+      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
       if (jet->TauTag==0) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
@@ -241,6 +241,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
+
+      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
       if (jet->BTag==0) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
@@ -340,6 +342,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
+      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetB1)&&(deltaR(jet->Eta, jetB1->Eta, jet->Phi, jetB1->Phi) < MAX_MATCH_DIST)) continue;
@@ -436,7 +440,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     }
     else sRecoJet = &nothing;
 
-
     // ********************
     // GEN PARTICLES
     // ********************
@@ -457,7 +460,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 	  iGenTau1 = iParticle;
 	  genTau1 = (GenParticle*) branchParticle->At(iGenTau1);
 	}
-	else if ( (tauCat2 == -1) && (iGenTau1==-2) ) { 
+	else if ( (tauCat2 == -1) && (iGenTau1==-1) ) { 
 	  iGenTau2 = iParticle;
 	  genTau2 = (GenParticle*) branchParticle->At(iGenTau2);
 	}
@@ -504,18 +507,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     }
     else sGenTau2 = &nothing;
 
-    if ((tauCat1==1)&& (genTau1)) {notfake+=1;}
-    else if ((tauCat1==1)) {fake+=1; }
-
-    if ((tauCat2==1)&& (genTau2)) {notfake+=1; }
-    else if ((tauCat2==1)) { fake+=1; }
-
-    if ((sGenTau1->Pt()!=999)&&(tauCat1==1)) { notfake2+=1; }
-    else if (tauCat1==1) fake2+=1;
-
-    if ((sGenTau2->Pt()!=999)&&(tauCat2==1)) { notfake2+=1; }
-    else if (tauCat2==1) { fake2+=1; }
-
     LorentzVector vGenB1(0,0,0,0);
     if (genB1) {
       vGenB1.SetPt(genB1->PT);
@@ -535,6 +526,22 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       sGenB2 = &vGenB2;
     }
     else sGenB2 = &nothing;
+
+    if ((sGenTau1->Pt()!=999)&&(tauCat1!=0)) { tFake1=0; }
+    else if (tauCat1==1) { tFake1=1; }
+    else {tFake1=2;}
+
+    if ((sGenTau2->Pt()!=999)&&(tauCat2!=0)) { tFake2=0; }
+    else if (tauCat2==1) { tFake2=1; }
+    else {tFake2=2;}
+
+    if ((sGenB1->Pt()!=999)&&(bTag1!=0)) { bFake1=0; }
+    else if (bTag1!=0) { bFake1=1; }
+    else {bFake1=2;}
+
+    if ((sGenB2->Pt()!=999)&&(bTag2!=0)) { bFake2=0; }
+    else if (bTag2!=0) { bFake2=1; }
+    else {bFake2=2;}
 
     // match generator level jets to generator particles
     for (Int_t iJet=0; iJet<branchGenJet->GetEntries(); iJet++) { // generator level jet loop
@@ -612,6 +619,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
     metPhi=missET->Phi;
 
     if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
+    //if (0) {
 
       tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
       tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());
@@ -635,7 +643,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       testing.SetMB2(mB2);
       testing.SetMT1(mTau1);
       testing.SetMT2(mTau2);
-      
+
       TVector2 c1=sumPt;
       TVector2 c2=sumPt-c1;
       
@@ -652,7 +660,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
       mt2 = min->MinValue();
     }
     
-    else { mt2 = -1; }
+    else { mt2 = 99999; }
 
     // ********************
     // BKGD SORTING
@@ -680,12 +688,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/k/klawhorn/public/HHTo
 
   } // end event loop
 
-  cout << fake << " " << notfake << " " << fake+notfake << endl;
-  cout << 100*fake/(fake+notfake) << "% " << endl;
-  cout << endl;
-  cout << fake2 << " " << notfake2 << " " << fake2+notfake2 << endl;
-  cout << 100*fake2/(fake2+notfake2) << "%" << endl;
-
   outFile->Write();
   outFile->Save();
 
@@ -702,5 +704,39 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
   Float_t deltaRSquared = etaDiff*etaDiff + phiDiff*phiDiff;
 
   return TMath::Sqrt(deltaRSquared);
+
+}
+
+Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
+  
+  Float_t MeanSqDeltaRMaxBarrel=0.07;
+  Float_t BetaMinBarrel=0.87;
+  Float_t MeanSqDeltaRMaxEndcap=0.07;
+  Float_t BetaMinEndcap=0.85;
+
+  //cout << eta << ", " << meanSqDeltaR << ", " << betastar << ": ";
+
+  if (fabs(eta)<1.5) {
+    if ((meanSqDeltaR<MeanSqDeltaRMaxBarrel)&&(betastar<BetaMinBarrel)) {
+      //cout << "barrel 0" << endl;
+      return 0;
+    }
+    else {
+      //cout << "barrel 1" << endl;
+      return 1;
+    }
+  }
+  else if (fabs(eta)<4.0) {
+    if ((meanSqDeltaR<MeanSqDeltaRMaxEndcap)&&(betastar<BetaMinEndcap)) {
+      //cout << "endcap 0" << endl;
+      return 0;
+    }
+    else {
+      //cout << "endcap 1" << endl;
+      return 1;
+    }
+  }
+  //cout << "forward 1" << endl;
+  return 1;
 
 }

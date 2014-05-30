@@ -12,7 +12,7 @@
     path += "-I. -I$ROOTSYS/src -I";
     path += rfitpath;
     gSystem->SetIncludePath(path.Data());
-
+    
     TString str = gSystem->GetMakeSharedLib();
     if (str.Contains("-m32")==0 && str.Contains("-m64")==0) {
       str.ReplaceAll("g++", "g++ -m32");
@@ -22,8 +22,8 @@
     gSystem->Load("/afs/cern.ch/user/j/jlawhorn/Delphes/libDelphes.so");
     gROOT->ProcessLine(".include /afs/cern.ch/user/j/jlawhorn/Delphes");
     gROOT->ProcessLine(".include /afs/cern.ch/user/j/jlawhorn/Delphes/external");
-    gROOT->Macro("../Utils/HttStyles.cc+");
-    gROOT->Macro("../Utils/CPlot.cc+");
+    //gROOT->Macro("../Utils/HttStyles.cc+");
+    //gROOT->Macro("../Utils/CPlot.cc+");
   }
   gInterpreter->ProcessLine(".! ps |grep root.exe");
 }
