@@ -26,10 +26,10 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
 
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
 
-void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHToTTBB_14TeV/HHToTTBB_14TeV_0.root",
-	       const Float_t xsec=1.0,
-	       const Float_t totalEvents=100,
-	       const TString outputfile="test.root") {
+void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upgrade/delphes/test4/Bjj-vbf-4p-0-700-v1510_14TEV_152178247_PhaseII_Conf4_140PileUp.root",
+	 const Float_t xsec=1.0,
+	 const Float_t totalEvents=100,
+	 const TString outputfile="test.root") {
 
   cout << inputfile << " " << xsec << " " << totalEvents << " " << outputfile << endl;
 
@@ -38,7 +38,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   const Double_t ELE_MASS  = 0.000511;
 
   const Int_t TAU_ID_CODE = 15;
-  const Int_t B_ID_CODE = 5;
 
   const Int_t T_ID_CODE = 6;
   const Int_t Z_ID_CODE = 23;
@@ -54,16 +53,16 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   enum { hadron=1, electron, muon };
 
   // setup mt2 minimizer
-  ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
-  min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-  min->SetTolerance(10.0);
-  min->SetPrintLevel(0);
+  //ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
+  //min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
+  //min->SetTolerance(10.0);
+  //min->SetPrintLevel(0);
 
-  TVector2 tau1(0,0), tau2(0,0), mpt(0,0);
-  TVector2 b1(0,0), b2(0,0);
-  Float_t mTau1=0, mTau2=0;
-  Float_t mB1=0, mB2=0;
-  Double_t mt2=0;
+  //TVector2 tau1(0,0), tau2(0,0), mpt(0,0);
+  //TVector2 b1(0,0), b2(0,0);
+  //Float_t mTau1=0, mTau2=0;
+  //Float_t mB1=0, mB2=0;
+  //Double_t mt2=0;
 
   // read input input file
   TChain chain("Delphes");
@@ -93,39 +92,28 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   Jet *jetTau1=0, *jetTau2=0;
   Electron *eleTau=0;
   Muon *muTau=0;
-  Jet *jetB1=0, *jetB2=0;
+  Jet *jet1=0, *jet2=0;
   GenParticle *genTau1=0, *genTau2=0;
-  GenParticle *genB1=0, *genB2=0;
-  Jet *genJetB1=0, *genJetB2=0;
   Jet *genJetTau1=0, *genJetTau2=0;
-  Jet *extraJet=0;
 
-  Int_t iB1=-1,         iB2=-1;
+  Int_t iJet1=-1,       iJet2=-1;
   Int_t iT1=-1,         iT2=-1;
   Int_t iGenTau1=-1,    iGenTau2=-1;
-  Int_t iGenB1=-1,      iGenB2=-1;
   Int_t iGenJetTau1=-1, iGenJetTau2=-1;
-  Int_t iGenJetB1=-1,   iGenJetB2=-1;
-  Int_t iExtra=-1;
+
+  Int_t nCentral=0;
 
   Int_t eventType;
   Float_t eventWeight;
   Float_t met, metPhi;
+  Float_t dEta, mJJ;
   Int_t tauCat1=0, tauCat2=0;
-  Int_t bTag1=0, bTag2=0;
-
   Int_t tFake1=0, tFake2=0;
-  Int_t bFake1=0, bFake2=0;
 
   LorentzVector *sRecoTau1=0, *sRecoTau2=0;
   LorentzVector *sGenJetTau1=0, *sGenJetTau2=0;
   LorentzVector *sGenTau1=0, *sGenTau2=0;
-
-  LorentzVector *sRecoB1=0, *sRecoB2=0;
-  LorentzVector *sGenJetB1=0, *sGenJetB2=0;
-  LorentzVector *sGenB1=0, *sGenB2=0;
-
-  LorentzVector *sRecoJet=0;
+  LorentzVector *sRecoJet1=0, *sRecoJet2=0;
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
@@ -135,28 +123,21 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   outTree->Branch("eventType",      &eventType,      "eventType/i");    // event type (0=signal, 1=tt, 2=zh, 3=other)
   outTree->Branch("tauCat1",        &tauCat1,        "tauCat1/i");      // leading tau final state - jet, muon, electron
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
-  outTree->Branch("bTag1",          &bTag1,          "bTag1/i");        // leading b-jet tag from delphes
-  outTree->Branch("bTag2",          &bTag2,          "bTag2/i");        // second b-jet tag from delphes
   outTree->Branch("tFake1",         &tFake1,         "tFake1/i");    
   outTree->Branch("tFake2",         &tFake2,         "tFake2/i");    
-  outTree->Branch("bFake1",         &bFake1,         "bFake1/i");    
-  outTree->Branch("bFake2",         &bFake2,         "bFake2/i");    
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
-  outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
+  outTree->Branch("dEta",           &dEta,           "dEta/f");         // delta Eta
+  outTree->Branch("mJJ",            &mJJ,            "mJJ/f") ;         // mass(jets)
+  //outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
   outTree->Branch("sGenTau1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau1);      // 4-vector for generator leading tau
   outTree->Branch("sGenTau2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau2);      // 4-vector for generator second tau
-  outTree->Branch("sGenB1",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB1);        // 4-vector for generator leading b-jet
-  outTree->Branch("sGenB2",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB2);        // 4-vector for generator second b-jet
   outTree->Branch("sGenJetTau1",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetTau1);   // 4-vector for generator leading tau
   outTree->Branch("sGenJetTau2",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetTau2);   // 4-vector for generator second tau
-  outTree->Branch("sGenJetB1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB1);     // 4-vector for generator leading b-jet
-  outTree->Branch("sGenJetB2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB2);     // 4-vector for generator second b-jet
   outTree->Branch("sRecoTau1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau1);     // 4-vector for reconstructed leading tau
   outTree->Branch("sRecoTau2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau2);     // 4-vector for reconstructed second tau
-  outTree->Branch("sRecoB1",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB1);       // 4-vector for reconstructed leading b-jet
-  outTree->Branch("sRecoB2",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB2);       // 4-vector for reconstructed second b-jet
-  outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector for reconstructed extra jet
+  outTree->Branch("sRecoJet1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet1);     // 4-vector for reconstructed leading forward-jet
+  outTree->Branch("sRecoJet2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet2);     // 4-vector for reconstructed second forward-jet
 
   // define placeholder vector for things that don't exist
   LorentzVector nothing(999,999,0,999);
@@ -168,30 +149,24 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     // RESET
     // ********************
     
-    iB1=-1; iB2=-1; iT1=-1; iT2=-1;
+    iJet1=-1; iJet2=-1; iT1=-1; iT2=-1;
     iGenTau1=-1;    iGenTau2=-1;
-    iGenB1=-1;      iGenB2=-1;
     iGenJetTau1=-1; iGenJetTau2=-1;
-    iGenJetB1=-1;   iGenJetB2=-1;
-    iExtra=-1;
-    tauCat1=-1; tauCat2=-1; bTag1=-1; bTag2=-1;
-    tFake1=2; tFake2=2; bFake1=2; bFake2=2;
+    tauCat1=-1; tauCat2=-1;
+    tFake1=2; tFake2=2;
     eventType=-1;
 
     jetTau1=0; jetTau2=0; eleTau=0; muTau=0;
-    jetB1=0;   jetB2=0; extraJet=0;
-    genTau1=0; genTau2=0; genB1=0;  genB2=0;
-    genJetB1=0; genJetB2=0; genJetTau1=0; genJetTau2=0;
-    sGenTau1=0; sGenTau2=0; sGenB1=0;  sGenB2=0;
-    sGenJetB1=0; sGenJetB2=0; sGenJetTau1=0; sGenJetTau2=0;
-    sRecoJet=0;
+    jet1=0;   jet2=0;
+    genTau1=0; genTau2=0;
+    genJetTau1=0; genJetTau2=0;
+    sGenTau1=0; sGenTau2=0;
+    sRecoJet1=0; sRecoJet2=0;
 
     // ********************
     // EVENT WEIGHT
     // ********************
 
-    // comment out following line for di-higgs samples
-    //event = (LHEFEvent*) branchEvent->At(0);
     eventWeight = 1;
     if (branchEvent) {
       event = (LHEFEvent*) branchEvent->At(0);
@@ -208,12 +183,12 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
+      if (jet->TauTag==0) continue;
       if (fabs(jet->Eta)>4.0) continue;
       if (jet->PT<25) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
-      if (jet->TauTag==0) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
 
@@ -242,77 +217,37 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       }
     } // end reco jet loop
 
+    // get VBF jets
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
-      if (fabs(jet->Eta)>4.0) continue;
+      if (fabs(jet->Eta)>4.7) continue;
       if (jet->PT<25) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
-      if (jet->BTag==0) continue;
+      if ((jet1)&&(deltaR(jet->Eta, jet1->Eta, jet->Phi, jet1->Phi) < MAX_MATCH_DIST)) continue;
+      if ((jet2)&&(deltaR(jet->Eta, jet2->Eta, jet->Phi, jet2->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
-
-      if (iB1==-1) {
-	iB1=iJet; 
-	jetB1 = (Jet*) branchJet->At(iB1); 
-	bTag1=jetB1->BTag;
+      
+      if (iJet1==-1) {
+	iJet1=iJet; 
+	jet1 = (Jet*) branchJet->At(iJet1); 
       }
-      else if (jet->PT > jetB1->PT) {
-	iB2=iB1; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=bTag1; 
-	iB1=iJet;
-	jetB1 = (Jet*) branchJet->At(iB1);
-	bTag1=jetB1->BTag;
+      else if (jet->PT > jet1->PT) {
+	iJet2=iJet1; 
+	jet2 = (Jet*) branchJet->At(iJet2); 
+	iJet1=iJet;
+	jet1 = (Jet*) branchJet->At(iJet1);
       }
-      else if (iB2==-1) { 
-	iB2=iJet; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=jetB2->BTag;
+      else if (iJet2==-1) { 
+	iJet2=iJet; 
+	jet2 = (Jet*) branchJet->At(iJet2); 
       }
-      else if (jet->PT > jetB2->PT) { 
-	iB2=iJet; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=jetB2->BTag;
-      }
-    }
-
-    for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
-      jet = (Jet*) branchJet->At(iJet);
-
-      if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
-
-      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
-
-      if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetB1)&&(deltaR(jet->Eta, jetB1->Eta, jet->Phi, jetB1->Phi) < MAX_MATCH_DIST)) continue;
-
-      if (iB1==-1) {
-	iB1=iJet; 
-	jetB1 = (Jet*) branchJet->At(iB1); 
-	bTag1=jetB1->BTag;
-      }
-      else if ((jet->PT > jetB1->PT) && ((bTag1==0)||(bTag1==-1))) {
-	iB2=iB1; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=bTag1; 
-	iB1=iJet;
-	jetB1 = (Jet*) branchJet->At(iB1);
-	bTag1=jetB1->BTag;
-      }
-      else if (iB2==-1) { 
-	iB2=iJet; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=jetB2->BTag;
-      }
-      else if (jet->PT > jetB2->PT) { 
-	iB2=iJet; 
-	jetB2 = (Jet*) branchJet->At(iB2); 
-	bTag2=jetB2->BTag;
+      else if (jet->PT > jet2->PT) { 
+	iJet2=iJet; 
+	jet2 = (Jet*) branchJet->At(iJet2); 
       }
     }
 
@@ -386,52 +321,65 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       }
     }
 
-    if ((iT1==-1)||(iT2==-1)||(iB1==-1)||(iB2==-1)) continue;
+    if ((iT1==-1)||(iT2==-1)||(iJet1==-1)||(iJet2==-1)) continue;
+
+    nCentral=0;
+
+    cout << endl;
+    cout << "New event" << endl;
+    cout << endl;
+    if (jetTau1 && jetTau2) cout << jetTau1->Eta << " " << jetTau1->PT << ", " << jetTau2->Eta << " " << jetTau2->PT << endl;
+    cout << jet1->Eta << " " << jet1->PT << ", " << jet2->Eta << " " << jet2->PT << endl;
+    cout << "---" << endl;
 
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
 
-      if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
-
-      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
-
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetB1)&&(deltaR(jet->Eta, jetB1->Eta, jet->Phi, jetB1->Phi) < MAX_MATCH_DIST)) continue;
-      if ((jetB2)&&(deltaR(jet->Eta, jetB2->Eta, jet->Phi, jetB2->Phi) < MAX_MATCH_DIST)) continue;
 
-      if (iExtra==-1) {
-	iExtra=iJet;
-	extraJet=(Jet*)branchJet->At(iExtra);
-      }
-      else if (jet->PT > extraJet->PT) {
-	iExtra=iJet;
-	extraJet=(Jet*)branchJet->At(iExtra);
-      }
-    }
+      if (fabs(jet->Eta)>4.7) continue;
+      if (jet->PT<25) continue;
 
-    // fill 4-vector for leading b-jet
-    LorentzVector vRecoB1(0,0,0,0);
-    if (jetB1) {
-      vRecoB1.SetPt(jetB1->PT);
-      vRecoB1.SetEta(jetB1->Eta);
-      vRecoB1.SetPhi(jetB1->Phi);
-      vRecoB1.SetM(jetB1->Mass);
-      sRecoB1 = &vRecoB1;
+      if ( (jet1->Eta > jet2->Eta) && (jet->Eta > jet2->Eta) && (jet1->Eta > jet->Eta) ) {
+	nCentral++;
+	cout << "central! " << jet->PT << " " << jet->Eta << endl;
+      }
+      else if ( (jet2->Eta > jet1->Eta) && (jet->Eta > jet1->Eta) && (jet2->Eta > jet->Eta) ) {
+	nCentral++;
+	cout << "central! " << jet->PT << " " << jet->Eta << endl;
+      }
     }
-    else sRecoB1 = &nothing;
-    // fill 4-vector for second b-jet
-    LorentzVector vRecoB2(0,0,0,0);
-    if (jetB2) {
-      vRecoB2.SetPt(jetB2->PT);
-      vRecoB2.SetEta(jetB2->Eta);
-      vRecoB2.SetPhi(jetB2->Phi);
-      vRecoB2.SetM(jetB2->Mass);
-      sRecoB2 = &vRecoB2;
+      
+      if (nCentral>0) continue;
+
+    // fill 4-vector for leading jet
+    LorentzVector vReco1(0,0,0,0);
+    if (jet1) {
+      vReco1.SetPt(jet1->PT);
+      vReco1.SetEta(jet1->Eta);
+      vReco1.SetPhi(jet1->Phi);
+      vReco1.SetM(jet1->Mass);
+      sRecoJet1 = &vReco1;
     }
-    else sRecoB2 = &nothing;
-    
+    else sRecoJet1 = &nothing;
+    // fill 4-vector for second jet
+    LorentzVector vReco2(0,0,0,0);
+    if (jet2) {
+      vReco2.SetPt(jet2->PT);
+      vReco2.SetEta(jet2->Eta);
+      vReco2.SetPhi(jet2->Phi);
+      vReco2.SetM(jet2->Mass);
+      sRecoJet2 = &vReco2;
+    }
+    else sRecoJet2 = &nothing;
+
+    if (!jet1 || !jet2) continue;
+    LorentzVector vJJ = vReco1+vReco2;
+    mJJ=vJJ.M();
+
+    dEta=jet2->Eta-jet1->Eta;
+
     // fill 4-vector for leading tau
     LorentzVector vRecoTau1(0,0,0,0);
     if (jetTau1) {
@@ -482,16 +430,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     }
     else sRecoTau2 = &nothing;
 
-    LorentzVector vRecoJet(0,0,0,0);
-    if (extraJet) {
-      vRecoJet.SetPt(extraJet->PT);
-      vRecoJet.SetEta(extraJet->Eta);
-      vRecoJet.SetPhi(extraJet->Phi);
-      vRecoJet.SetM(extraJet->Mass);
-      sRecoJet = &vRecoJet;
-    }
-    else sRecoJet = &nothing;
-
     // ********************
     // GEN PARTICLES
     // ********************
@@ -517,26 +455,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
 	  genTau2 = (GenParticle*) branchParticle->At(iGenTau2);
 	}
       }
-
-      if ( fabs(genParticle->PID) == B_ID_CODE ) { // b switch
-
-	if ( (bTag1 != -1) && ( deltaR(genParticle->Eta, vRecoB1.Eta(), genParticle->Phi, vRecoB1.Phi()) < MAX_MATCH_DIST )) {
-	  iGenB1 = iParticle;
-	  genB1 = (GenParticle*) branchParticle->At(iGenB1);
-	}
-	else if ( (bTag2 != -1) && ( deltaR(genParticle->Eta, vRecoB2.Eta(), genParticle->Phi, vRecoB2.Phi()) < MAX_MATCH_DIST )) {
-	  iGenB2 = iParticle;
-	  genB2 = (GenParticle*) branchParticle->At(iGenB2);
-	}
-	else if ( (bTag1 == -1) && (iGenB1==-1) ) { 
-	  iGenB1 = iParticle;
-	  genB1 = (GenParticle*) branchParticle->At(iGenB1);
-	}
-	else if ( (bTag2 == -1) && (iGenB1==-2) ) { 
-	  iGenB2 = iParticle;
-	  genB2 = (GenParticle*) branchParticle->At(iGenB2);
-	}
-      }
     }
 
     LorentzVector vGenTau1(0,0,0,0);
@@ -559,26 +477,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     }
     else sGenTau2 = &nothing;
 
-    LorentzVector vGenB1(0,0,0,0);
-    if (genB1) {
-      vGenB1.SetPt(genB1->PT);
-      vGenB1.SetEta(genB1->Eta);
-      vGenB1.SetPhi(genB1->Phi);
-      vGenB1.SetM(genB1->Mass);
-      sGenB1 = &vGenB1;
-    }
-    else sGenB1 = &nothing;
-
-    LorentzVector vGenB2(0,0,0,0);
-    if (genB2) {
-      vGenB2.SetPt(genB2->PT);
-      vGenB2.SetEta(genB2->Eta);
-      vGenB2.SetPhi(genB2->Phi);
-      vGenB2.SetM(genB2->Mass);
-      sGenB2 = &vGenB2;
-    }
-    else sGenB2 = &nothing;
-
     if ((sGenTau1->Pt()!=999)&&(tauCat1!=0)) { tFake1=0; }
     else if (tauCat1==1) { tFake1=1; }
     else {tFake1=2;}
@@ -587,29 +485,11 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     else if (tauCat2==1) { tFake2=1; }
     else {tFake2=2;}
 
-    if ((sGenB1->Pt()!=999)&&(bTag1!=0)) { bFake1=0; }
-    else if (bTag1!=0) { bFake1=1; }
-    else {bFake1=2;}
-
-    if ((sGenB2->Pt()!=999)&&(bTag2!=0)) { bFake2=0; }
-    else if (bTag2!=0) { bFake2=1; }
-    else {bFake2=2;}
-
     // match generator level jets to generator particles
     for (Int_t iJet=0; iJet<branchGenJet->GetEntries(); iJet++) { // generator level jet loop
       genJet = (Jet*) branchGenJet->At(iJet);
 
-      if ((genB1) && (deltaR(genJet->Eta, genB1->Eta, genJet->Phi, genB1->Phi) < MAX_MATCH_DIST) ) {
-	iGenJetB1=iJet;
-	genJetB1 = (Jet*) branchGenJet->At(iGenJetB1);
-      }
-
-      else if ((genB2) && (deltaR(genJet->Eta, genB2->Eta, genJet->Phi, genB2->Phi) < MAX_MATCH_DIST) ) {
-	iGenJetB2=iJet;
-	genJetB2 = (Jet*) branchGenJet->At(iGenJetB2);
-      }
-
-      else if ((genTau1) && (deltaR(genJet->Eta, genTau1->Eta, genJet->Phi, genTau1->Phi) < MAX_MATCH_DIST) ) {
+      if ((genTau1) && (deltaR(genJet->Eta, genTau1->Eta, genJet->Phi, genTau1->Phi) < MAX_MATCH_DIST) ) {
 	iGenJetTau1=iJet;
 	genJetTau1 = (Jet*) branchGenJet->At(iGenJetTau1);
       }
@@ -641,25 +521,6 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     }
     else sGenJetTau2 = &nothing;
 
-    LorentzVector vGenJetB1(0,0,0,0);
-    if (genJetB1) {
-      vGenJetB1.SetPt(genJetB1->PT);
-      vGenJetB1.SetEta(genJetB1->Eta);
-      vGenJetB1.SetPhi(genJetB1->Phi);
-      vGenJetB1.SetM(genJetB1->Mass);
-      sGenJetB1 = &vGenJetB1;
-    }
-    else sGenJetB1 = &nothing;
-
-    LorentzVector vGenJetB2(0,0,0,0);
-    if (genJetB2) {
-      vGenJetB2.SetPt(genJetB2->PT);
-      vGenJetB2.SetEta(genJetB2->Eta);
-      vGenJetB2.SetPhi(genJetB2->Phi);
-      vGenJetB2.SetM(genJetB2->Mass);
-      sGenJetB2 = &vGenJetB2;
-    }
-    else sGenJetB2 = &nothing;
 
     // ********************
     // MT2 CALC
@@ -670,7 +531,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     met=missET->MET;
     metPhi=missET->Phi;
 
-    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
+    /*    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
     //if (0) {
 
       tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
@@ -713,7 +574,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     }
     
     else { mt2 = 99999; }
-
+    */
     // ********************
     // BKGD SORTING
     // ********************
