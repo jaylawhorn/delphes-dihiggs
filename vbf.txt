@@ -1,5 +1,0 @@
-/afs/cern.ch/work/k/klawhorn/vbf_ntuples/vbf_select.root
-/afs/cern.ch/work/k/klawhorn/vbf_ntuples/Bjj-vbf-4p-0-700-v1510_14TEV.root
-/afs/cern.ch/work/k/klawhorn/vbf_ntuples/Bjj-vbf-4p-1400-2300-v1510_14TEV.root
-/afs/cern.ch/work/k/klawhorn/vbf_ntuples/Bjj-vbf-4p-2300-3400_14TEV.root
-/afs/cern.ch/work/k/klawhorn/vbf_ntuples/Bjj-vbf-4p-700-1400-v1510_14TEV.root
