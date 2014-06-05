@@ -58,7 +58,7 @@ do
       head -7 vbf_outline.sh > ${array[0]}_run.sh
       while read line2
       do
-	  echo root -l -q -b vbf.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,\\\""/afs/cern.ch/work/j/jlawhorn/public/vbf/ntuples/"${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
+	  echo root -l -q -b selection.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,\\\""/afs/cern.ch/work/j/jlawhorn/public/vbf/ntuples/"${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
 	  n=$((n+1))
 	      
       done < ${array[0]}.txt

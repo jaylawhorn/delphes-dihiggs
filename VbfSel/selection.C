@@ -17,7 +17,6 @@
 #include "modules/Delphes.h"
 #include "ExRootAnalysis/ExRootTreeReader.h"
 #include "classes/DelphesClasses.h"
-#include "mt2.hh"
 #endif
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVector;
@@ -26,7 +25,7 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
 
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
 
-void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upgrade/delphes/test4/Bjj-vbf-4p-0-700-v1510_14TEV_152178247_PhaseII_Conf4_140PileUp.root",
+void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upgrade/delphes/test4/Bjj-vbf-4p-0-700-v1510_14TEV_152178247_PhaseII_Conf4_140PileUp.root",
 	 const Float_t xsec=1.0,
 	 const Float_t totalEvents=100,
 	 const TString outputfile="test.root") {
@@ -51,18 +50,6 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 
   // tau decay modes
   enum { hadron=1, electron, muon };
-
-  // setup mt2 minimizer
-  //ROOT::Math::Minimizer *min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "");
-  //min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-  //min->SetTolerance(10.0);
-  //min->SetPrintLevel(0);
-
-  //TVector2 tau1(0,0), tau2(0,0), mpt(0,0);
-  //TVector2 b1(0,0), b2(0,0);
-  //Float_t mTau1=0, mTau2=0;
-  //Float_t mB1=0, mB2=0;
-  //Double_t mt2=0;
 
   // read input input file
   TChain chain("Delphes");
@@ -105,8 +92,13 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 
   Int_t eventType;
   Float_t eventWeight;
+
+  Float_t ptTau1, ptTau2, ptJet1, ptJet2;
+  Float_t etaTau1, etaTau2, etaJet1, etaJet2;
+  Float_t phiTau1, phiTau2, phiJet1, phiJet2;
+
   Float_t met, metPhi;
-  Float_t dEta, mJJ;
+  Float_t dEta, mJJ, mTT;
   Int_t tauCat1=0, tauCat2=0;
   Int_t tFake1=0, tFake2=0;
 
@@ -125,11 +117,23 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
   outTree->Branch("tFake1",         &tFake1,         "tFake1/i");    
   outTree->Branch("tFake2",         &tFake2,         "tFake2/i");    
+  outTree->Branch("ptTau1",         &ptTau1,         "ptTau1/f");       // pt(Tau1)                                                             
+  outTree->Branch("etaTau1",        &etaTau1,        "etaTau1/f");      // eta(Tau1)                                                            
+  outTree->Branch("phiTau1",        &phiTau1,        "phiTau1/f");      // phi(Tau1)                                                            
+  outTree->Branch("ptTau2",         &ptTau2,         "ptTau2/f");       // pt(Tau2)                                                             
+  outTree->Branch("etaTau2",        &etaTau2,        "etaTau2/f");      // eta(Tau2)                                                            
+  outTree->Branch("phiTau2",        &phiTau2,        "phiTau2/f");      // phi(Tau2)                                                            
+  outTree->Branch("ptJet1",         &ptJet1,         "ptJet1/f");       // pt(Jet1)                                                               
+  outTree->Branch("etaJet1",        &etaJet1,        "etaJet1/f");      // eta(Jet1)                                                              
+  outTree->Branch("phiJet1",        &phiJet1,        "phiJet1/f");      // phi(Jet1)                                                              
+  outTree->Branch("ptJet2",         &ptJet2,         "ptJet2/f");       // pt(Jet2)                                                               
+  outTree->Branch("etaJet2",        &etaJet2,        "etaJet2/f");      // eta(Jet2)                                                              
+  outTree->Branch("phiJet2",        &phiJet2,        "phiJet2/f");      // phi(Jet2)          
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
   outTree->Branch("dEta",           &dEta,           "dEta/f");         // delta Eta
   outTree->Branch("mJJ",            &mJJ,            "mJJ/f") ;         // mass(jets)
-  //outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
+  outTree->Branch("mTT",            &mTT,            "mTT/f") ;         // mass(tautau)
   outTree->Branch("sGenTau1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau1);      // 4-vector for generator leading tau
   outTree->Branch("sGenTau2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau2);      // 4-vector for generator second tau
   outTree->Branch("sGenJetTau1",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetTau1);   // 4-vector for generator leading tau
@@ -140,7 +144,7 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
   outTree->Branch("sRecoJet2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet2);     // 4-vector for reconstructed second forward-jet
 
   // define placeholder vector for things that don't exist
-  LorentzVector nothing(999,999,0,999);
+  LorentzVector nothing(-999,-999,0,-999);
 
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
@@ -155,6 +159,12 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
     tauCat1=-1; tauCat2=-1;
     tFake1=2; tFake2=2;
     eventType=-1;
+
+    mTT=-999; mJJ=-999; dEta=-999;
+    ptTau1=-999; etaTau1=-999; phiTau1=-999;
+    ptTau2=-999; etaTau2=-999; phiTau2=-999;
+    ptJet1=-999; etaJet1=-999; phiJet1=-999;
+    ptJet2=-999; etaJet2=-999; phiJet2=-999;
 
     jetTau1=0; jetTau2=0; eleTau=0; muTau=0;
     jet1=0;   jet2=0;
@@ -185,7 +195,7 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 
       if (jet->TauTag==0) continue;
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -222,7 +232,7 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       jet = (Jet*) branchJet->At(iJet);
 
       if (fabs(jet->Eta)>4.7) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -257,7 +267,7 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 	mu = (Muon*) branchMuon->At(iMuon);
 
 	if (fabs(mu->Eta)>4.0) continue;
-	if (mu->PT<25) continue;
+	if (mu->PT<30) continue;
 
 	if ((jetTau1)&&(deltaR(mu->Eta, jetTau1->Eta, mu->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(mu->Eta, jetTau2->Eta, mu->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -291,7 +301,7 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 	ele = (Electron*) branchElectron->At(iEle);
 
 	if (fabs(ele->Eta)>4.0) continue;
-	if (ele->PT<25) continue;
+	if (ele->PT<30) continue;
 
 	if ((jetTau1)&&(deltaR(ele->Eta, jetTau1->Eta, ele->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(ele->Eta, jetTau2->Eta, ele->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -325,12 +335,12 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
 
     nCentral=0;
 
-    cout << endl;
+    /*    cout << endl;
     cout << "New event" << endl;
     cout << endl;
     if (jetTau1 && jetTau2) cout << jetTau1->Eta << " " << jetTau1->PT << ", " << jetTau2->Eta << " " << jetTau2->PT << endl;
     cout << jet1->Eta << " " << jet1->PT << ", " << jet2->Eta << " " << jet2->PT << endl;
-    cout << "---" << endl;
+    cout << "---" << endl;*/
 
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
@@ -339,19 +349,19 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
 
       if (fabs(jet->Eta)>4.7) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if ( (jet1->Eta > jet2->Eta) && (jet->Eta > jet2->Eta) && (jet1->Eta > jet->Eta) ) {
 	nCentral++;
-	cout << "central! " << jet->PT << " " << jet->Eta << endl;
+	//cout << "central! " << jet->PT << " " << jet->Eta << endl;
       }
       else if ( (jet2->Eta > jet1->Eta) && (jet->Eta > jet1->Eta) && (jet2->Eta > jet->Eta) ) {
 	nCentral++;
-	cout << "central! " << jet->PT << " " << jet->Eta << endl;
+	//cout << "central! " << jet->PT << " " << jet->Eta << endl;
       }
     }
       
-      if (nCentral>0) continue;
+    if (nCentral>0) continue;
 
     // fill 4-vector for leading jet
     LorentzVector vReco1(0,0,0,0);
@@ -361,6 +371,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vReco1.SetPhi(jet1->Phi);
       vReco1.SetM(jet1->Mass);
       sRecoJet1 = &vReco1;
+      ptJet1=jet1->PT;
+      etaJet1=jet1->Eta;
+      phiJet1=jet1->Phi;
     }
     else sRecoJet1 = &nothing;
     // fill 4-vector for second jet
@@ -371,6 +384,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vReco2.SetPhi(jet2->Phi);
       vReco2.SetM(jet2->Mass);
       sRecoJet2 = &vReco2;
+      ptJet2=jet2->PT;
+      etaJet2=jet2->Eta;
+      phiJet2=jet2->Phi;
     }
     else sRecoJet2 = &nothing;
 
@@ -388,6 +404,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau1.SetPhi(jetTau1->Phi);
       vRecoTau1.SetM(jetTau1->Mass);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=jetTau1->PT;
+      etaTau1=jetTau1->Eta;
+      phiTau1=jetTau1->Phi;
     }
     else if ((muTau)&&(tauCat1==muon)) {
       vRecoTau1.SetPt(muTau->PT);
@@ -395,6 +414,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau1.SetPhi(muTau->Phi);
       vRecoTau1.SetM(MUON_MASS);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=muTau->PT;
+      etaTau1=muTau->Eta;
+      phiTau1=muTau->Phi;
     }
     else if ((eleTau)&&(tauCat1==electron)) {
       vRecoTau1.SetPt(eleTau->PT);
@@ -402,6 +424,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau1.SetPhi(eleTau->Phi);
       vRecoTau1.SetM(ELE_MASS);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=eleTau->PT;
+      etaTau1=eleTau->Eta;
+      phiTau1=eleTau->Phi;
     }
     else sRecoTau1 = &nothing;
 
@@ -413,6 +438,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau2.SetPhi(jetTau2->Phi);
       vRecoTau2.SetM(jetTau2->Mass);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=jetTau2->PT;
+      etaTau2=jetTau2->Eta;
+      phiTau2=jetTau2->Phi;
     }
     else if ((muTau)&&(tauCat2==muon)) {
       vRecoTau2.SetPt(muTau->PT);
@@ -420,6 +448,9 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau2.SetPhi(muTau->Phi);
       vRecoTau2.SetM(MUON_MASS);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=muTau->PT;
+      etaTau2=muTau->Eta;
+      phiTau2=muTau->Phi;
     }
     else if ((eleTau)&&(tauCat2==electron)) {
       vRecoTau2.SetPt(eleTau->PT);
@@ -427,8 +458,14 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
       vRecoTau2.SetPhi(eleTau->Phi);
       vRecoTau2.SetM(ELE_MASS);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=eleTau->PT;
+      etaTau2=eleTau->Eta;
+      phiTau2=eleTau->Phi;
     }
     else sRecoTau2 = &nothing;
+
+    LorentzVector vTT = vRecoTau1+vRecoTau2;
+    mTT=vTT.M();
 
     // ********************
     // GEN PARTICLES
@@ -521,60 +558,11 @@ void vbf(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/group/upg
     }
     else sGenJetTau2 = &nothing;
 
-
-    // ********************
-    // MT2 CALC
-    // ********************
-
     missET = (MissingET*) branchMET->At(0);
 
     met=missET->MET;
     metPhi=missET->Phi;
 
-    /*    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
-    //if (0) {
-
-      tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
-      tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());
-      mTau1=sRecoTau1->M();
-      mTau2=sRecoTau2->M();
-      
-      b1.SetMagPhi(sRecoB1->Pt(), sRecoB1->Phi());
-      b2.SetMagPhi(sRecoB2->Pt(), sRecoB2->Phi());
-      mB1=sRecoB1->M();
-      mB2=sRecoB2->M();
-      
-      mpt.SetMagPhi(met, metPhi);
-      
-      TVector2 sumPt = tau1+tau2+mpt;
-      
-      smT2 testing = smT2();
-      testing.SetB1(b1);
-      testing.SetB2(b2);
-      testing.SetMPT(sumPt);
-      testing.SetMB1(mB1);
-      testing.SetMB2(mB2);
-      testing.SetMT1(mTau1);
-      testing.SetMT2(mTau2);
-
-      TVector2 c1=sumPt;
-      TVector2 c2=sumPt-c1;
-      
-      ROOT::Math::Functor f(testing,2);
-      double step[2] = {0.1, 0.1};
-      double variable[2] = { 0.5*c1.Mod(), 0.0 };
-      
-      min->SetFunction(f);
-      min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, sumPt.Mod());
-      min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
-      
-      min->Minimize();
-      
-      mt2 = min->MinValue();
-    }
-    
-    else { mt2 = 99999; }
-    */
     // ********************
     // BKGD SORTING
     // ********************
