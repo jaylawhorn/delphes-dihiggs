@@ -59,11 +59,12 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   min->SetTolerance(10.0);
   min->SetPrintLevel(0);
 
-  TVector2 tau1(0,0), tau2(0,0), mpt(0,0);
+  TVector2 tau1(0,0), tau2(0,0), mpt(0,0), ppmpt(0,0);
   TVector2 b1(0,0), b2(0,0);
   Float_t mTau1=0, mTau2=0;
   Float_t mB1=0, mB2=0;
   Double_t mt2=0;
+  Double_t ppMt2=0;
 
   // read input input file
   TChain chain("Delphes");
@@ -166,6 +167,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   outTree->Branch("ppMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
   outTree->Branch("ppMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
+  outTree->Branch("ppMt2",          &ppMt2,          "ppMt2/D");        // PUPPI "stransverse mass"
   outTree->Branch("mTT",            &mTT,            "mTT/f");          // mass(tautau)
   outTree->Branch("mJJ",            &mJJ,            "mJJ/f");          // mass(jetjet)
   outTree->Branch("mHH",            &mHH,            "mHH/f");          // mass(HH)
@@ -740,8 +742,8 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     ppMet=missET->MET;
     ppMetPhi=missET->Phi;
 
-    //if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
-    if (0) {
+    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
+    //if (0) {
 
       tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
       tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());
@@ -754,22 +756,24 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       mB2=sRecoB2->M();
       
       mpt.SetMagPhi(met, metPhi);
+      ppmpt.SetMagPhi(ppMet, ppMetPhi);
       
       TVector2 sumPt = tau1+tau2+mpt;
+      TVector2 ppSumPt = tau1+tau2+ppmpt;
       
-      smT2 testing = smT2();
-      testing.SetB1(b1);
-      testing.SetB2(b2);
-      testing.SetMPT(sumPt);
-      testing.SetMB1(mB1);
-      testing.SetMB2(mB2);
-      testing.SetMT1(mTau1);
-      testing.SetMT2(mTau2);
+      smT2 calcmt2 = smT2();
+      calcmt2.SetB1(b1);
+      calcmt2.SetB2(b2);
+      calcmt2.SetMPT(sumPt);
+      calcmt2.SetMB1(mB1);
+      calcmt2.SetMB2(mB2);
+      calcmt2.SetMT1(mTau1);
+      calcmt2.SetMT2(mTau2);
 
       TVector2 c1=sumPt;
       TVector2 c2=sumPt-c1;
       
-      ROOT::Math::Functor f(testing,2);
+      ROOT::Math::Functor f(calcmt2,2);
       double step[2] = {0.1, 0.1};
       double variable[2] = { 0.5*c1.Mod(), 0.0 };
       
@@ -778,11 +782,29 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
       
       min->Minimize();
-      
       mt2 = min->MinValue();
+
+      calcmt2.SetMPT(ppSumPt);
+      c1=ppSumPt;
+      c2=sumPt-c1;
+
+      ROOT::Math::Functor f2(calcmt2,2);
+      step[0] = 0.1; step[1] = 0.1;
+      variable[0] = 0.5*c1.Mod(); variable[1] = 0.0;
+
+      min->SetFunction(f2);
+      min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, ppSumPt.Mod());
+      min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
+      
+      min->Minimize();
+      ppMt2 = min->MinValue();
+            
     }
     
-    else { mt2 = 99999; }
+    else { 
+      mt2 = 99999;
+      ppMt2 = 99999;
+    }
 
     // ********************
     // BKGD SORTING
