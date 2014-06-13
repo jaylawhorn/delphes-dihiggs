@@ -75,6 +75,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   TClonesArray *branchElectron = treeReader->UseBranch("Electron");
   TClonesArray *branchMuon = treeReader->UseBranch("Muon");
   TClonesArray *branchMET =treeReader->UseBranch("MissingET");
+  TClonesArray *branchPuppiMET =treeReader->UseBranch("PuppiMissingET");
 
   TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
@@ -111,11 +112,18 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   Int_t eventType;
   Float_t eventWeight;
   Float_t met, metPhi;
+  Float_t ppMet, ppMetPhi;
   Int_t tauCat1=0, tauCat2=0;
   Int_t bTag1=0, bTag2=0;
 
   Int_t tFake1=0, tFake2=0;
   Int_t bFake1=0, bFake2=0;
+
+  Float_t ptTau1, ptTau2, ptB1, ptB2;
+  Float_t etaTau1, etaTau2, etaB1, etaB2;
+  Float_t phiTau1, phiTau2, phiB1, phiB2;
+
+  Float_t mTT=0, mJJ=0, mHH=0, ptHH=0;
 
   LorentzVector *sRecoTau1=0, *sRecoTau2=0;
   LorentzVector *sGenJetTau1=0, *sGenJetTau2=0;
@@ -137,13 +145,31 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
   outTree->Branch("bTag1",          &bTag1,          "bTag1/i");        // leading b-jet tag from delphes
   outTree->Branch("bTag2",          &bTag2,          "bTag2/i");        // second b-jet tag from delphes
-  outTree->Branch("tFake1",         &tFake1,         "tFake1/i");    
-  outTree->Branch("tFake2",         &tFake2,         "tFake2/i");    
-  outTree->Branch("bFake1",         &bFake1,         "bFake1/i");    
-  outTree->Branch("bFake2",         &bFake2,         "bFake2/i");    
+  outTree->Branch("tFake1",         &tFake1,         "tFake1/i");       // is tau1 matched to gen tau?
+  outTree->Branch("tFake2",         &tFake2,         "tFake2/i");       // is tau2 matched to gen tau?
+  outTree->Branch("bFake1",         &bFake1,         "bFake1/i");       // is b1 matched to gen b?
+  outTree->Branch("bFake2",         &bFake2,         "bFake2/i");       // is b2 matched to gen b?
+  outTree->Branch("ptTau1",         &ptTau1,         "ptTau1/f");       // pt(Tau1)
+  outTree->Branch("etaTau1",        &etaTau1,        "etaTau1/f");      // eta(Tau1)
+  outTree->Branch("phiTau1",        &phiTau1,        "phiTau1/f");      // phi(Tau1)
+  outTree->Branch("ptTau2",         &ptTau2,         "ptTau2/f");       // pt(Tau2)
+  outTree->Branch("etaTau2",        &etaTau2,        "etaTau2/f");      // eta(Tau2)
+  outTree->Branch("phiTau2",        &phiTau2,        "phiTau2/f");      // phi(Tau2)
+  outTree->Branch("ptB1",           &ptB1,           "ptB1/f");         // pt(B1)
+  outTree->Branch("etaB1",          &etaB1,          "etaB1/f");        // eta(B1)
+  outTree->Branch("phiB1",          &phiB1,          "phiB1/f");        // phi(B1)
+  outTree->Branch("ptB2",           &ptB2,           "ptB2/f");         // pt(B2)
+  outTree->Branch("etaB2",          &etaB2,          "etaB2/f");        // eta(B2)
+  outTree->Branch("phiB2",          &phiB2,          "phiB2/f");        // phi(B2)
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
+  outTree->Branch("ppMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
+  outTree->Branch("ppMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass"
+  outTree->Branch("mTT",            &mTT,            "mTT/f");          // mass(tautau)
+  outTree->Branch("mJJ",            &mJJ,            "mJJ/f");          // mass(jetjet)
+  outTree->Branch("mHH",            &mHH,            "mHH/f");          // mass(HH)
+  outTree->Branch("ptHH",           &ptHH,           "ptHH/f");         // pt(HH)
   outTree->Branch("sGenTau1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau1);      // 4-vector for generator leading tau
   outTree->Branch("sGenTau2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau2);      // 4-vector for generator second tau
   outTree->Branch("sGenB1",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB1);        // 4-vector for generator leading b-jet
@@ -159,7 +185,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   outTree->Branch("sRecoJet",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet);      // 4-vector for reconstructed extra jet
 
   // define placeholder vector for things that don't exist
-  LorentzVector nothing(999,999,0,999);
+  LorentzVector nothing(-999,-999,0,-999);
 
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
@@ -167,15 +193,21 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     // ********************
     // RESET
     // ********************
-    
+
     iB1=-1; iB2=-1; iT1=-1; iT2=-1;
     iGenTau1=-1;    iGenTau2=-1;
     iGenB1=-1;      iGenB2=-1;
     iGenJetTau1=-1; iGenJetTau2=-1;
     iGenJetB1=-1;   iGenJetB2=-1;
     iExtra=-1;
-    tauCat1=-1; tauCat2=-1; bTag1=-1; bTag2=-1;
+    met=0; metPhi=0; ppMet=0; ppMetPhi=0;
+    tauCat1=0; tauCat2=0; bTag1=0; bTag2=0;
     tFake1=2; tFake2=2; bFake1=2; bFake2=2;
+    mTT=-999; mJJ=-999; mHH=-999; ptHH=-999;
+    ptTau1=-999; etaTau1=-999; phiTau1=-999;
+    ptTau2=-999; etaTau2=-999; phiTau2=-999;
+    ptB1=-999; etaB1=-999; phiB1=-999;
+    ptB2=-999; etaB2=-999; phiB2=-999;
     eventType=-1;
 
     jetTau1=0; jetTau2=0; eleTau=0; muTau=0;
@@ -209,7 +241,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       jet = (Jet*) branchJet->At(iJet);
 
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -246,7 +278,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       jet = (Jet*) branchJet->At(iJet);
 
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -283,7 +315,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       jet = (Jet*) branchJet->At(iJet);
 
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -322,7 +354,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
 	mu = (Muon*) branchMuon->At(iMuon);
 
 	if (fabs(mu->Eta)>4.0) continue;
-	if (mu->PT<25) continue;
+	if (mu->PT<30) continue;
 
 	if ((jetTau1)&&(deltaR(mu->Eta, jetTau1->Eta, mu->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(mu->Eta, jetTau2->Eta, mu->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -356,7 +388,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
 	ele = (Electron*) branchElectron->At(iEle);
 
 	if (fabs(ele->Eta)>4.0) continue;
-	if (ele->PT<25) continue;
+	if (ele->PT<30) continue;
 
 	if ((jetTau1)&&(deltaR(ele->Eta, jetTau1->Eta, ele->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(ele->Eta, jetTau2->Eta, ele->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -392,7 +424,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       jet = (Jet*) branchJet->At(iJet);
 
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<25) continue;
+      if (jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -419,8 +451,12 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoB1.SetPhi(jetB1->Phi);
       vRecoB1.SetM(jetB1->Mass);
       sRecoB1 = &vRecoB1;
+      ptB1=jetB1->PT;
+      etaB1=jetB1->Eta;
+      phiB1=jetB1->Phi;
     }
     else sRecoB1 = &nothing;
+
     // fill 4-vector for second b-jet
     LorentzVector vRecoB2(0,0,0,0);
     if (jetB2) {
@@ -429,9 +465,12 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoB2.SetPhi(jetB2->Phi);
       vRecoB2.SetM(jetB2->Mass);
       sRecoB2 = &vRecoB2;
+      ptB2=jetB2->PT;
+      etaB2=jetB2->Eta;
+      phiB2=jetB2->Phi;
     }
     else sRecoB2 = &nothing;
-    
+
     // fill 4-vector for leading tau
     LorentzVector vRecoTau1(0,0,0,0);
     if (jetTau1) {
@@ -440,6 +479,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau1.SetPhi(jetTau1->Phi);
       vRecoTau1.SetM(jetTau1->Mass);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=jetTau1->PT;
+      etaTau1=jetTau1->Eta;
+      phiTau1=jetTau1->Phi;
     }
     else if ((muTau)&&(tauCat1==muon)) {
       vRecoTau1.SetPt(muTau->PT);
@@ -447,6 +489,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau1.SetPhi(muTau->Phi);
       vRecoTau1.SetM(MUON_MASS);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=muTau->PT;
+      etaTau1=muTau->Eta;
+      phiTau1=muTau->Phi;
     }
     else if ((eleTau)&&(tauCat1==electron)) {
       vRecoTau1.SetPt(eleTau->PT);
@@ -454,6 +499,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau1.SetPhi(eleTau->Phi);
       vRecoTau1.SetM(ELE_MASS);
       sRecoTau1 = &vRecoTau1;
+      ptTau1=eleTau->PT;
+      etaTau1=eleTau->Eta;
+      phiTau1=eleTau->Phi;
     }
     else sRecoTau1 = &nothing;
 
@@ -465,6 +513,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau2.SetPhi(jetTau2->Phi);
       vRecoTau2.SetM(jetTau2->Mass);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=jetTau2->PT;
+      etaTau2=jetTau2->Eta;
+      phiTau2=jetTau2->Phi;
     }
     else if ((muTau)&&(tauCat2==muon)) {
       vRecoTau2.SetPt(muTau->PT);
@@ -472,6 +523,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau2.SetPhi(muTau->Phi);
       vRecoTau2.SetM(MUON_MASS);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=muTau->PT;
+      etaTau2=muTau->Eta;
+      phiTau2=muTau->Phi;
     }
     else if ((eleTau)&&(tauCat2==electron)) {
       vRecoTau2.SetPt(eleTau->PT);
@@ -479,6 +533,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       vRecoTau2.SetPhi(eleTau->Phi);
       vRecoTau2.SetM(ELE_MASS);
       sRecoTau2 = &vRecoTau2;
+      ptTau2=eleTau->PT;
+      etaTau2=eleTau->Eta;
+      phiTau2=eleTau->Phi;
     }
     else sRecoTau2 = &nothing;
 
@@ -491,6 +548,14 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
       sRecoJet = &vRecoJet;
     }
     else sRecoJet = &nothing;
+
+    LorentzVector vTT = vRecoTau1+vRecoTau2;
+    mTT=vTT.M();
+    LorentzVector vJJ = vRecoB1+vRecoB2;
+    mJJ=vJJ.M();
+    LorentzVector vHH = vTT+vJJ;
+    mHH=vHH.M();
+    ptHH=vHH.Pt();
 
     // ********************
     // GEN PARTICLES
@@ -670,8 +735,13 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     met=missET->MET;
     metPhi=missET->Phi;
 
-    if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
-    //if (0) {
+    missET = (MissingET*) branchPuppiMET->At(0);
+    
+    ppMet=missET->MET;
+    ppMetPhi=missET->Phi;
+
+    //if ( (sRecoTau1) && (sRecoTau2) && (sRecoB1) && (sRecoB2) ) {
+    if (0) {
 
       tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
       tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());

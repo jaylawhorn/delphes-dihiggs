@@ -32,6 +32,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
 
   cout << inputfile << " " << xsec << " " << totalEvents << " " << outputfile << endl;
 
+  cout << "H, Z, W, T " << endl;
+
   // declare constants
   const Double_t MUON_MASS = 0.105658369;
   const Double_t ELE_MASS  = 0.000511;
@@ -46,7 +48,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
   const Float_t MAX_MATCH_DIST = 0.5;
 
   // event types
-  enum { HH=0, TT, ZH, WH, WW, ZZ, ZW, ETC };
+  enum { H=0, Z, EWK, TT, ETC };
 
   // tau decay modes
   enum { hadron=1, electron, muon };
@@ -61,6 +63,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
   TClonesArray *branchElectron = treeReader->UseBranch("Electron");
   TClonesArray *branchMuon = treeReader->UseBranch("Muon");
   TClonesArray *branchMET =treeReader->UseBranch("MissingET");
+  TClonesArray *branchPuppiMET =treeReader->UseBranch("PuppiMissingET");
 
   TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
@@ -98,6 +101,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
   Float_t phiTau1, phiTau2, phiJet1, phiJet2;
 
   Float_t met, metPhi;
+  Float_t ppMet, ppMetPhi;
   Float_t dEta, mJJ, mTT;
   Int_t tauCat1=0, tauCat2=0;
   Int_t tFake1=0, tFake2=0;
@@ -131,6 +135,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
   outTree->Branch("phiJet2",        &phiJet2,        "phiJet2/f");      // phi(Jet2)          
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
+  outTree->Branch("ppMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
+  outTree->Branch("ppMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
   outTree->Branch("dEta",           &dEta,           "dEta/f");         // delta Eta
   outTree->Branch("mJJ",            &mJJ,            "mJJ/f") ;         // mass(jets)
   outTree->Branch("mTT",            &mTT,            "mTT/f") ;         // mass(tautau)
@@ -156,7 +162,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
     iJet1=-1; iJet2=-1; iT1=-1; iT2=-1;
     iGenTau1=-1;    iGenTau2=-1;
     iGenJetTau1=-1; iGenJetTau2=-1;
-    tauCat1=-1; tauCat2=-1;
+    tauCat1=0; tauCat2=0;
     tFake1=2; tFake2=2;
     eventType=-1;
 
@@ -563,9 +569,16 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
     met=missET->MET;
     metPhi=missET->Phi;
 
+    missET = (MissingET*) branchPuppiMET->At(0);
+    
+    ppMet=missET->MET;
+    ppMetPhi=missET->Phi;
+
     // ********************
     // BKGD SORTING
     // ********************
+
+    // H, Z, EWK (W+jets, BB), ttbar, other
 
     Int_t nH=0, nW=0, nZ=0, nT=0;
     for (Int_t iPart=0; iPart<branchParticle->GetEntries(); iPart++) {
@@ -576,15 +589,15 @@ void selection(const TString inputfile="root://eoscms.cern.ch//eos/cms/store/gro
       else if (fabs(genParticle->PID)==T_ID_CODE) nT++;
     }
 
-    if ( (nH==2) && (nW==0) && (nZ==0) ) eventType=HH;
-    else if ( (nH==0) && (nT==2) ) eventType=TT;
-    else if ( (nH!=0) && (nZ>0) ) eventType=ZH;
-    else if ( (nH!=0) && (nW>0) && (nZ==0) ) eventType=WH;
-    else if ( (nH==0) && (nW>0) && (nZ>0) ) eventType=ZW;
-    else if (nZ>1) eventType=ZZ;
-    else if (nW>1) eventType=WW;
-    else eventType=ETC;
-
+    if (nH==1 && nW==0 && nZ==0 && nT==0) eventType=H;
+    else if (nZ==1 && nH==0 && nW==0 && nT==0) eventType=Z;
+    else if (nZ>0 && nW>0 && nH==0 && nT==0) eventType=EWK;
+    else if (nH==0 && nT==2) eventType=TT;
+    else {
+      eventType=ETC;
+      cout << "H " << nH << ", Z " << nZ << ", W " << nW << ", T " << nT << endl;
+    }
+    
     outTree->Fill();
 
   } // end event loop
