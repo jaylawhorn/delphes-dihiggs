@@ -21,10 +21,10 @@ do
   if [ "${array[0]:0:1}" != "#" ]; then 
       echo "Preparing sample" ${array[0]}
       rm ${array[0]}.txt
-      if [ ${array[2]} -eq "1" ]; then
-	  filelist=(`/afs/cern.ch/project/eos/installation/0.3.4/bin/eos.select ls ${array[3]} | grep ${array[0]}`)
-      elif [ ${array[2]} -eq "0" ]; then
-	  filelist=(`ls ${array[3]} | grep ${array[0]}`)
+      if [ ${array[3]} -eq "1" ]; then
+	  filelist=(`/afs/cern.ch/project/eos/installation/0.3.4/bin/eos.select ls ${array[5]} | grep ${array[0]}`)
+      elif [ ${array[3]} -eq "0" ]; then
+	  filelist=(`ls ${array[5]} | grep ${array[0]}`)
       fi
       outarray=()
       for ((i=0; i<${#filelist[@]}; i++)) 
@@ -33,14 +33,14 @@ do
 	      outarray+=(${filelist[$i]})
 	  fi
       done
-      echo ${#outarray[@]} "files found in" ${array[3]}
+      echo ${#outarray[@]} "files found in" ${array[5]}
 
       for ((i=0; i<${#outarray[@]}; i++))
       do
-	  if [ ${array[2]} -eq "1" ]; then
-	      echo "root://eoscms.cern.ch/"${array[3]}"/"${outarray[i]} >> ${array[0]}.txt
-	  elif [ ${array[2]} -eq "0" ]; then
-	      echo ${array[3]}"/"${outarray[i]} >> ${array[0]}.txt
+	  if [ ${array[3]} -eq "1" ]; then
+	      echo "root://eoscms.cern.ch/"${array[5]}"/"${outarray[i]} >> ${array[0]}.txt
+	  elif [ ${array[3]} -eq "0" ]; then
+	      echo ${array[5]}"/"${outarray[i]} >> ${array[0]}.txt
 	  fi
       done
 
@@ -55,13 +55,17 @@ do
       n=0
 
       rm ${array[0]}_run.sh
-      head -7 run_outline.sh > ${array[0]}_run.sh
+      head -8 run_outline.sh > ${array[0]}_run.sh
+      echo 'echo /afs/cern.ch/work/j/jlawhorn/public/ntuples/'${array[0]}'.root > '${array[0]}'_comb.txt' >> ${array[0]}_run.sh
       while read line2
       do
-	  echo root -l -q -b selection.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,\\\""/afs/cern.ch/work/j/jlawhorn/public/ntuples/"${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
+	  echo root -l -q -b selection.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,${array[4]},\\\""/afs/cern.ch/work/j/jlawhorn/public/ntuples/"${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
+	  echo 'echo /afs/cern.ch/work/j/jlawhorn/public/ntuples/'${array[0]}'/'${n}'.root >> ' ${array[0]}'_comb.txt' >> ${array[0]}_run.sh
 	  n=$((n+1))
 	      
-      done < ${array[0]}.txt
+      done < ${array[0]}.txt      
+
+      echo root -l -q -b MergeNtuples.C+\\\(\\\"${array[0]}_comb.txt\\\"\\\) >> ${array[0]}_run.sh
 
       tail -3 run_outline.sh >> ${array[0]}_run.sh
       chmod u+x ${array[0]}_run.sh

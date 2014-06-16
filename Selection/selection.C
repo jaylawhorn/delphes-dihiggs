@@ -27,8 +27,9 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
 
 void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHToTTBB_14TeV/HHToTTBB_14TeV_0.root",
-	       const Float_t xsec=1.0,
-	       const Float_t totalEvents=100,
+	       const Float_t xsec=2.92,
+	       const Float_t totalEvents=5000,
+	       Int_t   sampleNo=100,
 	       const TString outputfile="test.root") {
 
   cout << inputfile << " " << xsec << " " << totalEvents << " " << outputfile << endl;
@@ -40,15 +41,10 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   const Int_t TAU_ID_CODE = 15;
   const Int_t B_ID_CODE = 5;
 
-  const Int_t T_ID_CODE = 6;
-  const Int_t Z_ID_CODE = 23;
-  const Int_t W_ID_CODE = 24;
-  const Int_t H_ID_CODE = 25;
-
   const Float_t MAX_MATCH_DIST = 0.5;
 
   // event types
-  enum { HH=0, TT, ZH, WH, WW, ZZ, ZW, ETC };
+  enum { HH=0, TT, H, EWK, ZJET, ETC };
 
   // tau decay modes
   enum { hadron=1, electron, muon };
@@ -111,6 +107,7 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   Int_t iExtra=-1;
 
   Int_t eventType;
+  Int_t genInfo;
   Float_t eventWeight;
   Float_t met, metPhi;
   Float_t ppMet, ppMetPhi;
@@ -141,7 +138,9 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
   // tree to hold information about selected events
   TTree *outTree = new TTree("Events", "Events");
   outTree->Branch("eventWeight",    &eventWeight,    "eventWeight/f");  // event weight from cross-section and Event->Weight
-  outTree->Branch("eventType",      &eventType,      "eventType/i");    // event type (0=signal, 1=tt, 2=zh, 3=other)
+  outTree->Branch("sampleNo",       &sampleNo,       "sampleNo/i");     // sample number (see config card for details)
+  outTree->Branch("genInfo",        &genInfo,        "genInfo/i");      // generator level info (see below)
+  outTree->Branch("eventType",      &eventType,      "eventType/i");    // see line 47
   outTree->Branch("tauCat1",        &tauCat1,        "tauCat1/i");      // leading tau final state - jet, muon, electron
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
   outTree->Branch("bTag1",          &bTag1,          "bTag1/i");        // leading b-jet tag from delphes
@@ -810,23 +809,41 @@ void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/HHTo
     // BKGD SORTING
     // ********************
 
-    Int_t nH=0, nW=0, nZ=0, nT=0;
+    Int_t nH=0, nW=0, nZ=0, nT=0, nB=0, nQ=0, nG=0, nP=0, nL=0;
     for (Int_t iPart=0; iPart<branchParticle->GetEntries(); iPart++) {
       genParticle = (GenParticle*) branchParticle->At(iPart);
-      if (fabs(genParticle->PID)==H_ID_CODE) nH++;
-      else if (fabs(genParticle->PID)==Z_ID_CODE) nZ++;
-      else if (fabs(genParticle->PID)==W_ID_CODE) nW++;
-      else if (fabs(genParticle->PID)==T_ID_CODE) nT++;
+      
+      Int_t pid=fabs(genParticle->PID);
+      if (pid==2212) continue;
+      if (pid==25) nH++;
+      else if (pid==23) nZ++;
+      else if (pid==24) nW++;
+      else if (pid==6) nT++;
+      else if (pid==5) nB++;
+      else if (pid<5)  nQ++;
+      else if (pid==21) nG++;
+      else if (pid==22) nP++;
+      else if (pid<17 && pid>10) nL++;
     }
 
-    if ( (nH==2) && (nW==0) && (nZ==0) ) eventType=HH;
-    else if ( (nH==0) && (nT==2) ) eventType=TT;
-    else if ( (nH!=0) && (nZ>0) ) eventType=ZH;
-    else if ( (nH!=0) && (nW>0) && (nZ==0) ) eventType=WH;
-    else if ( (nH==0) && (nW>0) && (nZ>0) ) eventType=ZW;
-    else if (nZ>1) eventType=ZZ;
-    else if (nW>1) eventType=WW;
+    if (nH>10) nH=9; if (nW>10) nW=9;
+    if (nZ>10) nZ=9; if (nT>10) nT=9;
+    if (nB>10) nB=9; if (nQ>10) nQ=9;
+    if (nG>10) nG=9; if (nP>10) nP=9;
+    if (nL>10) nL=9;
+
+    genInfo=nH+1e1*nW+1e2*nZ+1e3*nT+1e4*nB+1e5*nQ+1e6*nG+1e7*nP+1e8*nL;
+
+    //cout << setprecision(9) << genInfo << endl;
+
+    if ( nH==2 ) eventType=HH;
+    else if ( nH>0 ) eventType=H;
+    else if ( nT==2 ) eventType=TT;
+    else if ( nZ==1 && (nG+nQ)>0 ) eventType=ZJET;
+    else if ( nW+nZ+nT>0 ) eventType=EWK;
     else eventType=ETC;
+
+    //cout << eventType << endl;
 
     outTree->Fill();
 
