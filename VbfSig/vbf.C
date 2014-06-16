@@ -44,7 +44,7 @@ void vbf() {
   Float_t JET_ETA_MAX = 4.7;
 
   yieldData signal = getYield("/afs/cern.ch/work/j/jlawhorn/public/vbf/ntuples/Bjj-vbf.root", TAU_PT_MIN_H, TAU_PT_MIN_L, TAU_PT_MIN_HH, JET_PT_MIN, TAU_ETA_MAX, JET_ETA_MAX);
-  yieldData bkgd = getYield("/afs/cern.ch/work/j/jlawhorn/public/vbfntuples/vbf_bgd.root", TAU_PT_MIN_H, TAU_PT_MIN_L, TAU_PT_MIN_HH, JET_PT_MIN, TAU_ETA_MAX, JET_ETA_MAX);
+  yieldData bkgd = getYield("/afs/cern.ch/work/j/jlawhorn/public/vbf/ntuples/vbf_bgd.root", TAU_PT_MIN_H, TAU_PT_MIN_L, TAU_PT_MIN_HH, JET_PT_MIN, TAU_ETA_MAX, JET_ETA_MAX);
 
   cout << setprecision(1) << fixed;
 
@@ -167,6 +167,7 @@ yieldData getYield(const TString infilename, Float_t TAU_PT_MIN_H, Float_t TAU_P
 
     if (fabs(dEta)<3.5) continue;
 
+    //cout << eventType << endl;
 
     // TAU-TAU
     if (CAT==2) {
