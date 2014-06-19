@@ -955,7 +955,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       mTT=vTT.M();
     }
     else {
-      mTT=-9999;
+      mTT=-999;
       vTT=nothing;
     }
     
@@ -965,7 +965,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       mBB=vBB.M();
     }
     else {
-      mBB=-9999;
+      mBB=-999;
       vBB=nothing;
     }
     
@@ -975,8 +975,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       ptHH=vHH.Pt();
     }
     else {
-      mHH=-9999;
-      ptHH=-9999;
+      mHH=-999;
+      ptHH=-999;
     }
 
     LorentzVector vGG;
@@ -985,7 +985,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       mGG=vGG.M();
     }
     else {
-      mGG=-9999;
+      mGG=-999;
       vGG=nothing;
     }
 
@@ -995,8 +995,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       ptHH=vHH.Pt();
     }
     else {
-      mHH=-9999;
-      ptHH=-9999;
+      mHH=-999;
+      ptHH=-999;
     }
 
     if (vRecoJet_tt1.Pt()>0 && vRecoJet_tt2.Pt()>0) {
@@ -1019,7 +1019,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }	
     }
     else {
-      mJJ_tt=-9999;
+      mJJ_tt=-999;
       dEta_tt=0;
     }
 
@@ -1042,7 +1042,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
     }
     else {
-      mJJ_6j=-9999;
+      mJJ_6j=-999;
       dEta_6j=0;
     }
 
@@ -1055,10 +1055,17 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     met=missET->MET;
     metPhi=missET->Phi;
 
-    missET = (MissingET*) branchPuppiMET->At(0);
-    
-    ppMet=missET->MET;
-    ppMetPhi=missET->Phi;
+    if (branchPuppiMET) {
+
+      missET = (MissingET*) branchPuppiMET->At(0);
+      
+      ppMet=missET->MET;
+      ppMetPhi=missET->Phi;
+    }
+    else {
+      ppMet=-999;
+      ppMetPhi=-999;
+    }
 
     if ( sRecoTau1->Pt()>0 && sRecoTau2->Pt()>0 && sRecoB1->Pt()>0 && sRecoB2->Pt()>0) {
 
@@ -1073,10 +1080,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       mB2=sRecoB2->M();
       
       mpt.SetMagPhi(met, metPhi);
-      ppmpt.SetMagPhi(ppMet, ppMetPhi);
       
       TVector2 sumPt = tau1+tau2+mpt;
-      TVector2 ppSumPt = tau1+tau2+ppmpt;
       
       smT2 calcmt2 = smT2();
       calcmt2.SetB1(b1);
@@ -1101,25 +1106,31 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       min->Minimize();
       mt2 = min->MinValue();
 
-      calcmt2.SetMPT(ppSumPt);
-      c1=ppSumPt;
-      c2=sumPt-c1;
-
-      ROOT::Math::Functor f2(calcmt2,2);
-      step[0] = 0.1; step[1] = 0.1;
-      variable[0] = 0.5*c1.Mod(); variable[1] = 0.0;
-
-      min->SetFunction(f2);
-      min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, ppSumPt.Mod());
-      min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
-      
-      min->Minimize();
-      ppMt2 = min->MinValue();
-            
+      if (branchPuppiMET) {
+	
+	ppmpt.SetMagPhi(ppMet, ppMetPhi);
+	TVector2 ppSumPt = tau1+tau2+ppmpt;
+	
+	calcmt2.SetMPT(ppSumPt);
+	c1=ppSumPt;
+	c2=sumPt-c1;
+	
+	ROOT::Math::Functor f2(calcmt2,2);
+	step[0] = 0.1; step[1] = 0.1;
+	variable[0] = 0.5*c1.Mod(); variable[1] = 0.0;
+	
+	min->SetFunction(f2);
+	min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, ppSumPt.Mod());
+	min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
+	
+	min->Minimize();
+	ppMt2 = min->MinValue();
+      }
+      else ppMt2 = -999;
     }    
     else { 
-      mt2 = 99999;
-      ppMt2 = 99999;
+      mt2 = -999;
+      ppMt2 = -999;
     }
     
     if (ptB1>0 && ptB2>0 && ptTau1>0 && ptTau2>0) { isBBTT=1; }
@@ -1127,6 +1138,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     if (ptB1>0 && ptB2>0 && ptG1>0 && ptG2>0) { isBBGG=1; }
     if (ptJet_tt1>0 && ptJet_tt2>0 && ptTau1>0 && ptTau2>0) { isVBFTT=1; }
     if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0 && ptJet_6j1>0 && ptJet_6j2>0) { isVBF4B=1; }
+
+    if (isBBTT==0 && isBBBB==0 && isBBGG==0 && isVBFTT==0 && isVBF4B==0) continue;
     
     // ********************
     // GEN PARTICLES
@@ -1560,12 +1573,12 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     genInfo=nH+1e1*nW+1e2*nZ+1e3*nT+1e4*nB+1e5*nQ+1e6*nG+1e7*nP+1e8*nL;
 
-    if ( nH==2 ) eventType=HH;
+    if ( nH>2 ) eventType=HH;
     else if ( nH>0 ) eventType=H;
     else if ( nT==2 ) eventType=TT;
     else if ( nZ>0 && nW==0 && (nG+nQ)>0 ) eventType=ZJET;
     else if ( nW>0 && nZ==0 && (nG+nQ)>0 ) eventType=WJET;
-    else if ( nW+nZ+nT>0 ) eventType=EWK;
+    else if ( nW+nZ+nT+nL>0 ) eventType=EWK;
     else eventType=ETC;
 
     outTree->Fill();
