@@ -59,8 +59,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   TVector2 tau1(0,0), tau2(0,0), mpt(0,0), ppmpt(0,0);
   TVector2 b1(0,0), b2(0,0);
-  Float_t mTau1=0, mTau2=0;
-  Float_t mB1=0, mB2=0;
   Double_t mt2=0;
   Double_t ppMt2=0;
 
@@ -109,8 +107,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   GenParticle *genGam1=0, *genGam2=0;
   // HIGG(S)
   GenParticle *genH1=0, *genH2=0;
-  // GEN B-JETS
-  Jet *genJetB1=0, *genJetB2=0, *genJetB3=0, *genJetB4=0;
   // GEN TAU-JETS
   Jet *genJetTau1=0, *genJetTau2=0;
   // GEN VBF-JETS
@@ -127,7 +123,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Int_t iGenGam1=-1, iGenGam2=-1;
 
   Int_t iGenJetTau1=-1, iGenJetTau2=-1;
-  Int_t iGenJetB1=-1,   iGenJetB2=-1,   iGenJetB3=-1,   iGenJetB4=-1;
   Int_t iGenJet_tt1=-1, iGenJet_tt2=-1,  iGenJet_6j1=-1, iGenJet_6j2=-1;
 
   Int_t iHmatch1=-1, iHmatch2=-1, iHmatch3=-1, iHmatch4=-1;
@@ -155,28 +150,24 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Float_t ptTau1, ptTau2, ptB1, ptB2, ptB3, ptB4, ptG1, ptG2, ptJet_tt1, ptJet_tt2, ptJet_6j1, ptJet_6j2;
   Float_t etaTau1, etaTau2, etaB1, etaB2, etaB3, etaB4, etaG1, etaG2, etaJet_tt1, etaJet_tt2, etaJet_6j1, etaJet_6j2;
   Float_t phiTau1, phiTau2, phiB1, phiB2, phiB3, phiB4, phiG1, phiG2, phiJet_tt1, phiJet_tt2, phiJet_6j1, phiJet_6j2;
-  Float_t mB3, mB4, eG1, eG2, mJet_tt1, mJet_tt2, mJet_6j1, mJet_6j2;
+  Float_t mTau1, mTau2, mB1, mB2, mB3, mB4, eG1, eG2, mJet_tt1, mJet_tt2, mJet_6j1, mJet_6j2;
 
-  Float_t mTT=0, mBB=0, mGG=0;
-  Float_t mHH=0, ptHH=0;
-  Float_t mJJ_tt=0, dEta_tt=0;
-  Float_t mJJ_6j=0, dEta_6j=0;
+  Float_t ptTau1_gen, ptTau2_gen, ptB1_gen, ptB2_gen, ptB3_gen, ptB4_gen, ptG1_gen, ptG2_gen, ptJet_tt1_gen, ptJet_tt2_gen, ptJet_6j1_gen, ptJet_6j2_gen;
+  Float_t etaTau1_gen, etaTau2_gen, etaB1_gen, etaB2_gen, etaB3_gen, etaB4_gen, etaG1_gen, etaG2_gen, etaJet_tt1_gen, etaJet_tt2_gen, etaJet_6j1_gen, etaJet_6j2_gen;
+  Float_t phiTau1_gen, phiTau2_gen, phiB1_gen, phiB2_gen, phiB3_gen, phiB4_gen, phiG1_gen, phiG2_gen, phiJet_tt1_gen, phiJet_tt2_gen, phiJet_6j1_gen, phiJet_6j2_gen;
+  Float_t mTau1_gen, mTau2_gen, mB1_gen, mB2_gen, mB3_gen, mB4_gen, eG1_gen, eG2_gen, mJet_tt1_gen, mJet_tt2_gen, mJet_6j1_gen, mJet_6j2_gen;
 
-  LorentzVector *sRecoTau1=0,   *sRecoTau2=0;
-  LorentzVector *sGenJetTau1=0, *sGenJetTau2=0;
-  LorentzVector *sGenTau1=0,    *sGenTau2=0;
+  Float_t ptH1_gen, etaH1_gen, phiH1_gen, mH1_gen;
+  Float_t ptH2_gen, etaH2_gen, phiH2_gen, mH2_gen;
 
-  LorentzVector *sRecoGam1=0,   *sRecoGam2=0;
-  LorentzVector *sGenGam1=0,    *sGenGam2=0;
+  Float_t ptTau1_genJet, ptTau2_genJet, etaTau1_genJet, etaTau2_genJet, phiTau1_genJet, phiTau2_genJet, mTau1_genJet, mTau2_genJet;
 
-  LorentzVector *sRecoB1=0,   *sRecoB2=0,   *sRecoB3=0,   *sRecoB4=0;
-  LorentzVector *sGenJetB1=0, *sGenJetB2=0, *sGenJetB3=0, *sGenJetB4=0;
-  LorentzVector *sGenB1=0,    *sGenB2=0,    *sGenB3=0,    *sGenB4=0;
+  Float_t ptTT, ptBB1, ptBB2, ptGG, ptJJ_tt, ptJJ_6j, ptHH;
+  Float_t etaTT, etaBB1, etaBB2, etaGG, etaJJ_tt, etaJJ_6j, etaHH;
+  Float_t phiTT, phiBB1, phiBB2, phiGG, phiJJ_tt, phiJJ_6j, phiHH;
+  Float_t mTT, mBB1, mBB2, mGG, mJJ_tt, mJJ_6j, mHH;
 
-  LorentzVector *sRecoJet_tt1=0, *sRecoJet_tt2=0, *sRecoJet_6j1=0, *sRecoJet_6j2=0;
-  LorentzVector *sGenJet_tt1=0,  *sGenJet_tt2=0,  *sGenJet_6j1=0,  *sGenJet_6j2=0;
-
-  LorentzVector *sGenH1=0, *sGenH2=0;
+  Float_t dEta_tt=0, dEta_6j=0;
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
@@ -225,28 +216,24 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("phiB1",          &phiB1,          "phiB1/f");        // phi(B1)
   outTree->Branch("mB1",            &mB1,            "mB1/f");          // m(B1)
   outTree->Branch("bTag1",          &bTag1,          "bTag1/i");        // leading b-jet tag from delphes
-  outTree->Branch("iHmatch1",       &iHmatch1,       "iHmatch1/i");     // if 4 b's, which of two higgs matched
 
   outTree->Branch("ptB2",           &ptB2,           "ptB2/f");         // pt(B2)
   outTree->Branch("etaB2",          &etaB2,          "etaB2/f");        // eta(B2)
   outTree->Branch("phiB2",          &phiB2,          "phiB2/f");        // phi(B2)
   outTree->Branch("mB2",            &mB2,            "mB2/f");          // m(B2)
   outTree->Branch("bTag2",          &bTag2,          "bTag2/i");        // second b-jet tag from delphes
-  outTree->Branch("iHmatch2",       &iHmatch2,       "iHmatch2/i");     // if 4 b's, which of two higgs matched
 
   outTree->Branch("ptB3",           &ptB3,           "ptB3/f");         // pt(B3)
   outTree->Branch("etaB3",          &etaB3,          "etaB3/f");        // eta(B3)
   outTree->Branch("phiB3",          &phiB3,          "phiB3/f");        // phi(B3)
   outTree->Branch("mB3",            &mB3,            "mB3/f");          // m(B3)
   outTree->Branch("bTag3",          &bTag3,          "bTag3/i");        // third b-jet tag from delphes
-  outTree->Branch("iHmatch3",       &iHmatch3,       "iHmatch3/i");     // if 4 b's, which of two higgs matched
 
   outTree->Branch("ptB4",           &ptB4,           "ptB4/f");         // pt(B4)
   outTree->Branch("etaB4",          &etaB4,          "etaB4/f");        // eta(B4)
   outTree->Branch("phiB4",          &phiB4,          "phiB4/f");        // phi(B4)
   outTree->Branch("mB4",            &mB4,            "mB4/f");          // m(B4)
   outTree->Branch("bTag4",          &bTag4,          "bTag4/i");        // fourth b-jet tag from delphes
-  outTree->Branch("iHmatch4",       &iHmatch4,       "iHmatch4/i");     // if 4 b's, which of two higgs matched
 
   outTree->Branch("ptJet_tt1",      &ptJet_tt1,      "ptJet_tt1/f");    // pt(Jet1)
   outTree->Branch("etaJet_tt1",     &etaJet_tt1,     "etaJet_tt1/f");   // eta(Jet1)
@@ -272,70 +259,133 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("mJet_6j2",       &mJet_6j2,       "mJet_6j2/f");     // m(Jet2)
   outTree->Branch("jbTag_6j2",      &jbTag_6j2,      "jbTag_6j2/i");    // second VBF-jet b tag from delphes
 
-  outTree->Branch("mTT",            &mTT,            "mTT/f");          // mass(tautau)
-  outTree->Branch("mGG",            &mGG,            "mGG/f");          // mass(gamgam)
-  outTree->Branch("mBB",            &mBB,            "mBB/f");          // mass(bb)
+  outTree->Branch("ptTau1_gen",     &ptTau1_gen,     "ptTau1_gen/f");       // gen pt(Tau1)
+  outTree->Branch("etaTau1_gen",    &etaTau1_gen,    "etaTau1_gen/f");      // gen eta(Tau1)
+  outTree->Branch("phiTau1_gen",    &phiTau1_gen,    "phiTau1_gen/f");      // gen phi(Tau1)
+  outTree->Branch("mTau1_gen",      &mTau1_gen,      "mTau1_gen/f");        // gen m(Tau1)
+
+  outTree->Branch("ptTau2_gen",     &ptTau2_gen,     "ptTau2_gen/f");       // gen pt(Tau2)
+  outTree->Branch("etaTau2_gen",    &etaTau2_gen,    "etaTau2_gen/f");      // gen eta(Tau2)
+  outTree->Branch("phiTau2_gen",    &phiTau2_gen,    "phiTau2_gen/f");      // gen phi(Tau2)
+  outTree->Branch("mTau2_gen",      &mTau2_gen,      "mTau2_gen/f");        // gen m(Tau2)
+
+  outTree->Branch("ptTau1_genJet",  &ptTau1_genJet,  "ptTau1_genJet/f");    // gen pt(Tau1)
+  outTree->Branch("etaTau1_genJet", &etaTau1_genJet, "etaTau1_genJet/f");   // gen eta(Tau1)
+  outTree->Branch("phiTau1_genJet", &phiTau1_genJet, "phiTau1_genJet/f");   // gen phi(Tau1)
+  outTree->Branch("mTau1_genJet",   &mTau1_genJet,   "mTau1_genJet/f");     // gen m(Tau1)
+
+  outTree->Branch("ptTau2_genJet",  &ptTau2_genJet,  "ptTau2_genJet/f");    // gen pt(Tau2)
+  outTree->Branch("etaTau2_genJet", &etaTau2_genJet, "etaTau2_genJet/f");   // gen eta(Tau2)
+  outTree->Branch("phiTau2_genJet", &phiTau2_genJet, "phiTau2_genJet/f");   // gen phi(Tau2)
+  outTree->Branch("mTau2_genJet",   &mTau2_genJet,   "mTau2_genJet/f");     // gen m(Tau2)
+
+  outTree->Branch("ptG1_gen",       &ptG1_gen,       "ptG1_gen/f");         // gen pt(Gam1)
+  outTree->Branch("etaG1_gen",      &etaG1_gen,      "etaG1_gen/f");        // gen eta(Gam1)
+  outTree->Branch("phiG1_gen",      &phiG1_gen,      "phiG1_gen/f");        // gen phi(Gam1)
+  outTree->Branch("eG1_gen",        &eG1_gen,        "eG1_gen/f");          // gen e(Gam1)
+
+  outTree->Branch("ptG2_gen",       &ptG2_gen,       "ptG2_gen/f");         // gen pt(Gam2)
+  outTree->Branch("etaG2_gen",      &etaG2_gen,      "etaG2_gen/f");        // gen eta(Gam2)
+  outTree->Branch("phiG2_gen",      &phiG2_gen,      "phiG2_gen/f");        // gen phi(Gam2)
+  outTree->Branch("eG2_gen",        &eG2_gen,        "eG2_gen/f");          // gen e(Gam2)
+
+  outTree->Branch("ptB1_gen",       &ptB1_gen,       "ptB1_gen/f");         // gen pt(B1)
+  outTree->Branch("etaB1_gen",      &etaB1_gen,      "etaB1_gen/f");        // gen eta(B1)
+  outTree->Branch("phiB1_gen",      &phiB1_gen,      "phiB1_gen/f");        // gen phi(B1)
+  outTree->Branch("mB1_gen",        &mB1_gen,        "mB1_gen/f");          // gen m(B1)
+  outTree->Branch("iHmatch1",       &iHmatch1,       "iHmatch1/i");         // if 4 b's, which of two higgs matched
+
+  outTree->Branch("ptB2_gen",       &ptB2_gen,       "ptB2_gen/f");         // gen pt(B2)
+  outTree->Branch("etaB2_gen",      &etaB2_gen,      "etaB2_gen/f");        // gen eta(B2)
+  outTree->Branch("phiB2_gen",      &phiB2_gen,      "phiB2_gen/f");        // gen phi(B2)
+  outTree->Branch("mB2_gen",        &mB2_gen,        "mB2_gen/f");          // gen m(B2)
+  outTree->Branch("iHmatch2",       &iHmatch2,       "iHmatch2/i");         // if 4 b's, which of two higgs matched
+
+  outTree->Branch("ptB3_gen",       &ptB3_gen,       "ptB3_gen/f");         // gen pt(B3)
+  outTree->Branch("etaB3_gen",      &etaB3_gen,      "etaB3_gen/f");        // gen eta(B3)
+  outTree->Branch("phiB3_gen",      &phiB3_gen,      "phiB3_gen/f");        // gen phi(B3)
+  outTree->Branch("mB3_gen",        &mB3_gen,        "mB3_gen/f");          // gen m(B3)
+  outTree->Branch("iHmatch3",       &iHmatch3,       "iHmatch3/i");         // if 4 b's, which of two higgs matched
+
+  outTree->Branch("ptB4_gen",       &ptB4_gen,       "ptB4_gen/f");         // gen pt(B4)
+  outTree->Branch("etaB4_gen",      &etaB4_gen,      "etaB4_gen/f");        // gen eta(B4)
+  outTree->Branch("phiB4_gen",      &phiB4_gen,      "phiB4_gen/f");        // gen phi(B4)
+  outTree->Branch("mB4_gen",        &mB4_gen,        "mB4_gen/f");          // gen m(B4)
+  outTree->Branch("iHmatch4",       &iHmatch4,       "iHmatch4/i");         // if 4 b's, which of two higgs matched
+
+  outTree->Branch("ptH1_gen",       &ptH1_gen,       "ptH1_gen/f");         // gen pt(H1)
+  outTree->Branch("etaH1_gen",      &etaH1_gen,      "etaH1_gen/f");        // gen eta(H1)
+  outTree->Branch("phiH1_gen",      &phiH1_gen,      "phiH1_gen/f");        // gen phi(H1)
+  outTree->Branch("mH1_gen",        &mH1_gen,        "mH1_gen/f");          // gen m(H1)
+
+  outTree->Branch("ptH2_gen",       &ptH2_gen,       "ptH2_gen/f");         // gen pt(H2)
+  outTree->Branch("etaH2_gen",      &etaH2_gen,      "etaH2_gen/f");        // gen eta(H2)
+  outTree->Branch("phiH2_gen",      &phiH2_gen,      "phiH2_gen/f");        // gen phi(H2)
+  outTree->Branch("mH2_gen",        &mH2_gen,        "mH2_gen/f");          // gen m(H2)
+
+  outTree->Branch("ptJet_tt1_gen",  &ptJet_tt1_gen,  "ptJet_tt1_gen/f");    // gen jet pt(Jet1)
+  outTree->Branch("etaJet_tt1_gen", &etaJet_tt1_gen, "etaJet_tt1_gen/f");   // gen jet eta(Jet1)
+  outTree->Branch("phiJet_tt1_gen", &phiJet_tt1_gen, "phiJet_tt1_gen/f");   // gen jet phi(Jet1)
+  outTree->Branch("mJet_tt1_gen",   &mJet_tt1_gen,   "mJet_tt1_gen/f");     // gen jet m(Jet1)
+
+  outTree->Branch("ptJet_tt2_gen",  &ptJet_tt2_gen,  "ptJet_tt2_gen/f");    // gen jet pt(Jet_tt2)
+  outTree->Branch("etaJet_tt2_gen", &etaJet_tt2_gen, "etaJet_tt2_gen/f");   // gen jet eta(Jet_tt2)
+  outTree->Branch("phiJet_tt2_gen", &phiJet_tt2_gen, "phiJet_tt2_gen/f");   // gen jet phi(Jet_tt2)
+  outTree->Branch("mJet_tt2_gen",   &mJet_tt2_gen,   "mJet_tt2_gen/f");     // gen jet m(Jet_tt2)
+
+  outTree->Branch("ptJet_6j1_gen",  &ptJet_6j1_gen,  "ptJet_6j1_gen/f");    // gen jet pt(Jet1)
+  outTree->Branch("etaJet_6j1_gen", &etaJet_6j1_gen, "etaJet_6j1_gen/f");   // gen jet eta(Jet1)
+  outTree->Branch("phiJet_6j1_gen", &phiJet_6j1_gen, "phiJet_6j1_gen/f");   // gen jet phi(Jet1)
+  outTree->Branch("mJet_6j1_gen",   &mJet_6j1_gen,   "mJet_6j1_gen/f");     // gen jet m(Jet1)
+
+  outTree->Branch("ptJet_6j2_gen",  &ptJet_6j2_gen,  "ptJet_6j2_gen/f");    // gen jet pt(Jet2)
+  outTree->Branch("etaJet_6j2_gen", &etaJet_6j2_gen, "etaJet_6j2_gen/f");   // gen jet eta(Jet2)
+  outTree->Branch("phiJet_6j2_gen", &phiJet_6j2_gen, "phiJet_6j2_gen/f");   // gen jet phi(Jet2)
+  outTree->Branch("mJet_6j2_gen",   &mJet_6j2_gen,   "mJet_6j2_gen/f");     // gen jet m(Jet2)
+
+  outTree->Branch("ptTT",           &ptTT,           "ptTT/f");         // pt(TT)
+  outTree->Branch("etaTT",          &etaTT,          "etaTT/f");        // eta(TT)
+  outTree->Branch("phiTT",          &phiTT,          "phiTT/f");        // phi(TT)
+  outTree->Branch("mTT",            &mTT,            "mTT/f");          // m(TT)
+
+  outTree->Branch("ptBB1",          &ptBB1,          "ptBB1/f");        // pt(BB1)
+  outTree->Branch("etaBB1",         &etaBB1,         "etaBB1/f");       // eta(BB1)
+  outTree->Branch("phiBB1",         &phiBB1,         "phiBB1/f");       // phi(BB1)
+  outTree->Branch("mBB1",           &mBB1,           "mBB1/f");         // m(BB1)
+
+  outTree->Branch("ptBB2",          &ptBB2,          "ptBB2/f");        // pt(BB2)
+  outTree->Branch("etaBB2",         &etaBB2,         "etaBB2/f");       // eta(BB2)
+  outTree->Branch("phiBB2",         &phiBB2,         "phiBB2/f");       // phi(BB2)
+  outTree->Branch("mBB2",           &mBB2,           "mBB2/f");         // m(BB2)
+
+  outTree->Branch("ptGG",           &ptGG,           "ptGG/f");         // pt(GG)
+  outTree->Branch("etaGG",          &etaGG,          "etaGG/f");        // eta(GG)
+  outTree->Branch("phiGG",          &phiGG,          "phiGG/f");        // phi(GG)
+  outTree->Branch("mGG",            &mGG,            "mGG/f");          // m(GG)
+
+  outTree->Branch("ptJJ_tt",        &ptJJ_tt,        "ptJJ_tt/f");      // pt(JJ_tt)
+  outTree->Branch("etaJJ_tt",       &etaJJ_tt,       "etaJJ_tt/f");     // eta(JJ_tt)
+  outTree->Branch("phiJJ_tt",       &phiJJ_tt,       "phiJJ_tt/f");     // phi(JJ_tt)
+  outTree->Branch("mJJ_tt",         &mJJ_tt,         "mJJ_tt/f");       // m(JJ_tt)
+
+  outTree->Branch("ptJJ_6j",        &ptJJ_6j,        "ptJJ_6j/f");      // pt(JJ_6j)
+  outTree->Branch("etaJJ_6j",       &etaJJ_6j,       "etaJJ_6j/f");     // eta(JJ_6j)
+  outTree->Branch("phiJJ_6j",       &phiJJ_6j,       "phiJJ_6j/f");     // phi(JJ_6j)
+  outTree->Branch("mJJ_6j",         &mJJ_6j,         "mJJ_6j/f");       // m(JJ_6j)
+
+  outTree->Branch("ptHH",           &ptHH,           "ptHH/f");         // pt(HH)
+  outTree->Branch("etaHH",          &etaHH,          "etaHH/f");        // eta(HH)
+  outTree->Branch("phiHH",          &phiHH,          "phiHH/f");        // phi(HH)
+  outTree->Branch("mHH",            &mHH,            "mHH/f");          // m(HH)
 
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass" (HH)
   outTree->Branch("ppMt2",          &ppMt2,          "ppMt2/D");        // PUPPI "stransverse mass" (HH)
-  outTree->Branch("mHH",            &mHH,            "mHH/f");          // mass(HH) 
-  outTree->Branch("ptHH",           &ptHH,           "ptHH/f");         // pt(HH)
 
   outTree->Branch("nBtag",          &nBtag,          "nBtag/i");        // number of b-tagged jets (VBF)   
   outTree->Branch("nCentral",       &nCentral,       "nCentral/i");     // number of central jets (VBF)
   outTree->Branch("centB",          &centB,          "centB/i");        // how many b's between VBF jets?
-  outTree->Branch("mJJ_tt",         &mJJ_tt,         "mJJ_tt/f");       // mass(jetjet) (VBF)
   outTree->Branch("dEta_tt",        &dEta_tt,        "dEta_tt/f");      // delta Eta (VBF)
-  outTree->Branch("mJJ_6j",         &mJJ_6j,         "mJJ_6j/f");       // mass(jetjet) (VBF)
   outTree->Branch("dEta_6j",        &dEta_6j,        "dEta_6j/f");      // delta Eta (VBF)
-
-  outTree->Branch("sGenTau1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau1);      // 4-vector for generator leading tau
-  outTree->Branch("sGenJetTau1",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetTau1);   // 4-vector for generator leading tau
-  outTree->Branch("sRecoTau1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau1);     // 4-vector for reconstructed leading tau
-
-  outTree->Branch("sGenTau2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenTau2);      // 4-vector for generator second tau
-  outTree->Branch("sGenJetTau2",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetTau2);   // 4-vector for generator second tau
-  outTree->Branch("sRecoTau2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoTau2);     // 4-vector for reconstructed second tau
-
-  outTree->Branch("sGenGam1",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenGam1);      // 4-vector for generator leading gamma
-  outTree->Branch("sRecoGam1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoGam1);     // 4-vector for reconstructed leading gamma
-
-  outTree->Branch("sGenGam2",       "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenGam2);      // 4-vector for generator second gamma
-  outTree->Branch("sRecoGam2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoGam2);     // 4-vector for reconstructed second gamma
-
-  outTree->Branch("sGenB1",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB1);        // 4-vector for generator leading b-quark
-  outTree->Branch("sGenJetB1",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB1);     // 4-vector for generator leading b-jet
-  outTree->Branch("sRecoB1",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB1);       // 4-vector for reconstructed leading b-jet
-
-  outTree->Branch("sGenB2",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB2);        // 4-vector for generator b-quark
-  outTree->Branch("sGenJetB2",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB2);     // 4-vector for generator b-jet
-  outTree->Branch("sRecoB2",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB2);       // 4-vector for reconstructed b-jet
-
-  outTree->Branch("sGenB3",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB3);        // 4-vector for generator b-quark
-  outTree->Branch("sGenJetB3",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB3);     // 4-vector for generator b-jet
-  outTree->Branch("sRecoB3",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB3);       // 4-vector for reconstructed b-jet
-
-  outTree->Branch("sGenB4",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenB4);        // 4-vector for generator b-quark
-  outTree->Branch("sGenJetB4",      "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJetB4);     // 4-vector for generator b-jet
-  outTree->Branch("sRecoB4",        "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoB4);       // 4-vector for reconstructed b-jet
-
-  outTree->Branch("sRecoJet_tt1",   "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet_tt1);  // 4-vector for reconstructed leading VBF-jet
-  outTree->Branch("sGenJet_tt1",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJet_tt1);   // 4-vector for generator leading VBF-jet
-
-  outTree->Branch("sRecoJet_tt2",   "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet_tt2);  // 4-vector for reconstructed VBF-jet
-  outTree->Branch("sGenJet_tt2",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJet_tt2);   // 4-vector for generator VBF-jet
-
-  outTree->Branch("sRecoJet_6j1",   "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet_6j1);  // 4-vector for reconstructed leading VBF-jet
-  outTree->Branch("sGenJet_6j1",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJet_6j1);   // 4-vector for generator leading VBF-jet
-
-  outTree->Branch("sRecoJet_6j2",   "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sRecoJet_6j2);  // 4-vector for reconstructed VBF-jet
-  outTree->Branch("sGenJet_6j2",    "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenJet_6j2);   // 4-vector for generator VBF-jet
-
-  outTree->Branch("sGenH1",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenH1);        // generator Higgs
-  outTree->Branch("sGenH2",         "ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> >", &sGenH2);        // generator Higgs
-
-  // define placeholder vector for things that don't exist
-  LorentzVector nothing(-999,-999,0,-999);
 
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
@@ -354,8 +404,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     iGenGam1=-1;    iGenGam2=-1;
 
     iGenJetTau1=-1; iGenJetTau2=-1;
-    iGenJetB1=-1;   iGenJetB2=-1;
-    iGenJetB3=-1;   iGenJetB4=-1;
     iGenJet_tt1=-1; iGenJet_tt2=-1;
     iGenJet_6j1=-1; iGenJet_6j2=-1;
 
@@ -366,10 +414,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     jbTag_tt1=0; jbTag_tt2=0;
     jbTag_6j1=0; jbTag_6j2=0;
     
-    mTT=-999; mBB=-999; mGG=-999;
-    mHH=-999; ptHH=-999;
-    mJJ_tt=-999; dEta_tt=-999; 
-    mJJ_6j=-999; dEta_6j=-999; 
+    mTT=-999; mBB1=-999; mBB2=-999; mGG=-999; mHH=-999; mJJ_tt=-999; mJJ_6j=-999; 
+    ptTT=-999; ptBB1=-999; ptBB2=-999; ptGG=-999; ptHH=-999; ptJJ_tt=-999; ptJJ_6j=-999; 
+    etaTT=-999; etaBB1=-999; etaBB2=-999; etaGG=-999; etaHH=-999; etaJJ_tt=-999; etaJJ_6j=-999; 
+    phiTT=-999; phiBB1=-999; phiBB2=-999; phiGG=-999; phiHH=-999; phiJJ_tt=-999; phiJJ_6j=-999; 
+
+    dEta_tt=-999; dEta_6j=-999; 
+
     nBtag=0; nCentral=0; centB=0;
 
     ptTau1=-999; etaTau1=-999; phiTau1=-999; mTau1=-999;
@@ -380,6 +431,18 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     ptB2=-999; etaB2=-999; phiB2=-999; mB2=-999;
     ptB3=-999; etaB3=-999; phiB3=-999; mB3=-999;
     ptB4=-999; etaB4=-999; phiB4=-999; mB4=-999;
+
+    ptTau1_gen=-999; etaTau1_gen=-999; phiTau1_gen=-999; mTau1_gen=-999;
+    ptTau2_gen=-999; etaTau2_gen=-999; phiTau2_gen=-999; mTau2_gen=-999;
+    ptG1_gen=-999; etaG1_gen=-999; phiG1_gen=-999; eG1_gen=-999;
+    ptG2_gen=-999; etaG2_gen=-999; phiG2_gen=-999; eG2_gen=-999;
+    ptB1_gen=-999; etaB1_gen=-999; phiB1_gen=-999; mB1_gen=-999;
+    ptB2_gen=-999; etaB2_gen=-999; phiB2_gen=-999; mB2_gen=-999;
+    ptB3_gen=-999; etaB3_gen=-999; phiB3_gen=-999; mB3_gen=-999;
+    ptB4_gen=-999; etaB4_gen=-999; phiB4_gen=-999; mB4_gen=-999;
+
+    ptTau1_genJet=-999; etaTau1_genJet=-999; phiTau1_genJet=-999; mTau1_genJet=-999;
+    ptTau2_genJet=-999; etaTau2_genJet=-999; phiTau2_genJet=-999; mTau2_genJet=-999;
 
     eventType=-1;
 
@@ -392,26 +455,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     jetB1=0;   jetB2=0;   jetB3=0;   jetB4=0;
     jet_tt1=0; jet_tt2=0; jet_6j1=0; jet_6j1=0;
     gamma1=0;  gamma2=0;
-
-    genTau1=0; genTau2=0; genGam1=0; genGam2=0;
-    genB1=0;   genB2=0;   genB3=0;   genB4=0;
-
-    genJetTau1=0; genJetTau2=0; 
-    genJet_tt1=0; genJet_tt2=0; genJet_6j1=0; genJet_6j2=0; 
-    genJetB1=0;   genJetB2=0;   genJetB3=0;   genJetB4=0; 
-
-    sRecoB1=0;   sRecoB2=0;   sRecoB3=0;     sRecoB4=0;
-    sRecoTau1=0; sRecoTau2=0; 
-    sRecoJet_tt1=0; sRecoJet_tt2=0; sRecoJet_6j1=0; sRecoJet_6j2=0;
-    sRecoGam1=0; sRecoGam2=0;
- 
-    sGenJetB1=0;   sGenJetB2=0;   sGenJetB3=0;   sGenJetB4=0;
-    sGenJetTau1=0; sGenJetTau2=0; 
-    sGenJet_tt1=0; sGenJet_tt2=0; sGenJet_6j1=0; sGenJet_6j2=0;
-
-    sGenB1=0;   sGenB2=0;   sGenB3=0;   sGenB4=0;
-    sGenTau1=0; sGenTau2=0; sGenGam1=0; sGenGam2=0;
-    sGenH1=0;   sGenH2=0;
 
     // ********************
     // EVENT WEIGHT
@@ -730,7 +773,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau1.SetEta(jetTau1->Eta);
       vRecoTau1.SetPhi(jetTau1->Phi);
       vRecoTau1.SetM(jetTau1->Mass);
-      sRecoTau1 = &vRecoTau1;
       ptTau1=jetTau1->PT;
       etaTau1=jetTau1->Eta;
       phiTau1=jetTau1->Phi;
@@ -741,7 +783,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau1.SetEta(muTau->Eta);
       vRecoTau1.SetPhi(muTau->Phi);
       vRecoTau1.SetM(MUON_MASS);
-      sRecoTau1 = &vRecoTau1;
       ptTau1=muTau->PT;
       etaTau1=muTau->Eta;
       phiTau1=muTau->Phi;
@@ -752,13 +793,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau1.SetEta(eleTau->Eta);
       vRecoTau1.SetPhi(eleTau->Phi);
       vRecoTau1.SetM(ELE_MASS);
-      sRecoTau1 = &vRecoTau1;
       ptTau1=eleTau->PT;
       etaTau1=eleTau->Eta;
       phiTau1=eleTau->Phi;
       mTau1=ELE_MASS;
     }
-    else sRecoTau1 = &nothing;
 
     // fill 4-vector for second tau
     LorentzVector vRecoTau2(0,0,0,0);
@@ -767,7 +806,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau2.SetEta(jetTau2->Eta);
       vRecoTau2.SetPhi(jetTau2->Phi);
       vRecoTau2.SetM(jetTau2->Mass);
-      sRecoTau2 = &vRecoTau2;
       ptTau2=jetTau2->PT;
       etaTau2=jetTau2->Eta;
       phiTau2=jetTau2->Phi;
@@ -778,7 +816,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau2.SetEta(muTau->Eta);
       vRecoTau2.SetPhi(muTau->Phi);
       vRecoTau2.SetM(MUON_MASS);
-      sRecoTau2 = &vRecoTau2;
       ptTau2=muTau->PT;
       etaTau2=muTau->Eta;
       phiTau2=muTau->Phi;
@@ -789,13 +826,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoTau2.SetEta(eleTau->Eta);
       vRecoTau2.SetPhi(eleTau->Phi);
       vRecoTau2.SetM(ELE_MASS);
-      sRecoTau2 = &vRecoTau2;
       ptTau2=eleTau->PT;
       etaTau2=eleTau->Eta;
       phiTau2=eleTau->Phi;
       mTau2=ELE_MASS;
     }
-    else sRecoTau2 = &nothing;
 
     // fill 4-vector for leading b-jet
     LorentzVector vRecoB1(0,0,0,0);
@@ -804,13 +839,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoB1.SetEta(jetB1->Eta);
       vRecoB1.SetPhi(jetB1->Phi);
       vRecoB1.SetM(jetB1->Mass);
-      sRecoB1 = &vRecoB1;
       ptB1=jetB1->PT;
       etaB1=jetB1->Eta;
       phiB1=jetB1->Phi;
       mB1=jetB1->Mass;
     }
-    else sRecoB1 = &nothing;
 
     // fill 4-vector for second b-jet
     LorentzVector vRecoB2(0,0,0,0);
@@ -819,13 +852,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoB2.SetEta(jetB2->Eta);
       vRecoB2.SetPhi(jetB2->Phi);
       vRecoB2.SetM(jetB2->Mass);
-      sRecoB2 = &vRecoB2;
       ptB2=jetB2->PT;
       etaB2=jetB2->Eta;
       phiB2=jetB2->Phi;
       mB2=jetB2->Mass;
     }
-    else sRecoB2 = &nothing;
 
     // fill 4-vector for b-jet
     LorentzVector vRecoB3(0,0,0,0);
@@ -834,13 +865,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoB3.SetEta(jetB3->Eta);
       vRecoB3.SetPhi(jetB3->Phi);
       vRecoB3.SetM(jetB3->Mass);
-      sRecoB3 = &vRecoB3;
       ptB3=jetB3->PT;
       etaB3=jetB3->Eta;
       phiB3=jetB3->Phi;
       mB3=jetB3->Mass;
     }
-    else sRecoB3 = &nothing;
 
     // fill 4-vector for b-jet
     LorentzVector vRecoB4(0,0,0,0);
@@ -849,13 +878,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoB4.SetEta(jetB4->Eta);
       vRecoB4.SetPhi(jetB4->Phi);
       vRecoB4.SetM(jetB4->Mass);
-      sRecoB4 = &vRecoB4;
       ptB4=jetB4->PT;
       etaB4=jetB4->Eta;
       phiB4=jetB4->Phi;
       mB4=jetB4->Mass;
     }
-    else sRecoB4 = &nothing;
 
     // fill 4-vector for leading photon
     LorentzVector vRecoGam1(0,0,0,0);
@@ -864,13 +891,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoGam1.SetEta(gamma1->Eta);
       vRecoGam1.SetPhi(gamma1->Phi);
       vRecoGam1.SetM(0);
-      sRecoGam1 = &vRecoGam1;
       ptG1=gamma1->PT;
       etaG1=gamma1->Eta;
       phiG1=gamma1->Phi;
       eG1=gamma1->E;
     }
-    else sRecoGam1 = &nothing;
 
     // fill 4-vector for second photon
     LorentzVector vRecoGam2(0,0,0,0);
@@ -879,13 +904,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoGam2.SetEta(gamma2->Eta);
       vRecoGam2.SetPhi(gamma2->Phi);
       vRecoGam2.SetM(0);
-      sRecoGam2 = &vRecoGam2;
       ptG2=gamma2->PT;
       etaG2=gamma2->Eta;
       phiG2=gamma2->Phi;
       eG2=gamma2->E;
     }
-    else sRecoGam2 = &nothing;
 
     // fill 4-vector for leading VBF jet
     LorentzVector vRecoJet_tt1(0,0,0,0);
@@ -894,13 +917,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoJet_tt1.SetEta(jet_tt1->Eta);
       vRecoJet_tt1.SetPhi(jet_tt1->Phi);
       vRecoJet_tt1.SetM(jet_tt1->Mass);
-      sRecoJet_tt1 = &vRecoJet_tt1;
       ptJet_tt1=jet_tt1->PT;
       etaJet_tt1=jet_tt1->Eta;
       phiJet_tt1=jet_tt1->Phi;
       mJet_tt1=jet_tt1->Mass;
     }
-    else sRecoJet_tt1 = &nothing;
 
     LorentzVector vRecoJet_tt2(0,0,0,0);
     if (jet_tt2) {
@@ -908,13 +929,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoJet_tt2.SetEta(jet_tt2->Eta);
       vRecoJet_tt2.SetPhi(jet_tt2->Phi);
       vRecoJet_tt2.SetM(jet_tt2->Mass);
-      sRecoJet_tt2 = &vRecoJet_tt2;
       ptJet_tt2=jet_tt2->PT;
       etaJet_tt2=jet_tt2->Eta;
       phiJet_tt2=jet_tt2->Phi;
       mJet_tt2=jet_tt2->Mass;
     }
-    else sRecoJet_tt2 = &nothing;
 
     // fill 4-vector for leading VBF jet
     LorentzVector vRecoJet_6j1(0,0,0,0);
@@ -923,13 +942,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoJet_6j1.SetEta(jet_6j1->Eta);
       vRecoJet_6j1.SetPhi(jet_6j1->Phi);
       vRecoJet_6j1.SetM(jet_6j1->Mass);
-      sRecoJet_6j1 = &vRecoJet_6j1;
       ptJet_6j1=jet_6j1->PT;
       etaJet_6j1=jet_6j1->Eta;
       phiJet_6j1=jet_6j1->Phi;
       mJet_6j1=jet_6j1->Mass;
     }
-    else sRecoJet_6j1 = &nothing;
 
     LorentzVector vRecoJet_6j2(0,0,0,0);
     if (jet_6j2) {
@@ -937,71 +954,78 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       vRecoJet_6j2.SetEta(jet_6j2->Eta);
       vRecoJet_6j2.SetPhi(jet_6j2->Phi);
       vRecoJet_6j2.SetM(jet_6j2->Mass);
-      sRecoJet_6j2 = &vRecoJet_6j2;
       ptJet_6j2=jet_6j2->PT;
       etaJet_6j2=jet_6j2->Eta;
       phiJet_6j2=jet_6j2->Phi;
       mJet_6j2=jet_6j2->Mass;
     }
-    else sRecoJet_6j2 = &nothing;
+
+    // ********************
+    // FLAG FINAL STATE
+    // ********************
+
+    if (ptB1>0 && ptB2>0 && ptTau1>0 && ptTau2>0) { isBBTT=1; }
+    if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0) { isBBBB=1; }
+    if (ptB1>0 && ptB2>0 && ptG1>0 && ptG2>0) { isBBGG=1; }
+    if (ptJet_tt1>0 && ptJet_tt2>0 && ptTau1>0 && ptTau2>0) { isVBFTT=1; }
+    if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0 && ptJet_6j1>0 && ptJet_6j2>0) { isVBF4B=1; }
+
+    if (isBBTT==0 && isBBBB==0 && isBBGG==0 && isVBFTT==0 && isVBF4B==0) continue;
     
     // ********************
     // COMPUTE VARIABLES
     // ********************
 
     LorentzVector vTT;
-    if (vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0) {
+    if (isBBTT==1 || isVBFTT==1) {
       vTT = vRecoTau1+vRecoTau2;
       mTT=vTT.M();
-    }
-    else {
-      mTT=-999;
-      vTT=nothing;
-    }
-    
-    LorentzVector vBB;
-    if (vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
-      vBB = vRecoB1+vRecoB2;
-      mBB=vBB.M();
-    }
-    else {
-      mBB=-999;
-      vBB=nothing;
-    }
-    
-    if (vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0 && vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
-      LorentzVector vHH = vTT+vBB;
-      mHH=vHH.M();
-      ptHH=vHH.Pt();
-    }
-    else {
-      mHH=-999;
-      ptHH=-999;
+      ptTT=vTT.Pt();
+      etaTT=vTT.Eta();
+      phiTT=vTT.Phi();
     }
 
     LorentzVector vGG;
-    if (vRecoGam1.Pt()>0 && vRecoGam2.Pt()>0) {
+    if (isBBGG==1) {
       vGG = vRecoGam1+vRecoGam2;
       mGG=vGG.M();
+      ptGG=vGG.Pt();
+      etaGG=vGG.Eta();
+      phiGG=vGG.Phi();
     }
-    else {
-      mGG=-999;
-      vGG=nothing;
+    
+    LorentzVector vBB1;
+    if (isBBTT==1 || isBBGG==1) {
+      vBB1 = vRecoB1+vRecoB2;
+      mBB1=vBB1.M();
+      ptBB1=vBB1.Pt();
+      etaBB1=vBB1.Eta();
+      phiBB1=vBB1.Phi();
     }
 
-    if (vRecoGam1.Pt()>0 && vRecoGam2.Pt()>0 && vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
-      LorentzVector vHH = vBB+vGG;
+    LorentzVector vHH;
+    if (isBBTT==1) {
+      vHH = vTT+vBB1;
       mHH=vHH.M();
       ptHH=vHH.Pt();
+      etaHH=vHH.Eta();
+      phiHH=vHH.Phi();
     }
-    else {
-      mHH=-999;
-      ptHH=-999;
+    else if (isBBGG==1) {
+      vHH = vTT+vGG;
+      mHH=vHH.M();
+      ptHH=vHH.Pt();
+      etaHH=vHH.Eta();
+      phiHH=vHH.Phi();
     }
 
+    LorentzVector vJJ;
     if (vRecoJet_tt1.Pt()>0 && vRecoJet_tt2.Pt()>0) {
-      LorentzVector vJJ = vRecoJet_tt1+vRecoJet_tt2;
+      vJJ = vRecoJet_tt1+vRecoJet_tt2;
       mJJ_tt=vJJ.M();
+      ptJJ_tt=vJJ.Pt();
+      etaJJ_tt=vJJ.Eta();
+      phiJJ_tt=vJJ.Phi();
       dEta_tt=vRecoJet_tt1.Eta()-vRecoJet_tt2.Eta();
       
       for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop                                                                                                  
@@ -1018,14 +1042,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	}
       }	
     }
-    else {
-      mJJ_tt=-999;
-      dEta_tt=0;
-    }
 
     if (vRecoJet_6j1.Pt()>0 && vRecoJet_6j2.Pt()>0) {
-      LorentzVector vJJ = vRecoJet_6j1+vRecoJet_6j2;
+      vJJ = vRecoJet_6j1+vRecoJet_6j2;
       mJJ_6j=vJJ.M();
+      ptJJ_6j=vJJ.Pt();
+      etaJJ_6j=vJJ.Eta();
+      phiJJ_6j=vJJ.Phi();
       dEta_6j=vRecoJet_6j1.Eta()-vRecoJet_6j2.Eta();
       
       if (vRecoJet_6j1.Eta() > vRecoJet_6j2.Eta()) {
@@ -1040,10 +1063,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	if (vRecoB3.Eta() > vRecoJet_6j1.Eta() && vRecoJet_6j2.Eta() > vRecoB3.Eta()) centB++;
 	if (vRecoB4.Eta() > vRecoJet_6j1.Eta() && vRecoJet_6j2.Eta() > vRecoB4.Eta()) centB++;	
       }
-    }
-    else {
-      mJJ_6j=-999;
-      dEta_6j=0;
     }
 
     // ********************
@@ -1062,22 +1081,14 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       ppMet=missET->MET;
       ppMetPhi=missET->Phi;
     }
-    else {
-      ppMet=-999;
-      ppMetPhi=-999;
-    }
 
-    if ( sRecoTau1->Pt()>0 && sRecoTau2->Pt()>0 && sRecoB1->Pt()>0 && sRecoB2->Pt()>0) {
+    if ( vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0 && vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
 
-      tau1.SetMagPhi(sRecoTau1->Pt(), sRecoTau1->Phi());
-      tau2.SetMagPhi(sRecoTau2->Pt(), sRecoTau2->Phi());
-      mTau1=sRecoTau1->M();
-      mTau2=sRecoTau2->M();
+      tau1.SetMagPhi(vRecoTau1.Pt(), vRecoTau1.Phi());
+      tau2.SetMagPhi(vRecoTau2.Pt(), vRecoTau2.Phi());
       
-      b1.SetMagPhi(sRecoB1->Pt(), sRecoB1->Phi());
-      b2.SetMagPhi(sRecoB2->Pt(), sRecoB2->Phi());
-      mB1=sRecoB1->M();
-      mB2=sRecoB2->M();
+      b1.SetMagPhi(vRecoB1.Pt(), vRecoB1.Phi());
+      b2.SetMagPhi(vRecoB2.Pt(), vRecoB2.Phi());
       
       mpt.SetMagPhi(met, metPhi);
       
@@ -1128,18 +1139,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
       else ppMt2 = -999;
     }    
-    else { 
-      mt2 = -999;
-      ppMt2 = -999;
-    }
-    
-    if (ptB1>0 && ptB2>0 && ptTau1>0 && ptTau2>0) { isBBTT=1; }
-    if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0) { isBBBB=1; }
-    if (ptB1>0 && ptB2>0 && ptG1>0 && ptG2>0) { isBBGG=1; }
-    if (ptJet_tt1>0 && ptJet_tt2>0 && ptTau1>0 && ptTau2>0) { isVBFTT=1; }
-    if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0 && ptJet_6j1>0 && ptJet_6j2>0) { isVBF4B=1; }
-
-    if (isBBTT==0 && isBBBB==0 && isBBGG==0 && isVBFTT==0 && isVBF4B==0) continue;
     
     // ********************
     // GEN PARTICLES
@@ -1247,106 +1246,75 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
     }
 
-    LorentzVector vGenTau1(0,0,0,0);
     if (genTau1) {
-      vGenTau1.SetPt(genTau1->PT);
-      vGenTau1.SetEta(genTau1->Eta);
-      vGenTau1.SetPhi(genTau1->Phi);
-      vGenTau1.SetM(genTau1->Mass);
-      sGenTau1 = &vGenTau1;
+      ptTau1_gen=genTau1->PT;
+      etaTau1_gen=genTau1->Eta;
+      phiTau1_gen=genTau1->Phi;
+      mTau1_gen=genTau1->Mass;
     }
-    else sGenTau1 = &nothing;
 
-    LorentzVector vGenTau2(0,0,0,0);
     if (genTau2) {
-      vGenTau2.SetPt(genTau2->PT);
-      vGenTau2.SetEta(genTau2->Eta);
-      vGenTau2.SetPhi(genTau2->Phi);
-      vGenTau2.SetM(genTau2->Mass);
-      sGenTau2 = &vGenTau2;
+      ptTau2_gen=genTau2->PT;
+      etaTau2_gen=genTau2->Eta;
+      phiTau2_gen=genTau2->Phi;
+      mTau2_gen=genTau2->Mass;
     }
-    else sGenTau2 = &nothing;
 
-    LorentzVector vGenGam1(0,0,0,0);
     if (genGam1) {
-      vGenGam1.SetPt(genGam1->PT);
-      vGenGam1.SetEta(genGam1->Eta);
-      vGenGam1.SetPhi(genGam1->Phi);
-      vGenGam1.SetM(0);
-      sGenGam1 = &vGenGam1;
+      ptG1_gen=genGam1->PT;
+      etaG1_gen=genGam1->Eta;
+      phiG1_gen=genGam1->Phi;
+      eG1_gen=genGam1->E;
     }
-    else sGenGam1 = &nothing;
 
-    LorentzVector vGenGam2(0,0,0,0);
     if (genGam2) {
-      vGenGam2.SetPt(genGam2->PT);
-      vGenGam2.SetEta(genGam2->Eta);
-      vGenGam2.SetPhi(genGam2->Phi);
-      vGenGam2.SetM(0);
-      sGenGam2 = &vGenGam2;
+      ptG2_gen=genGam2->PT;
+      etaG2_gen=genGam2->Eta;
+      phiG2_gen=genGam2->Phi;
+      eG2_gen=genGam2->E;
     }
-    else sGenGam2 = &nothing;
 
-    LorentzVector vGenB1(0,0,0,0);
     if (genB1) {
-      vGenB1.SetPt(genB1->PT);
-      vGenB1.SetEta(genB1->Eta);
-      vGenB1.SetPhi(genB1->Phi);
-      vGenB1.SetM(genB1->Mass);
-      sGenB1 = &vGenB1;
+      ptB1_gen=genB1->PT;
+      etaB1_gen=genB1->Eta;
+      phiB1_gen=genB1->Phi;
+      mB1_gen=genB1->Mass;
     }
-    else sGenB1 = &nothing;
 
-    LorentzVector vGenB2(0,0,0,0);
     if (genB2) {
-      vGenB2.SetPt(genB2->PT);
-      vGenB2.SetEta(genB2->Eta);
-      vGenB2.SetPhi(genB2->Phi);
-      vGenB2.SetM(genB2->Mass);
-      sGenB2 = &vGenB2;
+      ptB2_gen=genB2->PT;
+      etaB2_gen=genB2->Eta;
+      phiB2_gen=genB2->Phi;
+      mB2_gen=genB2->Mass;
     }
-    else sGenB2 = &nothing;
 
-    LorentzVector vGenB3(0,0,0,0);
     if (genB3) {
-      vGenB3.SetPt(genB3->PT);
-      vGenB3.SetEta(genB3->Eta);
-      vGenB3.SetPhi(genB3->Phi);
-      vGenB3.SetM(genB3->Mass);
-      sGenB3 = &vGenB3;
+      ptB3_gen=genB3->PT;
+      etaB3_gen=genB3->Eta;
+      phiB3_gen=genB3->Phi;
+      mB3_gen=genB3->Mass;
     }
-    else sGenB3 = &nothing;
 
-    LorentzVector vGenB4(0,0,0,0);
     if (genB4) {
-      vGenB4.SetPt(genB4->PT);
-      vGenB4.SetEta(genB4->Eta);
-      vGenB4.SetPhi(genB4->Phi);
-      vGenB4.SetM(genB4->Mass);
-      sGenB4 = &vGenB4;
+      ptB4_gen=genB4->PT;
+      etaB4_gen=genB4->Eta;
+      phiB4_gen=genB4->Phi;
+      mB4_gen=genB4->Mass;
     }
-    else sGenB4 = &nothing;
 
-    LorentzVector vGenH1(0,0,0,0);
     if (genH1) {
-      vGenH1.SetPt(genH1->PT);
-      vGenH1.SetEta(genH1->Eta);
-      vGenH1.SetPhi(genH1->Phi);
-      vGenH1.SetM(genH1->Mass);
-      sGenH1 = &vGenH1;
+      ptH1_gen=genH1->PT;
+      etaH1_gen=genH1->Eta;
+      phiH1_gen=genH1->Phi;
+      mH1_gen=genH1->Mass;
     }
-    else sGenH1 = &nothing;
 
-    LorentzVector vGenH2(0,0,0,0);
     if (genH2) {
-      vGenH2.SetPt(genH2->PT);
-      vGenH2.SetEta(genH2->Eta);
-      vGenH2.SetPhi(genH2->Phi);
-      vGenH2.SetM(genH2->Mass);
-      sGenH2 = &vGenH2;
+      ptH2_gen=genH2->PT;
+      etaH2_gen=genH2->Eta;
+      phiH2_gen=genH2->Phi;
+      mH2_gen=genH2->Mass;
     }
-    else sGenH2 = &nothing;
-
 
     // ********************
     // GEN JETS
@@ -1355,150 +1323,85 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     for (Int_t iJet=0; iJet<branchGenJet->GetEntries(); iJet++) { // generator level jet loop                                                                                      
       genJet = (Jet*) branchGenJet->At(iJet);
 
-      if (deltaR(genJet->Eta, sRecoB1->Eta(), genJet->Phi, sRecoB1->Phi()) < MAX_MATCH_DIST) {
-        iGenJetB1=iJet;
-        genJetB1 = (Jet*) branchGenJet->At(iGenJetB1);
-      }
-      else if (deltaR(genJet->Eta, sRecoB2->Eta(), genJet->Phi, sRecoB2->Phi()) < MAX_MATCH_DIST) {
-        iGenJetB2=iJet;
-        genJetB2 = (Jet*) branchGenJet->At(iGenJetB2);
-      }
-      else if (deltaR(genJet->Eta, sRecoB3->Eta(), genJet->Phi, sRecoB3->Phi()) < MAX_MATCH_DIST) {
-        iGenJetB3=iJet;
-        genJetB3 = (Jet*) branchGenJet->At(iGenJetB3);
-      }
-      else if (deltaR(genJet->Eta, sRecoB4->Eta(), genJet->Phi, sRecoB4->Phi()) < MAX_MATCH_DIST) {
-        iGenJetB4=iJet;
-        genJetB4 = (Jet*) branchGenJet->At(iGenJetB4);
-      }
-      else if (deltaR(genJet->Eta, sRecoTau1->Eta(), genJet->Phi, sRecoTau1->Phi()) < MAX_MATCH_DIST) {
+      if (deltaR(genJet->Eta, vRecoTau1.Eta(), genJet->Phi, vRecoTau1.Phi()) < MAX_MATCH_DIST) {
         iGenJetTau1=iJet;
         genJetTau1 = (Jet*) branchGenJet->At(iGenJetTau1);
       }
-      else if (deltaR(genJet->Eta, sRecoTau2->Eta(), genJet->Phi, sRecoTau2->Phi()) < MAX_MATCH_DIST) {
+      else if (deltaR(genJet->Eta, vRecoTau2.Eta(), genJet->Phi, vRecoTau2.Phi()) < MAX_MATCH_DIST) {
         iGenJetTau2=iJet;
         genJetTau2 = (Jet*) branchGenJet->At(iGenJetTau2);
       }
-      else if (deltaR(genJet->Eta, sRecoJet_tt1->Eta(), genJet->Phi, sRecoJet_tt1->Phi()) < MAX_MATCH_DIST) {
+      else if (deltaR(genJet->Eta, vRecoJet_tt1.Eta(), genJet->Phi, vRecoJet_tt1.Phi()) < MAX_MATCH_DIST) {
         iGenJet_tt1=iJet;
         genJet_tt1 = (Jet*) branchGenJet->At(iGenJet_tt1);
       }
-      else if (deltaR(genJet->Eta, sRecoJet_tt2->Eta(), genJet->Phi, sRecoJet_tt2->Phi()) < MAX_MATCH_DIST) {
+      else if (deltaR(genJet->Eta, vRecoJet_tt2.Eta(), genJet->Phi, vRecoJet_tt2.Phi()) < MAX_MATCH_DIST) {
         iGenJet_tt2=iJet;
         genJet_tt2 = (Jet*) branchGenJet->At(iGenJet_tt2);
       }
-      else if (deltaR(genJet->Eta, sRecoJet_6j1->Eta(), genJet->Phi, sRecoJet_6j1->Phi()) < MAX_MATCH_DIST) {
+      else if (deltaR(genJet->Eta, vRecoJet_6j1.Eta(), genJet->Phi, vRecoJet_6j1.Phi()) < MAX_MATCH_DIST) {
         iGenJet_6j1=iJet;
         genJet_6j1 = (Jet*) branchGenJet->At(iGenJet_6j1);
       }
-      else if (deltaR(genJet->Eta, sRecoJet_6j2->Eta(), genJet->Phi, sRecoJet_6j2->Phi()) < MAX_MATCH_DIST) {
+      else if (deltaR(genJet->Eta, vRecoJet_6j2.Eta(), genJet->Phi, vRecoJet_6j2.Phi()) < MAX_MATCH_DIST) {
         iGenJet_6j2=iJet;
         genJet_6j2 = (Jet*) branchGenJet->At(iGenJet_6j2);
       }
     }
 
-    LorentzVector vGenJetTau1(0,0,0,0);
     if (genJetTau1) {
-      vGenJetTau1.SetPt(genJetTau1->PT);
-      vGenJetTau1.SetEta(genJetTau1->Eta);
-      vGenJetTau1.SetPhi(genJetTau1->Phi);
-      vGenJetTau1.SetM(genJetTau1->Mass);
-      sGenJetTau1 = &vGenJetTau1;
+      ptTau1_genJet=genJetTau1->PT;
+      etaTau1_genJet=genJetTau1->Eta;
+      phiTau1_genJet=genJetTau1->Phi;
+      mTau1_genJet=genJetTau1->Mass;
     }
-    else sGenJetTau1 = &nothing;
 
-    LorentzVector vGenJetTau2(0,0,0,0);
     if (genJetTau2) {
-      vGenJetTau2.SetPt(genJetTau2->PT);
-      vGenJetTau2.SetEta(genJetTau2->Eta);
-      vGenJetTau2.SetPhi(genJetTau2->Phi);
-      vGenJetTau2.SetM(genJetTau2->Mass);
-      sGenJetTau2 = &vGenJetTau2;
+      ptTau2_genJet=genJetTau2->PT;
+      etaTau2_genJet=genJetTau2->Eta;
+      phiTau2_genJet=genJetTau2->Phi;
+      mTau2_genJet=genJetTau2->Mass;
     }
-    else sGenJetTau2 = &nothing;
-    
-    LorentzVector vGenJetB1(0,0,0,0);
-    if (genJetB1) {
-      vGenJetB1.SetPt(genJetB1->PT);
-      vGenJetB1.SetEta(genJetB1->Eta);
-      vGenJetB1.SetPhi(genJetB1->Phi);
-      vGenJetB1.SetM(genJetB1->Mass);
-      sGenJetB1 = &vGenJetB1;
-    }
-    else sGenJetB1 = &nothing;
 
-    LorentzVector vGenJetB2(0,0,0,0);
-    if (genJetB2) {
-      vGenJetB2.SetPt(genJetB2->PT);
-      vGenJetB2.SetEta(genJetB2->Eta);
-      vGenJetB2.SetPhi(genJetB2->Phi);
-      vGenJetB2.SetM(genJetB2->Mass);
-      sGenJetB2 = &vGenJetB2;
-    }
-    else sGenJetB2 = &nothing;
-
-    LorentzVector vGenJetB3(0,0,0,0);
-    if (genJetB3) {
-      vGenJetB3.SetPt(genJetB3->PT);
-      vGenJetB3.SetEta(genJetB3->Eta);
-      vGenJetB3.SetPhi(genJetB3->Phi);
-      vGenJetB3.SetM(genJetB3->Mass);
-      sGenJetB3 = &vGenJetB3;
-    }
-    else sGenJetB3 = &nothing;
-
-    LorentzVector vGenJetB4(0,0,0,0);
-    if (genJetB4) {
-      vGenJetB4.SetPt(genJetB4->PT);
-      vGenJetB4.SetEta(genJetB4->Eta);
-      vGenJetB4.SetPhi(genJetB4->Phi);
-      vGenJetB4.SetM(genJetB4->Mass);
-      sGenJetB4 = &vGenJetB4;
-    }
-    else sGenJetB4 = &nothing;
-
-    LorentzVector vGenJet_tt1(0,0,0,0);
     if (genJet_tt1) {
-      vGenJet_tt1.SetPt(genJet_tt1->PT);
-      vGenJet_tt1.SetEta(genJet_tt1->Eta);
-      vGenJet_tt1.SetPhi(genJet_tt1->Phi);
-      vGenJet_tt1.SetM(genJet_tt1->Mass);
-      sGenJet_tt1 = &vGenJet_tt1;
+      ptJet_tt1_gen=genJet_tt1->PT;
+      etaJet_tt1_gen=genJet_tt1->Eta;
+      phiJet_tt1_gen=genJet_tt1->Phi;
+      mJet_tt1_gen=genJet_tt1->Mass;
     }
-    else sGenJet_tt1 = &nothing;
 
-    LorentzVector vGenJet_tt2(0,0,0,0);
     if (genJet_tt2) {
-      vGenJet_tt2.SetPt(genJet_tt2->PT);
-      vGenJet_tt2.SetEta(genJet_tt2->Eta);
-      vGenJet_tt2.SetPhi(genJet_tt2->Phi);
-      vGenJet_tt2.SetM(genJet_tt2->Mass);
-      sGenJet_tt2 = &vGenJet_tt2;
+      ptJet_tt2_gen=genJet_tt2->PT;
+      etaJet_tt2_gen=genJet_tt2->Eta;
+      phiJet_tt2_gen=genJet_tt2->Phi;
+      mJet_tt2_gen=genJet_tt2->Mass;
     }
-    else sGenJet_tt2 = &nothing;
 
-    LorentzVector vGenJet_6j1(0,0,0,0);
     if (genJet_6j1) {
-      vGenJet_6j1.SetPt(genJet_6j1->PT);
-      vGenJet_6j1.SetEta(genJet_6j1->Eta);
-      vGenJet_6j1.SetPhi(genJet_6j1->Phi);
-      vGenJet_6j1.SetM(genJet_6j1->Mass);
-      sGenJet_6j1 = &vGenJet_6j1;
+      ptJet_6j1_gen=genJet_6j1->PT;
+      etaJet_6j1_gen=genJet_6j1->Eta;
+      phiJet_6j1_gen=genJet_6j1->Phi;
+      mJet_6j1_gen=genJet_6j1->Mass;
     }
-    else sGenJet_6j1 = &nothing;
 
-    LorentzVector vGenJet_6j2(0,0,0,0);
     if (genJet_6j2) {
-      vGenJet_6j2.SetPt(genJet_6j2->PT);
-      vGenJet_6j2.SetEta(genJet_6j2->Eta);
-      vGenJet_6j2.SetPhi(genJet_6j2->Phi);
-      vGenJet_6j2.SetM(genJet_6j2->Mass);
-      sGenJet_6j2 = &vGenJet_6j2;
+      ptJet_6j2_gen=genJet_6j2->PT;
+      etaJet_6j2_gen=genJet_6j2->Eta;
+      phiJet_6j2_gen=genJet_6j2->Phi;
+      mJet_6j2_gen=genJet_6j2->Mass;
     }
-    else sGenJet_6j2 = &nothing;
 
-    if ( (isBBBB==1 || isVBF4B==1) && (vGenH1.Pt()>0 && vGenH2.Pt()>0) ) {
 
+    if ( (isBBBB==1 || isVBF4B==1) && ptH1_gen>0 && ptH2_gen>0 ) {
+
+      LorentzVector vGenB1(ptB1_gen, etaB1_gen, phiB1_gen, mB1_gen);
+      LorentzVector vGenB2(ptB2_gen, etaB2_gen, phiB2_gen, mB2_gen);
+      LorentzVector vGenB3(ptB3_gen, etaB3_gen, phiB3_gen, mB3_gen);
+      LorentzVector vGenB4(ptB4_gen, etaB4_gen, phiB4_gen, mB4_gen);
+      
+      LorentzVector vGenH1(ptH1_gen, etaH1_gen, phiH1_gen, mH1_gen);
+      LorentzVector vGenH2(ptH2_gen, etaH2_gen, phiH2_gen, mH2_gen);
+      
       LorentzVector vTestBB1=vGenB1+vGenB2;
       LorentzVector vTestBB2=vGenB3+vGenB4;
       

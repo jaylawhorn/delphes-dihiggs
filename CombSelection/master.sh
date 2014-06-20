@@ -2,18 +2,20 @@
 
 #master run script for pre-processing
 
-if [ ${#} -lt "2" ]; then
+if [ ${#} -lt "3" ]; then
     echo "Please use the following syntax: " 
-    echo "    ./master.sh <conf_file> <submit>"
+    echo "    ./master.sh <conf_file> <output_dir> <submit>"
     echo " "
     echo "<conf_file> is a text file containing the names of all samples"
+    echo "<output_dir> is the desired output location"
     echo "<submit> is either 0 if you want to submit the jobs by hand or"
     echo "         1 if you want the jobs to be automatically submitted"
     exit
 fi
 
 conf_file=$1
-submit=$2
+output_dir=$2
+submit=$3
 
 while read line #loop over lines in ${conf_file}
 do
@@ -50,17 +52,18 @@ do
 
       echo `cat ${array[0]}_events.txt` "events found"
 
-      mkdir -p "/afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/"${array[0]}
+      mkdir -p ${output_dir}
+      mkdir -p ${output_dir}${array[0]}
 
       n=0
 
       rm ${array[0]}_run.sh
       head -8 run_outline.sh > ${array[0]}_run.sh
-      echo 'echo /afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/'${array[0]}'.root > '${array[0]}'_comb.txt' >> ${array[0]}_run.sh
+      echo 'echo '${output_dir}${array[0]}'.root > '${array[0]}'_comb.txt' >> ${array[0]}_run.sh
       while read line2
       do
-	  echo root -l -q -b selection.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,${array[4]},\\\""/afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/"${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
-	  echo 'echo /afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/'${array[0]}'/'${n}'.root >> ' ${array[0]}'_comb.txt' >> ${array[0]}_run.sh
+	  echo root -l -q -b selection.C+\\\(\\\"${line2}\\\",${array[1]},`cat ${array[0]}_events.txt`,${array[4]},\\\"${output_dir}${array[0]}/${n}".root"\\\"\\\) >> ${array[0]}_run.sh
+	  echo 'echo '${output_dir}${array[0]}'/'${n}'.root >> ' ${array[0]}'_comb.txt' >> ${array[0]}_run.sh
 	  n=$((n+1))
 	      
       done < ${array[0]}.txt      
