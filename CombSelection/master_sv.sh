@@ -85,7 +85,7 @@ do
 	  elif [ $((n%5)) -eq "0" ]; then
 	      echo $script $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
 	      if [ ${submit} -eq "1" ]; then
-		  bsub -o ${outputDir}out.%J -e ${outputDir}err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+		  bsub -o ${outputDir}/out.%J -e ${outputDir}/err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
 	      else
 		  ./${script} $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
 	      fi
@@ -100,7 +100,7 @@ do
 
       echo $script $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
       if [ ${submit} -eq "1" ]; then
-	  bsub -o ${outputDir}out.%J -e ${outputDir}err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+	  bsub -o ${outputDir}/out.%J -e ${outputDir}/err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
       else
 	  ./${script} $workDir $outputDir ${line2} ${array[1]} $nevents ${array[4]} $n $runMacro $soFile ${file_array[@]} ${no_array[@]}
       fi

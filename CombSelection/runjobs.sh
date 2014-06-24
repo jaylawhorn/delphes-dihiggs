@@ -33,7 +33,7 @@ for ((i=0; i<$((loop/2)); i++))
 do 
     x=`expr 7 + $i + $loop / 2`
     echo root -l -b -q ${runMacro}+\(\"${inarray[`expr $i + 7`]}\",${xsec},${events},${id},\"${outputDir}/${inarray[$x]}.root\"\)
-    root -l -b -q ${runMacro}+\(\"${infile}\",${xsec},${events},${id},\"${outputDir}/${x}.root\"\)
+    root -l -b -q ${runMacro}+\(\"${inarray[`expr $i + 7`]}\",${xsec},${events},${id},\"${outputDir}/${inarray[$x]}.root\"\)
 
 done
 
