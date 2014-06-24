@@ -51,13 +51,13 @@ do
       nevents=`cat ${array[0]}_events.txt`
       echo $nevents "events found"
 
-      outputDir=/afs/cern.ch/work/a/arapyan/public/comb_ntuples/${array[0]}
+      outputDir=/afs/cern.ch/work/a/arapyan/public/delphes/comb_ntuples/${array[0]}
       workDir=$CMSSW_BASE #`pwd`  
       runMacro=selection.C
       soFile=`echo $runMacro | sed 's/\./_/'`.so
       script=runjobs.sh
       
-      
+
       # check a few things
       if [ ! "$CMSSW_BASE" ]; then
 	  echo "-------> error: define cms environment."
@@ -67,6 +67,9 @@ do
 	  echo "-------> error: forgot to recompile run macro."
 	  exit 1
       fi
+
+      mkdir -p ${output_dir}
+      mkdir -p ${output_dir}${array[0]}
 
       cp setRootEnv.C            $workDir
       cp rootlogon.C             $workDir
@@ -79,7 +82,7 @@ do
 	do
 	if [ ${submit} -eq "1" ]; then
 	    echo  $script $workDir $outputDir ${line2} ${array[1]} $nevents ${array[4]} $n $runMacro $soFile
-	    bsub  -o out.%J  -q 2nd $script  $workDir $outputDir ${line2}  ${array[1]} $nevents ${array[4]} $n $runMacro $soFile
+	    bsub  -o out.%J  -q 8nh $script  $workDir $outputDir ${line2}  ${array[1]} $nevents ${array[4]} $n $runMacro $soFile
 	fi
 	n=$((n+1))
       done < ${array[0]}.txt 

@@ -23,7 +23,6 @@ cp ${scramdir}/rootlogon.C .
 cp ${scramdir}/$runMacro  .
 cp ${scramdir}/$soFile  .
 
-mkdir ${outputDir}
 root -l -b -q ${runMacro}+\(\"${infile}\",${xsec},${events},${id},\"${outputDir}/${x}.root\"\)
 
 status=`echo $?`

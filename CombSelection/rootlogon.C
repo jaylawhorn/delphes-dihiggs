@@ -19,7 +19,10 @@
       gSystem->SetMakeSharedLib(str);
     }
     cout << " CMSSW environment is set up." << endl;
-    gROOT->Macro("setRootEnv.C+");
+    TString addedLibs(gSystem->GetLibraries());
+    if(!addedLibs.Contains("setRootEnv_C.so")) {
+      gROOT->Macro("$CMSSW_BASE/src/delphes-dihiggs/CombSelection/setRootEnv.C+");
+    }
     gSystem->Load("$CMSSW_BASE/src/Delphes/libDelphes.so");
     //gSystem->Load("libTauAnalysisSVFitHelper.so");
     //gSystem->Load("libTauAnalysisCandidateTools.so");
