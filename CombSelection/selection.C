@@ -14,10 +14,13 @@
 #include <iomanip>
 #include <fstream>
 #include "Math/LorentzVector.h"
+#include "TLorentzVector.h"
 #include "modules/Delphes.h"
 #include "ExRootAnalysis/ExRootTreeReader.h"
 #include "classes/DelphesClasses.h"
 #include "mt2.hh"
+#include "TauAnalysis/SVFitHelper/interface/TSVfit.h"
+#include "TauAnalysis/SVFitHelper/interface/TSVfitter.h"
 #endif
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVector;
@@ -27,7 +30,7 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
 
 //void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/new_hh/new_hh_0.root",
-void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgrade/delphes/ProdJun14/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_151887068_PhaseII_Conf4_140PileUp_seed151887069_1of5.root",
+void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgrade/delphes/ProdJun14/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_190076234_PhaseII_Conf4_140PileUp_seed190076235_1of5.root",
 	       const Float_t xsec=2.92,
 	       const Float_t totalEvents=5000,
 	       Int_t   sampleNo=100,
@@ -38,12 +41,22 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   // declare constants
   const Double_t MUON_MASS = 0.105658369;
   const Double_t ELE_MASS  = 0.000511;
+  const Double_t TAU_MASS  = 1.77682;
 
   const Int_t TAU_ID_CODE = 15;
   const Int_t B_ID_CODE = 5;
   const Int_t G_ID_CODE = 21;
 
   const Float_t MAX_MATCH_DIST = 0.4;
+
+  const Float_t lcov00 = 2500;
+  const Float_t lcov10 = 500;
+  const Float_t lcov01 = 500;
+  const Float_t lcov11 = 2500;
+  const Float_t lcov00pp = 225;
+  const Float_t lcov10pp = 45;
+  const Float_t lcov01pp = 45;
+  const Float_t lcov11pp = 225;
 
   // event categories
   enum { HH=0, H, TT, WJET, ZJET, EWK, ETC };
@@ -57,10 +70,16 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   min->SetTolerance(10.0);
   min->SetPrintLevel(0);
 
+  // setup svfit
+  mithep::TSVfitter *fitter = new mithep::TSVfitter();
+
   TVector2 tau1(0,0), tau2(0,0), mpt(0,0), ppmpt(0,0);
   TVector2 b1(0,0), b2(0,0);
   Double_t mt2=0;
   Double_t ppMt2=0;
+  Double_t m_sv=0; 
+  Double_t m_svpileup=0; 
+  Double_t m_svpuppi=0;
 
   // read input input file
   TChain chain("Delphes");
@@ -75,6 +94,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
   TClonesArray *branchMET =treeReader->UseBranch("MissingET");
   TClonesArray *branchPuppiMET =treeReader->UseBranch("PuppiMissingET");
+  TClonesArray *branchPileupMET =treeReader->UseBranch("PileUpJetIDMissingET");
 
   TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
@@ -139,6 +159,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   Float_t met, metPhi;
   Float_t ppMet, ppMetPhi;
+  Float_t pileupMet, pileupMetPhi;
 
   Int_t nCentral=0, nBtag=0;
   Int_t centB=0;
@@ -147,7 +168,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Int_t bTag1=0, bTag2=0, bTag3=0, bTag4=0;
   Int_t jbTag_tt1=0, jbTag_tt2=0, jbTag_6j1=0, jbTag_6j2=0;
   
-  Float_t ptTau1, ptTau2, ptB1, ptB2, ptB3, ptB4, ptG1, ptG2, ptJet_tt1, ptJet_tt2, ptJet_6j1, ptJet_6j2;
+  Float_t ptTau1, ptTau2, ptB1, ptB2, ptB3, ptB4, ptG1, ptG2, ptJet_tt1, ptJet_tt2, ptJet_6j1, ptJet_6j2, tauIso1, tauIso2;
   Float_t etaTau1, etaTau2, etaB1, etaB2, etaB3, etaB4, etaG1, etaG2, etaJet_tt1, etaJet_tt2, etaJet_6j1, etaJet_6j2;
   Float_t phiTau1, phiTau2, phiB1, phiB2, phiB3, phiB4, phiG1, phiG2, phiJet_tt1, phiJet_tt2, phiJet_6j1, phiJet_6j2;
   Float_t mTau1, mTau2, mB1, mB2, mB3, mB4, eG1, eG2, mJet_tt1, mJet_tt2, mJet_6j1, mJet_6j2;
@@ -186,20 +207,23 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
-  outTree->Branch("ppMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
-  outTree->Branch("ppMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
+  outTree->Branch("pileupmet",            &pileupMet,            "pileupMet/f");          // pileup missing transverse energy
+  outTree->Branch("pileupmetPhi",         &pileupMetPhi,         "pileupMetPhi/f");       // pileup missing transverse energy phi
+  outTree->Branch("puppiMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
+  outTree->Branch("puppiMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
 
   outTree->Branch("ptTau1",         &ptTau1,         "ptTau1/f");       // pt(Tau1)
   outTree->Branch("etaTau1",        &etaTau1,        "etaTau1/f");      // eta(Tau1)
   outTree->Branch("phiTau1",        &phiTau1,        "phiTau1/f");      // phi(Tau1)
   outTree->Branch("mTau1",          &mTau1,          "mTau1/f");        // m(Tau1)
   outTree->Branch("tauCat1",        &tauCat1,        "tauCat1/i");      // leading tau final state - jet, muon, electron
-
+  outTree->Branch("tauIso1",        &tauIso1,        "tauIso1/f");      // leading tau final state - jet, muon, electron
   outTree->Branch("ptTau2",         &ptTau2,         "ptTau2/f");       // pt(Tau2)
   outTree->Branch("etaTau2",        &etaTau2,        "etaTau2/f");      // eta(Tau2)
   outTree->Branch("phiTau2",        &phiTau2,        "phiTau2/f");      // phi(Tau2)
   outTree->Branch("mTau2",          &mTau2,          "mTau2/f");        // m(Tau2)
   outTree->Branch("tauCat2",        &tauCat2,        "tauCat2/i");      // second tau final state - jet, muon, electron
+  outTree->Branch("tauIso2",        &tauIso2,        "tauIso2/f");      // second tau final state - jet, muon, electron
 
   outTree->Branch("ptG1",           &ptG1,           "ptG1/f");         // pt(Gam1)
   outTree->Branch("etaG1",          &etaG1,          "etaG1/f");        // eta(Gam1)
@@ -380,6 +404,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass" (HH)
   outTree->Branch("ppMt2",          &ppMt2,          "ppMt2/D");        // PUPPI "stransverse mass" (HH)
+  
+  outTree->Branch("m_sv",            &m_sv,            "m_sv/D");          // "SVFit mass estimate" 
+  outTree->Branch("m_svpileup",            &m_svpileup,            "m_svpileup/D");          // "SVFit mass estimate with pileup jet ID MET"
+  outTree->Branch("m_svpuppi",            &m_svpuppi,            "m_svpuppi/D");          // "SVFit mass estimate with pileup jet ID MET"
 
   outTree->Branch("nBtag",          &nBtag,          "nBtag/i");        // number of b-tagged jets (VBF)   
   outTree->Branch("nCentral",       &nCentral,       "nCentral/i");     // number of central jets (VBF)
@@ -407,7 +435,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     iGenJet_tt1=-1; iGenJet_tt2=-1;
     iGenJet_6j1=-1; iGenJet_6j2=-1;
 
-    met=0; metPhi=0; ppMet=0; ppMetPhi=0;
+    met=0; metPhi=0; ppMet=0; ppMetPhi=0; pileupMet=0; pileupMetPhi=0;
 
     tauCat1=0; tauCat2=0; 
     bTag1=0; bTag2=0; bTag3=0; bTag4=0;
@@ -423,8 +451,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     nBtag=0; nCentral=0; centB=0;
 
-    ptTau1=-999; etaTau1=-999; phiTau1=-999; mTau1=-999;
-    ptTau2=-999; etaTau2=-999; phiTau2=-999; mTau2=-999;
+    ptTau1=-999; etaTau1=-999; phiTau1=-999; mTau1=-999; tauIso1=-999;
+    ptTau2=-999; etaTau2=-999; phiTau2=-999; mTau2=-999; tauIso2=-999;
     ptG1=-999; etaG1=-999; phiG1=-999; eG1=-999;
     ptG2=-999; etaG2=-999; phiG2=-999; eG2=-999;
     ptB1=-999; etaB1=-999; phiB1=-999; mB1=-999;
@@ -456,6 +484,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     jet_tt1=0; jet_tt2=0; jet_6j1=0; jet_6j1=0;
     gamma1=0;  gamma2=0;
 
+    m_sv = -999; m_svpileup = -999; m_svpuppi = -999;
+    
     // ********************
     // EVENT WEIGHT
     // ********************
@@ -506,74 +536,44 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
     } // end reco jet loop
 
-    if ((iT1==-1) || (iT2==-1)) {
-      // get muonic taus
-      for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { // reco muon loop
-	mu = (Muon*) branchMuon->At(iMuon);
+     
+    for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { // reco muon loop
+      mu = (Muon*) branchMuon->At(iMuon);
 
-	if (fabs(mu->Eta)>4.0) continue;
-	if (mu->PT<30) continue;
+      if (fabs(mu->Eta)>4.0) continue;
+      if (mu->PT<10) continue;
 
-	if (iT1==-1 && tauCat2!=muon) { 
-	  iT1=iMuon; 
-	  muTau = (Muon*) branchMuon->At(iT1); 
-	  tauCat1=muon; 
-	}
-	else if (iT2==-1 && tauCat1!=muon) { 
-	  iT2=iMuon; 
-	  muTau = (Muon*) branchMuon->At(iT2); 
-	  tauCat2=muon; 
-	}
-	else if (muTau) {
+      if(!muTau)
+	muTau = (Muon*) branchMuon->At(iMuon);
+      else
+	{
 	  if ( mu->PT > muTau->PT ) { 
-	    if (tauCat1==muon) {
-	      iT1=iMuon;
-	      muTau = (Muon*) branchMuon->At(iT1); 
-	    }
-	    else if (tauCat2==muon) {
-	      iT2=iMuon;
-	      muTau = (Muon*) branchMuon->At(iT2); 
-	    }
+	    muTau = (Muon*) branchMuon->At(iMuon); 
 	  }
 	}
-      }
-
-      // get electronic taus
-      for (Int_t iEle=0; iEle<branchElectron->GetEntries(); iEle++) { // reco ele loop
-	ele = (Electron*) branchElectron->At(iEle);
-
-	if (fabs(ele->Eta)>4.0) continue;
-	if (ele->PT<30) continue;
-
-	if (iT1==-1 && tauCat1!=electron) { 
-	  iT1=iEle; 
-	  eleTau = (Electron*) branchElectron->At(iT1); 
-	  tauCat1=electron; 
-	}
-	else if (iT2==-1 && tauCat2!=electron) { 
-	  iT2=iEle; 
-	  eleTau = (Electron*) branchElectron->At(iT2); 
-	  tauCat2=electron;
-	}
-	else if (eleTau) {
-	  if ( ele->PT > eleTau->PT ) { 
-	    if ( tauCat1==electron) {
-	      iT1=iEle;
-	      eleTau = (Electron*) branchElectron->At(iT1); 
-	    }
-	    else if ( tauCat2==electron) {
-	      iT2=iEle;
-	      eleTau = (Electron*) branchElectron->At(iT2); 
-	    }
-	  }
-	}
-      }
     }
+    
+      // get electronic taus
+    for (Int_t iEle=0; iEle<branchElectron->GetEntries(); iEle++) { // reco ele loop
+      ele = (Electron*) branchElectron->At(iEle);
 
+      if (fabs(ele->Eta)>4.0) continue;
+      if (ele->PT<10) continue;
+      
+      if(!eleTau)
+	eleTau= (Electron*) branchElectron->At(iEle);
+      else
+	{
+	  if ( ele->PT > eleTau->PT ) { 
+	    eleTau = (Electron*) branchElectron->At(iEle); 
+	  }
+	}
+    }
+	   
     // ********************
     // GAMMA SELECTION
     // ********************
-
+    
     for (Int_t iP=0; iP<branchPhoton->GetEntries(); iP++) { // reco photon loop
       gam = (Photon*) branchPhoton->At(iP);
 
@@ -766,9 +766,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     // STORE VARIABLES
     // ********************
 
+    //std::cout << "whaaat  " <<  (muTau ? muTau->PT : 0) << "  "  << (jetTau1 ? jetTau1->PT : 0) << " "  << (jetTau2 ? jetTau2->PT : 0) << "  " << (eleTau ? eleTau->PT : 0) << std::endl;
     // fill 4-vector for leading tau
     LorentzVector vRecoTau1(0,0,0,0);
-    if (jetTau1) {
+    LorentzVector vRecoTau2(0,0,0,0);
+    if(jetTau2 ? (jetTau2->PT > (muTau ? muTau->PT : 0) && jetTau2->PT > (eleTau? eleTau->PT : 0)) : 0) {
       vRecoTau1.SetPt(jetTau1->PT);
       vRecoTau1.SetEta(jetTau1->Eta);
       vRecoTau1.SetPhi(jetTau1->Phi);
@@ -777,31 +779,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       etaTau1=jetTau1->Eta;
       phiTau1=jetTau1->Phi;
       mTau1=jetTau1->Mass;
-    }
-    else if ((muTau)&&(tauCat1==muon)) {
-      vRecoTau1.SetPt(muTau->PT);
-      vRecoTau1.SetEta(muTau->Eta);
-      vRecoTau1.SetPhi(muTau->Phi);
-      vRecoTau1.SetM(MUON_MASS);
-      ptTau1=muTau->PT;
-      etaTau1=muTau->Eta;
-      phiTau1=muTau->Phi;
-      mTau1=MUON_MASS;
-    }
-    else if ((eleTau)&&(tauCat1==electron)) {
-      vRecoTau1.SetPt(eleTau->PT);
-      vRecoTau1.SetEta(eleTau->Eta);
-      vRecoTau1.SetPhi(eleTau->Phi);
-      vRecoTau1.SetM(ELE_MASS);
-      ptTau1=eleTau->PT;
-      etaTau1=eleTau->Eta;
-      phiTau1=eleTau->Phi;
-      mTau1=ELE_MASS;
-    }
-
-    // fill 4-vector for second tau
-    LorentzVector vRecoTau2(0,0,0,0);
-    if (jetTau2) {
       vRecoTau2.SetPt(jetTau2->PT);
       vRecoTau2.SetEta(jetTau2->Eta);
       vRecoTau2.SetPhi(jetTau2->Phi);
@@ -811,17 +788,17 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       phiTau2=jetTau2->Phi;
       mTau2=jetTau2->Mass;
     }
-    else if ((muTau)&&(tauCat2==muon)) {
-      vRecoTau2.SetPt(muTau->PT);
-      vRecoTau2.SetEta(muTau->Eta);
-      vRecoTau2.SetPhi(muTau->Phi);
-      vRecoTau2.SetM(MUON_MASS);
-      ptTau2=muTau->PT;
-      etaTau2=muTau->Eta;
-      phiTau2=muTau->Phi;
-      mTau2=MUON_MASS;
-    }
-    else if ((eleTau)&&(tauCat2==electron)) {
+    else if ((muTau ? muTau->PT : 0) > (jetTau1 ? jetTau1->PT : 0) && (eleTau ? eleTau->PT : 0) > (jetTau1 ? jetTau1->PT : 0)) {
+      vRecoTau1.SetPt(muTau->PT);
+      vRecoTau1.SetEta(muTau->Eta);
+      vRecoTau1.SetPhi(muTau->Phi);
+      vRecoTau1.SetM(MUON_MASS);
+      ptTau1=muTau->PT;
+      etaTau1=muTau->Eta;
+      phiTau1=muTau->Phi;
+      mTau1=MUON_MASS;
+      tauCat1=muon;
+      tauIso1=muTau->IsolationVar;
       vRecoTau2.SetPt(eleTau->PT);
       vRecoTau2.SetEta(eleTau->Eta);
       vRecoTau2.SetPhi(eleTau->Phi);
@@ -830,8 +807,50 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       etaTau2=eleTau->Eta;
       phiTau2=eleTau->Phi;
       mTau2=ELE_MASS;
+      tauCat2=electron;
+      tauIso2=eleTau->IsolationVar;
     }
-
+    else if (jetTau1 && (muTau? muTau->PT : 0) > (jetTau2 ? jetTau2->PT : 0) && (muTau ? muTau->PT : 0) > (eleTau ? eleTau->PT : 0)) {
+      vRecoTau1.SetPt(jetTau1->PT);
+      vRecoTau1.SetEta(jetTau1->Eta);
+      vRecoTau1.SetPhi(jetTau1->Phi);
+      vRecoTau1.SetM(jetTau1->Mass);
+      ptTau1=jetTau1->PT;
+      etaTau1=jetTau1->Eta;
+      phiTau1=jetTau1->Phi;
+      mTau1=jetTau1->Mass;
+      vRecoTau2.SetPt(muTau->PT);
+      vRecoTau2.SetEta(muTau->Eta);
+      vRecoTau2.SetPhi(muTau->Phi);
+      vRecoTau2.SetM(MUON_MASS);
+      ptTau2=muTau->PT;
+      etaTau2=muTau->Eta;
+      phiTau2=muTau->Phi;
+      mTau2=MUON_MASS;
+      tauCat2=muon;
+      tauIso2=muTau->IsolationVar;
+    }
+    else if (jetTau1 && (eleTau ? eleTau->PT : 0) > (jetTau2 ? jetTau2->PT : 0) && (eleTau ? eleTau->PT : 0) > (muTau ? muTau->PT : 0)) {
+      vRecoTau1.SetPt(jetTau1->PT);
+      vRecoTau1.SetEta(jetTau1->Eta);
+      vRecoTau1.SetPhi(jetTau1->Phi);
+      vRecoTau1.SetM(jetTau1->Mass);
+      ptTau1=jetTau1->PT;
+      etaTau1=jetTau1->Eta;
+      phiTau1=jetTau1->Phi;
+      mTau1=jetTau1->Mass;
+      vRecoTau2.SetPt(eleTau->PT);
+      vRecoTau2.SetEta(eleTau->Eta);
+      vRecoTau2.SetPhi(eleTau->Phi);
+      vRecoTau2.SetM(ELE_MASS);
+      ptTau2=eleTau->PT;
+      etaTau2=eleTau->Eta;
+      phiTau2=eleTau->Phi;
+      mTau2=ELE_MASS;
+      tauCat2=electron;
+      tauIso2=eleTau->IsolationVar;
+    }
+      
     // fill 4-vector for leading b-jet
     LorentzVector vRecoB1(0,0,0,0);
     if (jetB1) {
@@ -971,6 +990,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     if (ptB1>0 && ptB2>0 && ptB3>0 && ptB4>0 && ptJet_6j1>0 && ptJet_6j2>0) { isVBF4B=1; }
 
     if (isBBTT==0 && isBBBB==0 && isBBGG==0 && isVBFTT==0 && isVBF4B==0) continue;
+
     
     // ********************
     // COMPUTE VARIABLES
@@ -1082,6 +1102,14 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       ppMetPhi=missET->Phi;
     }
 
+    if (branchPileupMET) {
+      
+      missET = (MissingET*) branchPileupMET->At(0);
+       
+      pileupMet=missET->MET;
+      pileupMetPhi=missET->Phi;
+    }
+
     if ( vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0 && vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
 
       tau1.SetMagPhi(vRecoTau1.Pt(), vRecoTau1.Phi());
@@ -1139,6 +1167,61 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
       else ppMt2 = -999;
     }    
+
+    // ***********************************
+    // Let's start with SVFit calculations
+    // ***********************************
+    
+    if (vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0) {
+      int channel=0;
+      mithep::TSVfit svfit;
+      svfit.cov_00=lcov00;
+      svfit.cov_01=lcov01;
+      svfit.cov_10=lcov10;
+      svfit.cov_11=lcov11;
+      TLorentzVector lvec1;
+      if(tauCat1==hadron)
+	lvec1.SetPtEtaPhiM(ptTau1,etaTau1,phiTau1,TAU_MASS);
+      else
+	lvec1.SetPtEtaPhiM(ptTau1,etaTau1,phiTau1,mTau1);
+      TLorentzVector lvec2; 
+      if(tauCat2==hadron)
+	lvec2.SetPtEtaPhiM(ptTau2,etaTau2,phiTau2,TAU_MASS);
+      else
+	lvec2.SetPtEtaPhiM(ptTau2,etaTau2,phiTau2,mTau2);
+      mithep::FourVectorM svlep1; svlep1.SetPxPyPzE(lvec1.Px(),lvec1.Py(),lvec1.Pz(),lvec1.E());
+      mithep::FourVectorM svlep2; svlep2.SetPxPyPzE(lvec2.Px(),lvec2.Py(),lvec2.Pz(),lvec2.E());
+      if(tauCat1!=hadron)
+	{
+	  svfit.daughter1 = svlep1;
+	  svfit.daughter2 = svlep2;
+	  svfit.daughterId1 = 1;
+	  svfit.daughterId2 = 2;
+	  if(tauCat2!=hadron)
+	    channel=0;
+	  else
+	    channel=1;
+	}
+      else
+	{
+	  svfit.daughter1 = svlep2;
+	  svfit.daughter2 = svlep1;
+	  svfit.daughterId1 = 2;
+	  svfit.daughterId2 = 1;
+	  if(tauCat2==hadron)
+	    channel=2;
+	  else
+	    channel=1;
+	}
+      m_sv = fitter->integrate(&svfit,met,metPhi,channel);
+      svfit.cov_00=lcov00pp;
+      svfit.cov_01=lcov01pp;
+      svfit.cov_10=lcov10pp;
+      svfit.cov_11=lcov11pp;
+      m_svpileup = fitter->integrate(&svfit,pileupMet,pileupMetPhi,channel);
+      m_svpuppi = fitter->integrate(&svfit,ppMet,ppMetPhi,channel);
+      std::cout << tauCat1 << "  " <<  tauCat2 << "   " << channel  << "  "  << m_sv << "  "  <<  m_svpileup <<  "  " <<  m_svpuppi << "  " << std::endl; 
+    }
     
     // ********************
     // GEN PARTICLES
