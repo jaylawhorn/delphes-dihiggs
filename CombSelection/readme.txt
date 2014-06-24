@@ -14,3 +14,11 @@ Run with "./master.sh conf.txt 1". For each line in conf.txt, generates a list o
 
 getall.C: opens all ROOT files in a text file and finds the total number of events
 
+/* To get the svfit working. 
+1) Setup cmssw
+2) cmsenv
+3) Clone git@github.com:arapyan/TauAnalysis.git
+4) compile
+5) make sure there are no hard coded directories in master_sv.sh,rootlogon.C
+6) submit jobs with master_sv.sh
+
