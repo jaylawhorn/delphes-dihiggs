@@ -38,9 +38,9 @@ do
       for ((i=0; i<${#outarray[@]}; i++))
       do
 	  if [ ${array[3]} -eq "1" ]; then
-	      echo "root://eoscms.cern.ch/"${array[5]}"/"${outarray[i]} >> ${array[0]}.txt
+	      echo "root://eoscms.cern.ch/"${array[5]}${outarray[i]} >> ${array[0]}.txt
 	  elif [ ${array[3]} -eq "0" ]; then
-	      echo ${array[5]}"/"${outarray[i]} >> ${array[0]}.txt
+	      echo ${array[5]}${outarray[i]} >> ${array[0]}.txt
 	  fi
       done
 
@@ -51,7 +51,7 @@ do
       nevents=`cat ${array[0]}_events.txt`
       echo $nevents "events found"
 
-      outputDir=/afs/cern.ch/work/a/arapyan/public/delphes/comb_ntuples/${array[0]}
+      outputDir=/afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/${array[0]}
       workDir=$CMSSW_BASE #`pwd`  
       runMacro=selection.C
       soFile=`echo $runMacro | sed 's/\./_/'`.so
@@ -68,8 +68,7 @@ do
 	  exit 1
       fi
 
-      mkdir -p ${output_dir}
-      mkdir -p ${output_dir}${array[0]}
+      mkdir -p ${outputDir}
 
       cp setRootEnv.C            $workDir
       cp rootlogon.C             $workDir
@@ -77,15 +76,34 @@ do
       cp $soFile                 $workDir
 
       n=0
-      
+
       while read line2
-	do
-	if [ ${submit} -eq "1" ]; then
-	    echo  $script $workDir $outputDir ${line2} ${array[1]} $nevents ${array[4]} $n $runMacro $soFile
-	    bsub  -o out.%J  -q 8nh $script  $workDir $outputDir ${line2}  ${array[1]} $nevents ${array[4]} $n $runMacro $soFile
-	fi
-	n=$((n+1))
-      done < ${array[0]}.txt 
+      do
+	  if [ $n -eq "0" ]; then
+	      file_array=(${line2})
+	      no_array=(${n})		  
+	  elif [ $((n%5)) -eq "0" ]; then
+	      echo $script $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+	      if [ ${submit} -eq "1" ]; then
+		  bsub -o ${outputDir}out.%J -e ${outputDir}err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+	      else
+		  ./${script} $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+	      fi
+	      file_array=(${line2})
+	      no_array=(${n})
+	  else
+	      file_array=("${file_array[@]}" ${line2})
+	      no_array=("${no_array[@]}" ${n})
+	  fi
+	  n=$((n+1))	  
+      done < ${array[0]}.txt
+
+      echo $script $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+      if [ ${submit} -eq "1" ]; then
+	  bsub -o ${outputDir}out.%J -e ${outputDir}err.%J -q 8nh $script  $workDir $outputDir ${array[1]} $nevents ${array[4]} $runMacro $soFile ${file_array[@]} ${no_array[@]}
+      else
+	  ./${script} $workDir $outputDir ${line2} ${array[1]} $nevents ${array[4]} $n $runMacro $soFile ${file_array[@]} ${no_array[@]}
+      fi
   fi
 done < ${conf_file}
 
