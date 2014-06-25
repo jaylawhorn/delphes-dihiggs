@@ -56,13 +56,13 @@ void blind(TH1F* iH,double low,double high) {
 }
 
 
-void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbins=10, double xmin=0, double xmax=250,std::string xtitle="m_{vis}(#tau#tau)", std::string ytitle="Events")
+void draw(std::string var="mHH", std::string cut="(1)", int chan_cat=0, int nbins=25, double xmin=100, double xmax=1600,std::string xtitle="", std::string ytitle="Events")
 {
   SetStyle(); gStyle->SetLineStyleString(11,"20 10");
   TH1::SetDefaultSumw2(1);
 
   std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/";
-  double sigscale = 10;
+  double sigscale = 1000;
   double sigscale1 = 10; 
   std::stringstream scale; scale << sigscale;
   std::stringstream scale1; scale1 << sigscale1;
@@ -81,35 +81,37 @@ void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbin
 
   std::string optcut = cut+"*"+taucut+"*"+bcut;
   if (chan_cat==0) { //tt
-    optcut = cut+"*"+ttcut;
+    optcut += "*"+ttcut;
   }
   else if (chan_cat==1) { //mt
-    optcut = cut+"*"+mtcut;
+    optcut += "*"+mtcut;
   }
   else if (chan_cat==2) { //et
-    optcut = cut+"*"+etcut;
+    optcut += "*"+etcut;
   }
   else if (chan_cat==3) { //em
-    optcut = cut+"*"+emcut;
+    optcut += "*"+emcut;
   }
 
   //signal region
-  std::string hhcut = optcut+"*eventWeight*(isBBTT==1)*(eventType==0)*"+lumi.str();
-  std::string hcut = optcut+"*eventWeight*(isBBTT==1)*(eventType==1)*"+lumi.str();
-  std::string ttbarcut = optcut+"*eventWeight*(isBBTT==1)*(eventType==2)*"+lumi.str();
-  std::string zjetcut = optcut+"*eventWeight*(isBBTT==1)*(eventType==4)*"+lumi.str();
-  std::string ewkcut = optcut+"*eventWeight*(isBBTT==1)*(eventType==3||eventType==5)*"+lumi.str();
-  std::string othercut = optcut+"*eventWeight*(isBBTT==1)*(eventType==6)*"+lumi.str();
+  std::string hhcut = optcut+"*"+scale.str()+"*newEvtWeight*(isBBTT==1)*(1)*"+lumi.str();
+  std::string hcut = optcut+"*newEvtWeight*(isBBTT==1)*(1)*"+lumi.str();
+  std::string ttbarcut = optcut+"*newEvtWeight*(isBBTT==1)*(1)*"+lumi.str();
+  std::string zjetcut = optcut+"*newEvtWeight*(isBBTT==1)*(eventType==4)*"+lumi.str();
+  std::string ewkcut = optcut+"*newEvtWeight*(isBBTT==1)*(eventType!=4)*"+lumi.str();
+
+  cout << hhcut << endl;
   
   //--------------------------------------------------------------------------
   
   //Get the trees
-  TTree *bgtree = load(dir+"NOT_SCIENCE.root"); 
-  TTree *sigtree = load(dir+"NOT_SCIENCE.root"); 
-  //TTree *sigtree = load(dir+"HHToTTBB_14TeV.root"); 
+  TTree *ttbartree = load(dir+"tt.root"); 
+  TTree *htree = load(dir+"H.root"); 
+  TTree *ewktree = load(dir+"EWK.root"); 
+  TTree *sigtree = load(dir+"HHToTTBB_14TeV.root"); 
 
   //-------------------------------------------------------------------------
-  
+
   //Get histograms
   TCanvas *canv0 = MakeCanvas("canv", "histograms", 600, 600);
   canv0->cd();
@@ -121,39 +123,33 @@ void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbin
   sig->SetLineColor(kBlack);
   TH1F *ttbar = new TH1F("TTbar","",nbins,xmin,xmax);
   vardraw = var+">>"+"TTbar";
-  bgtree->Draw(vardraw.c_str(),ttbarcut.c_str());
+  ttbartree->Draw(vardraw.c_str(),ttbarcut.c_str());
   InitHist(ttbar, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(155,152,204), 1001);
   TH1F *hbg = new TH1F("H","",nbins,xmin,xmax);
   vardraw = var+">>"+"H";
-  bgtree->Draw(vardraw.c_str(),hcut.c_str());
+  htree->Draw(vardraw.c_str(),hcut.c_str());
   InitHist(hbg, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(141,201,159), 1001);
   TH1F *zjet = new TH1F("Zjets","",nbins,xmin,xmax);
   vardraw = var+">>"+"Zjets";
-  bgtree->Draw(vardraw.c_str(),zjetcut.c_str());
+  ewktree->Draw(vardraw.c_str(),zjetcut.c_str());
   InitHist(zjet, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *ewk = new TH1F("EWK","",nbins,xmin,xmax);
   vardraw = var+">>"+"EWK";
-  bgtree->Draw(vardraw.c_str(),zjetcut.c_str());
+  ewktree->Draw(vardraw.c_str(),ewkcut.c_str());
   InitHist(ewk, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(248,206,104), 1001);
-  TH1F *other = new TH1F("Other","",nbins,xmin,xmax);
-  vardraw = var+">>"+"Other";
-  bgtree->Draw(vardraw.c_str(),othercut.c_str());
-  InitHist(other, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(255,255,255), 1001);
 
   cout << sig->GetEntries() << endl;
   cout << ttbar->GetEntries() << endl;
   cout << hbg->GetEntries() << endl;
   cout << zjet->GetEntries() << endl;
   cout << ewk->GetEntries() << endl;
-  cout << other->GetEntries() << endl;
   
   delete canv0;
   //-----------------------------------------------------------------------
   //Draw the histograms
   TCanvas *canv = MakeCanvas("canv", "histograms", 600, 600);
   canv->cd();
-  ewk->Add(other); zjet->Add(ewk);
-  hbg->Add(zjet); ttbar->Add(hbg);
+  zjet->Add(ewk); hbg->Add(zjet); ttbar->Add(hbg);
   //Error band stat
   TH1F* errorBand = (TH1F*)sig ->Clone("errorBand");
   errorBand  ->SetMarkerSize(0);
@@ -166,13 +162,12 @@ void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbin
   //       break;
   //     }
   //}
-  ttbar->SetMaximum(1.2*std::max(maximum(ttbar, 0), maximum(other, 0)));
+  ttbar->SetMaximum(1.2*std::max(maximum(ttbar, 0), maximum(sig, 0)));
   //blind(sig,75,150);
   ttbar->Draw("hist");
   hbg->Draw("histsame");
   zjet->Draw("histsame");
   ewk->Draw("histsame");
-  other->Draw("histsame");
   sig->Draw("histsame");
   //errorBand->Draw("e2same");
   canv->RedrawAxis();
@@ -180,12 +175,11 @@ void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbin
   //Adding a legend
   TLegend* leg = new TLegend(0.53, 0.73, 0.95, 0.90);
   SetLegendStyle(leg);
-  leg->AddEntry(sig , "HH"             , "F");
+  leg->AddEntry(sig , TString::Format("%.0f#timeshh#rightarrow#tau#tau bb", sigscale)      , "L");
   leg->AddEntry(ttbar, "t#bar{t}"              , "F" );
   leg->AddEntry(hbg  , "H"  , "F" );
   leg->AddEntry(zjet  , "Z+jets"           , "F" );
   leg->AddEntry(ewk  , "EWK"           , "F" );
-  leg->AddEntry(other, "Other"                 , "F" );
   //leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
@@ -221,6 +215,5 @@ void draw(std::string var="mBB", std::string cut="(1)", int chan_cat=0, int nbin
   if (chan_cat==3) sprintf(outfile, "%s_em.png", var.c_str());
 
   canv->Print(outfile);
-  //canv->Print((var+"_tt.png").c_str());
 
 }
