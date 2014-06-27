@@ -63,7 +63,7 @@ void draw_obj(std::string var="ptTau1", std::string cut="(ptTau2>45 && abs(etaTa
   TH1::SetDefaultSumw2(1);
 
   std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/comb_ntuples/";
-  double sigscale = 10;
+  double sigscale = 1000;
   double sigscale1 = 10; 
   std::stringstream scale; scale << sigscale;
   std::stringstream scale1; scale1 << sigscale1;
@@ -104,19 +104,19 @@ void draw_obj(std::string var="ptTau1", std::string cut="(ptTau2>45 && abs(etaTa
   //cout << optcut << endl;
   
   //signal region
-  std::string hhcut = optcut+"*eventWeight*(eventType==0)*"+lumi.str();
-  std::string ttbarcut = optcut+"*eventWeight*(eventType==2)*"+lumi.str();
-  std::string hcut = optcut+"*eventWeight*(eventType==1)*"+lumi.str();
+  std::string hhcut = optcut+"*"+scale.str()+"*eventWeight*(1)*"+lumi.str();
+  std::string ttbarcut = optcut+"*eventWeight*(1)*"+lumi.str();
+  std::string hcut = optcut+"*eventWeight*(1)*"+lumi.str();
   std::string zjetcut = optcut+"*eventWeight*(eventType==4)*"+lumi.str();
-  std::string ewkcut = optcut+"*eventWeight*(eventType==3||eventType==5)*"+lumi.str();
-  std::string othercut = optcut+"*eventWeight*(eventType==6)*"+lumi.str();
+  std::string ewkcut = optcut+"*eventWeight*(eventType!=4)*"+lumi.str();
   
   //--------------------------------------------------------------------------
   
   //Get the trees
-  TTree *bgtree = load(dir+"TEMP.root"); 
-  TTree *sigtree = load(dir+"TEMP.root"); 
-  //TTree *sigtree = load(dir+"HHToTTBB_14TeV.root"); 
+  TTree *ttbartree = load(dir+"tt.root"); 
+  TTree *htree = load(dir+"H.root"); 
+  TTree *ewktree = load(dir+"EWK.root"); 
+  TTree *sigtree = load(dir+"HHToTTBB_14TeV.root"); 
 
   //-------------------------------------------------------------------------
   
@@ -131,39 +131,33 @@ void draw_obj(std::string var="ptTau1", std::string cut="(ptTau2>45 && abs(etaTa
   sig->SetLineColor(kBlack);
   TH1F *ttbar = new TH1F("TTbar","",nbins,xmin,xmax);
   vardraw = var+">>"+"TTbar";
-  bgtree->Draw(vardraw.c_str(),ttbarcut.c_str());
+  ttbartree->Draw(vardraw.c_str(),ttbarcut.c_str());
   InitHist(ttbar, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(155,152,204), 1001);
   TH1F *hbg = new TH1F("H","",nbins,xmin,xmax);
   vardraw = var+">>"+"H";
-  bgtree->Draw(vardraw.c_str(),hcut.c_str());
-  InitHist(hbg, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(248,206,104), 1001);
+  htree->Draw(vardraw.c_str(),hcut.c_str());
+  InitHist(hbg, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(141,201,159), 1001);
   TH1F *zjet = new TH1F("Zjets","",nbins,xmin,xmax);
   vardraw = var+">>"+"Zjets";
-  bgtree->Draw(vardraw.c_str(),zjetcut.c_str());
-  InitHist(zjet, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(248,206,104), 1001);
+  ewktree->Draw(vardraw.c_str(),zjetcut.c_str());
+  InitHist(zjet, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *ewk = new TH1F("EWK","",nbins,xmin,xmax);
   vardraw = var+">>"+"EWK";
-  bgtree->Draw(vardraw.c_str(),zjetcut.c_str());
+  ewktree->Draw(vardraw.c_str(),ewkcut.c_str());
   InitHist(ewk, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(248,206,104), 1001);
-  TH1F *other = new TH1F("Other","",nbins,xmin,xmax);
-  vardraw = var+">>"+"Other";
-  bgtree->Draw(vardraw.c_str(),othercut.c_str());
-  InitHist(other, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
 
   cout << sig->GetEntries() << endl;
   cout << ttbar->GetEntries() << endl;
   cout << hbg->GetEntries() << endl;
   cout << zjet->GetEntries() << endl;
   cout << ewk->GetEntries() << endl;
-  cout << other->GetEntries() << endl;
   
   delete canv0;
   //-----------------------------------------------------------------------
   //Draw the histograms
   TCanvas *canv = MakeCanvas("canv", "histograms", 600, 600);
   canv->cd();
-  ewk->Add(other); zjet->Add(ewk);
-  hbg->Add(zjet); ttbar->Add(hbg);
+  zjet->Add(ewk); hbg->Add(zjet); ttbar->Add(hbg);
   //Error band stat
   TH1F* errorBand = (TH1F*)sig ->Clone("errorBand");
   errorBand  ->SetMarkerSize(0);
@@ -176,13 +170,12 @@ void draw_obj(std::string var="ptTau1", std::string cut="(ptTau2>45 && abs(etaTa
   //       break;
   //     }
   //}
-  ttbar->SetMaximum(1.2*std::max(maximum(ttbar, 0), maximum(other, 0)));
+  ttbar->SetMaximum(1.2*std::max(maximum(ttbar, 0), maximum(ewk, 0)));
   //blind(sig,75,150);
   ttbar->Draw("hist");
   hbg->Draw("histsame");
   zjet->Draw("histsame");
   ewk->Draw("histsame");
-  other->Draw("histsame");
   sig->Draw("histsame");
   //errorBand->Draw("e2same");
   canv->RedrawAxis();
@@ -190,12 +183,11 @@ void draw_obj(std::string var="ptTau1", std::string cut="(ptTau2>45 && abs(etaTa
   //Adding a legend
   TLegend* leg = new TLegend(0.53, 0.73, 0.95, 0.90);
   SetLegendStyle(leg);
-  leg->AddEntry(sig , "HH"             , "F");
+  leg->AddEntry(sig , TString::Format("%.0f#timeshh#rightarrow#tau#tau bb", sigscale)      , "L");
   leg->AddEntry(ttbar, "t#bar{t}"              , "F" );
   leg->AddEntry(hbg  , "H"  , "F" );
   leg->AddEntry(zjet  , "Z+jets"           , "F" );
   leg->AddEntry(ewk  , "EWK"           , "F" );
-  leg->AddEntry(other, "Other"                 , "F" );
   //leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
