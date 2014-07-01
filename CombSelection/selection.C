@@ -620,6 +620,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
+      if ((muTau)&&(deltaR(jet->Eta, muTau->Eta, jet->Phi, muTau->Phi) < MAX_MATCH_DIST)) continue;
+      if ((eleTau)&&(deltaR(jet->Eta, eleTau->Eta, jet->Phi, eleTau->Phi) < MAX_MATCH_DIST)) continue;
 
       if (iB1==-1) {
 	iB1=iJet; 
@@ -703,7 +705,9 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
-      
+      if ((muTau)&&(deltaR(jet->Eta, muTau->Eta, jet->Phi, muTau->Phi) < MAX_MATCH_DIST)) continue;
+      if ((eleTau)&&(deltaR(jet->Eta, eleTau->Eta, jet->Phi, eleTau->Phi) < MAX_MATCH_DIST)) continue;
+
       if (iJ1==-1) {
         iJ1=iJet;
         jet_tt1 = (Jet*) branchJet->At(iJ1);
@@ -1058,6 +1062,12 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	
 	if (fabs(jet->Eta)>4.7) continue;
 	if (jet->PT<30) continue;
+	if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+
+	if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
+	if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
+	if ((muTau)&&(deltaR(jet->Eta, muTau->Eta, jet->Phi, muTau->Phi) < MAX_MATCH_DIST)) continue;
+	if ((eleTau)&&(deltaR(jet->Eta, eleTau->Eta, jet->Phi, eleTau->Phi) < MAX_MATCH_DIST)) continue;
 	
 	if ( (vRecoJet_tt1.Eta() > vRecoJet_tt2.Eta()) && (jet->Eta > vRecoJet_tt2.Eta()) && (vRecoJet_tt1.Eta() > jet->Eta) ) {
 	  nCentral++;
