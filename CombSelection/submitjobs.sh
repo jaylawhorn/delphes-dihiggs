@@ -36,13 +36,20 @@ do
     sed 1d ${file} | while read line
     do
 	if [[ ! -e ${outputDir} ]]; then
-	    echo "Output directory doesn't exist. Not submitting."
+	    continue
+	    #echo "Output directory doesn't exist. Not submitting."
 	elif [[ `bjobs -w | grep ${line}` ]]; then
-	    echo "Job is currently running. Not submitting."
-	elif [[ -e ${outputDir}/${line} ]] && [[ `cat ${outputDir}/out.${line%.*}.txt | grep "Selection complete"` ]]; then
-	    echo "Output file exists and selection completed gracefully. Not submitting."
-	elif [[ `cat ${outputDir}/out.${line%.*}.txt | grep "File broken"` ]]; then
-	    echo "Input file is broken. Not submitting."
+	    continue
+	    #echo "Job is currently running. Not submitting."
+	elif [[ `grep "File broken" ${outputDir}/out.${line%.*}.txt` ]]; then
+	    continue
+	    #echo "Input file is broken. Not submitting."
+	elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" ${outputDir}/out.${line%.*}.txt` ]]; then
+	    continue
+	    #echo "Output file exists and selection completed gracefully. Not submitting."
+	elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" \`egrep -lir "${line}" /afs/cern.ch/work/j/jlawhorn/public/ntuples/orphans/\`` ]]; then
+	    echo "Output is in orphaned folder... Not submitting."
+	    continue
 	else
 	    echo $script $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
 	    #./${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
