@@ -33,15 +33,11 @@ Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
 
 double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0);
 
-//void selection(const TString inputfile="/afs/cern.ch/work/j/jlawhorn/public/new_hh/new_hh_0.root",
 void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgrade/delphes/ProdJun14/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_190076234_PhaseII_Conf4_140PileUp_seed190076235_1of5.root",
 	       const Float_t xsec=2.92,
-	       const Float_t totalEvents=5000,
-	       Int_t   sampleNo=100,
+	       Int_t sampleNo=100,
 	       const TString outputfile="test.root") {
 
-  cout << inputfile << " " << xsec << " " << totalEvents << " " << outputfile << endl;
-  
   // declare constants
   const Double_t MUON_MASS = 0.105658369;
   const Double_t ELE_MASS  = 0.000511;
@@ -77,10 +73,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   // setup svfit
   mithep::TSVfitter *fitter = new mithep::TSVfitter();
 
-  TVector2 tau1(0,0), tau2(0,0), mpt(0,0), ppmpt(0,0);
+  TVector2 tau1(0,0), tau2(0,0), mpt(0,0), ppmpt(0,0), pumpt(0,0);
   TVector2 b1(0,0), b2(0,0);
   Double_t mt2=0;
-  Double_t ppMt2=0;
+  Double_t mt2puppi=0;
+  Double_t mt2pileup=0;
   Double_t m_sv=0; 
   Double_t m_svpileup=0; 
   Double_t m_svpuppi=0;
@@ -101,8 +98,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
   Long64_t numberOfEntries = treeReader->GetEntries();
 
-  cout << numberOfEntries << endl; 
   TClonesArray *branchJet = treeReader->UseBranch("Jet");
+
+  if (!(branchJet)) {
+    cout << "File broken" << endl;
+    return;
+  }
+
   TClonesArray *branchElectron = treeReader->UseBranch("Electron");
   TClonesArray *branchMuon = treeReader->UseBranch("Muon");
   TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
@@ -211,6 +213,11 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
+  TTree *infoTree = new TTree("Count", "Count");
+  Long64_t n = numberOfEntries;
+  infoTree->Branch("n", &n, "n/i");
+  infoTree->Fill();
+
   // tree to hold information about selected events
   TTree *outTree = new TTree("Events", "Events");
 
@@ -226,10 +233,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   outTree->Branch("met",            &met,            "met/f");          // missing transverse energy
   outTree->Branch("metPhi",         &metPhi,         "metPhi/f");       // missing transverse energy phi
-  outTree->Branch("pileupmet",            &pileupMet,            "pileupMet/f");          // pileup missing transverse energy
-  outTree->Branch("pileupmetPhi",         &pileupMetPhi,         "pileupMetPhi/f");       // pileup missing transverse energy phi
-  outTree->Branch("puppiMet",          &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
-  outTree->Branch("puppiMetPhi",       &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
+  outTree->Branch("pileupmet",      &pileupMet,      "pileupMet/f");    // pileup missing transverse energy
+  outTree->Branch("pileupmetPhi",   &pileupMetPhi,   "pileupMetPhi/f"); // pileup missing transverse energy phi
+  outTree->Branch("puppiMet",       &ppMet,          "ppMet/f");        // PUPPI missing transverse energy
+  outTree->Branch("puppiMetPhi",    &ppMetPhi,       "ppMetPhi/f");     // PUPPI missing transverse energy phi
 
   outTree->Branch("ptTau1",         &ptTau1,         "ptTau1/f");       // pt(Tau1)
   outTree->Branch("etaTau1",        &etaTau1,        "etaTau1/f");      // eta(Tau1)
@@ -422,11 +429,12 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("mHH",            &mHH,            "mHH/f");          // m(HH)
 
   outTree->Branch("mt2",            &mt2,            "mt2/D");          // "stransverse mass" (HH)
-  outTree->Branch("ppMt2",          &ppMt2,          "ppMt2/D");        // PUPPI "stransverse mass" (HH)
+  outTree->Branch("mt2puppi",       &mt2puppi,       "mt2puppi/D");     // PUPPI "stransverse mass" (HH)
+  outTree->Branch("mt2pileup",      &mt2pileup,      "mt2pileup/D");    // PUJetID "stransverse mass" (HH)
   
-  outTree->Branch("m_sv",            &m_sv,            "m_sv/D");          // "SVFit mass estimate" 
-  outTree->Branch("m_svpileup",            &m_svpileup,            "m_svpileup/D");          // "SVFit mass estimate with pileup jet ID MET"
-  outTree->Branch("m_svpuppi",            &m_svpuppi,            "m_svpuppi/D");          // "SVFit mass estimate with pileup jet ID MET"
+  outTree->Branch("m_sv",           &m_sv,           "m_sv/D");         // "SVFit mass estimate" 
+  outTree->Branch("m_svpileup",     &m_svpileup,     "m_svpileup/D");   // "SVFit mass estimate with pileup jet ID MET"
+  outTree->Branch("m_svpuppi",      &m_svpuppi,      "m_svpuppi/D");    // "SVFit mass estimate with pileup jet ID MET"
 
   outTree->Branch("nBtag",          &nBtag,          "nBtag/i");        // number of b-tagged jets (VBF)   
   outTree->Branch("nCentral",       &nCentral,       "nCentral/i");     // number of central jets (VBF)
@@ -457,8 +465,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     iGenJet_tt1=-1; iGenJet_tt2=-1;
     iGenJet_6j1=-1; iGenJet_6j2=-1;
 
-    met=0; metPhi=0; ppMet=0; ppMetPhi=0; pileupMet=0; pileupMetPhi=0;
-
     tauCat1=0; tauCat2=0; 
     bTag1=0; bTag2=0; bTag3=0; bTag4=0;
     jbTag_tt1=0; jbTag_tt2=0;
@@ -468,10 +474,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     ptTT=-999; ptBB1=-999; ptBB2=-999; ptGG=-999; ptHH=-999; ptJJ_tt=-999; ptJJ_6j=-999; 
     etaTT=-999; etaBB1=-999; etaBB2=-999; etaGG=-999; etaHH=-999; etaJJ_tt=-999; etaJJ_6j=-999; 
     phiTT=-999; phiBB1=-999; phiBB2=-999; phiGG=-999; phiHH=-999; phiJJ_tt=-999; phiJJ_6j=-999; 
-
-    dEta_tt=-999; dEta_6j=-999; 
-
-    nBtag=0; nCentral=0; centB=0;
 
     ptTau1=-999; etaTau1=-999; phiTau1=-999; mTau1=-999; tauIso1=-999;
     ptTau2=-999; etaTau2=-999; phiTau2=-999; mTau2=-999; tauIso2=-999;
@@ -496,6 +498,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     eventType=-1;
 
+    dEta_tt=-999; dEta_6j=-999; 
+    nBtag=0; nCentral=0; centB=0;
     iHmatch1=0; iHmatch2=0; iHmatch3=0; iHmatch4=0;
 
     isBBTT=0; isBBGG=0; isBBBB=0;
@@ -503,10 +507,12 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     jetTau1=0; jetTau2=0; eleTau=0;  muTau=0; 
     jetB1=0;   jetB2=0;   jetB3=0;   jetB4=0;
-    jet_tt1=0; jet_tt2=0; jet_6j1=0; jet_6j1=0;
+    jet_tt1=0; jet_tt2=0; jet_6j1=0; jet_6j2=0;
     gamma1=0;  gamma2=0;
 
+    met=0; metPhi=0; ppMet=0; ppMetPhi=0; pileupMet=0; pileupMetPhi=0;
     m_sv = -999; m_svpileup = -999; m_svpuppi = -999;
+    mt2=-999; mt2puppi=-999; mt2pileup=-999;
     
     rho_0=-999; rho_1=-999; rho_2=-999;
 
@@ -520,7 +526,6 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       eventWeight*=event->Weight;
     }
     eventWeight *= xsec;
-    eventWeight /= totalEvents;
 
     // **********************
     // Event rho
@@ -1178,40 +1183,44 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     if ( vRecoTau1.Pt()>0 && vRecoTau2.Pt()>0 && vRecoB1.Pt()>0 && vRecoB2.Pt()>0) {
 
-      tau1.SetMagPhi(vRecoTau1.Pt(), vRecoTau1.Phi());
-      tau2.SetMagPhi(vRecoTau2.Pt(), vRecoTau2.Phi());
-      
-      b1.SetMagPhi(vRecoB1.Pt(), vRecoB1.Phi());
-      b2.SetMagPhi(vRecoB2.Pt(), vRecoB2.Phi());
-      
-      mpt.SetMagPhi(met, metPhi);
-      
-      TVector2 sumPt = tau1+tau2+mpt;
-      
-      smT2 calcmt2 = smT2();
-      calcmt2.SetB1(b1);
-      calcmt2.SetB2(b2);
-      calcmt2.SetMPT(sumPt);
-      calcmt2.SetMB1(mB1);
-      calcmt2.SetMB2(mB2);
-      calcmt2.SetMT1(mTau1);
-      calcmt2.SetMT2(mTau2);
+	tau1.SetMagPhi(vRecoTau1.Pt(), vRecoTau1.Phi());
+	tau2.SetMagPhi(vRecoTau2.Pt(), vRecoTau2.Phi());
+	
+	b1.SetMagPhi(vRecoB1.Pt(), vRecoB1.Phi());
+	b2.SetMagPhi(vRecoB2.Pt(), vRecoB2.Phi());
+	
+	mpt.SetMagPhi(met, metPhi);
+	
+	TVector2 sumPt = tau1+tau2+mpt;
+	
+	smT2 calcmt2 = smT2();
+	calcmt2.SetB1(b1);
+	calcmt2.SetB2(b2);
+	calcmt2.SetMPT(sumPt);
+	calcmt2.SetMB1(mB1);
+	calcmt2.SetMB2(mB2);
+	calcmt2.SetMT1(mTau1);
+	calcmt2.SetMT2(mTau2);
+	
+	TVector2 c1=sumPt;
+	TVector2 c2=sumPt-c1;
 
-      TVector2 c1=sumPt;
-      TVector2 c2=sumPt-c1;
-      
-      ROOT::Math::Functor f(calcmt2,2);
-      double step[2] = {0.1, 0.1};
-      double variable[2] = { 0.5*c1.Mod(), 0.0 };
-      
-      min->SetFunction(f);
-      min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, sumPt.Mod());
-      min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
-      
-      min->Minimize();
-      mt2 = min->MinValue();
+	double step[2] = {0.1, 0.1};
+	double variable[2] = { 0.5*c1.Mod(), 0.0 };
 
-      if (branchPuppiMET) {
+      if (0) {	
+	ROOT::Math::Functor f(calcmt2,2);
+	
+	min->SetFunction(f);
+	min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, sumPt.Mod());
+	min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
+	
+	min->Minimize();
+	mt2 = min->MinValue();
+      }
+
+      //if (branchPuppiMET) {
+      if (0) {
 	
 	ppmpt.SetMagPhi(ppMet, ppMetPhi);
 	TVector2 ppSumPt = tau1+tau2+ppmpt;
@@ -1229,9 +1238,31 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
 	
 	min->Minimize();
-	ppMt2 = min->MinValue();
+	mt2puppi = min->MinValue();
       }
-      else ppMt2 = -999;
+      else mt2puppi = -999;
+
+      if (branchPileupMET) {
+	
+	pumpt.SetMagPhi(pileupMet, pileupMetPhi);
+	TVector2 puSumPt = tau1+tau2+pumpt;
+	
+	calcmt2.SetMPT(puSumPt);
+	c1=puSumPt;
+	c2=sumPt-c1;
+	
+	ROOT::Math::Functor f3(calcmt2,2);
+	step[0] = 0.1; step[1] = 0.1;
+	variable[0] = 0.5*c1.Mod(); variable[1] = 0.0;
+	
+	min->SetFunction(f3);
+	min->SetLimitedVariable(0,"cT",variable[0], step[0], 0.0, puSumPt.Mod());
+	min->SetLimitedVariable(1,"cPhi",variable[1], step[1], 0.0, TMath::Pi());
+	
+	min->Minimize();
+	mt2pileup = min->MinValue();
+      }
+      else mt2pileup = -999;
     }    
 
     // ***********************************
@@ -1641,6 +1672,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outFile->Save();
 
   cout << endl;
+  cout << "Selection complete" << endl;
 
 }
 
