@@ -24,12 +24,13 @@
       gROOT->Macro("$CMSSW_BASE/src/delphes-dihiggs/CombSelection/setRootEnv.C+");
     }
     gSystem->Load("$CMSSW_BASE/src/Delphes/libDelphes.so");
-    //gSystem->Load("libTauAnalysisSVFitHelper.so");
-    //gSystem->Load("libTauAnalysisCandidateTools.so");
     loadLibraries("libTauAnalysisSVFitHelper.so");
     loadLibraries("libTauAnalysisCandidateTools.so");
+    loadLibraries("libJECJECHelper.so");
     gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/Delphes");
     gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/Delphes/external");
+    //gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/CondFormats");
+    //gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h");
     //gROOT->Macro("../Utils/HttStyles.cc+");
     //gROOT->Macro("../Utils/CPlot.cc+");
   }

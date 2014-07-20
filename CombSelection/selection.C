@@ -21,6 +21,8 @@
 #include "mt2.hh"
 #include "TauAnalysis/SVFitHelper/interface/TSVfit.h"
 #include "TauAnalysis/SVFitHelper/interface/TSVfitter.h"
+#include "JEC/JECHelper/interface/jcorr.h"
+
 #endif
 
 typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVector;
@@ -28,6 +30,8 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVecto
 Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t beta );
+
+double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0);
 
 void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgrade/delphes/ProdJun14/tt-4p-1100-1700-v1510_14TEV/tt-4p-1100-1700-v1510_14TEV_190076234_PhaseII_Conf4_140PileUp_seed190076235_1of5.root",
 	       const Float_t xsec=2.92,
@@ -78,6 +82,16 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Double_t m_svpileup=0; 
   Double_t m_svpuppi=0;
 
+  //setup jet corrections
+  
+  mithep::jcorr *corrector = new mithep::jcorr;
+  char *PATH = getenv("CMSSW_BASE"); assert(PATH);
+  TString path(TString::Format("%s/src/JEC/JECHelper/data/JetCorrections_phase2/", PATH));
+  corrector->AddJetCorr(path+"Delphes_V1_MC_L1FastJet_AK4PF.txt");
+  corrector->AddJetCorr(path+"Delphes_V1_MC_L2Relative_AK4PF.txt");
+  corrector->AddJetCorr(path+"Delphes_V1_MC_L3Absolute_AK4PFl1.txt");
+  corrector->setup();
+
   // read input input file
   TChain chain("Delphes");
   chain.Add(inputfile);
@@ -97,7 +111,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   TClonesArray *branchMET =treeReader->UseBranch("MissingET");
   TClonesArray *branchPuppiMET =treeReader->UseBranch("PuppiMissingET");
   TClonesArray *branchPileupMET =treeReader->UseBranch("PileUpJetIDMissingET");
-
+  TClonesArray *branchRho = treeReader->UseBranch("Rho");
   TClonesArray *branchGenJet = treeReader->UseBranch("GenJet");
   TClonesArray *branchParticle = treeReader->UseBranch("Particle");
   TClonesArray *branchEvent = treeReader->UseBranch("Event");
@@ -106,6 +120,9 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   GenParticle *genParticle=0;
   Jet *genJet=0;
   Jet *jet=0;
+  Rho *rho0=0;
+  Rho *rho1=0;
+  Rho *rho2=0;
   Electron *ele=0;
   Muon *mu=0;
   Photon *gam=0;
@@ -191,6 +208,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Float_t mTT, mBB1, mBB2, mGG, mJJ_tt, mJJ_6j, mHH;
 
   Float_t dEta_tt=0, dEta_6j=0;
+
+  Float_t rho_0=0, rho_1=0, rho_2=0;
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
@@ -422,7 +441,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("centB",          &centB,          "centB/i");        // how many b's between VBF jets?
   outTree->Branch("dEta_tt",        &dEta_tt,        "dEta_tt/f");      // delta Eta (VBF)
   outTree->Branch("dEta_6j",        &dEta_6j,        "dEta_6j/f");      // delta Eta (VBF)
-
+  outTree->Branch("rho_0",         &rho_0,         "rho_0/f");       // central rho, 0-2.5
+  outTree->Branch("rho_1",         &rho_1,         "rho_1/f");       // central rho, 2.5-4
+  outTree->Branch("rho_2",         &rho_2,         "rho_2/f");       // central rho, 4-5
+  
   for (Int_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // entry loop
     treeReader->ReadEntry(iEntry);
 
@@ -492,6 +514,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     m_sv = -999; m_svpileup = -999; m_svpuppi = -999;
     mt2=-999; mt2puppi=-999; mt2pileup=-999;
     
+    rho_0=-999; rho_1=-999; rho_2=-999;
+
     // ********************
     // EVENT WEIGHT
     // ********************
@@ -503,15 +527,29 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     }
     eventWeight *= xsec;
 
+    // **********************
+    // Event rho
+    // *********************
+    
+    rho0 = (Rho*) branchRho->At(0);
+    rho1 = (Rho*) branchRho->At(1);
+    rho2 = (Rho*) branchRho->At(2);
+
+    rho_0 = rho0->Rho;
+    rho_1 = rho1->Rho;
+    rho_2 = rho2->Rho;
+
     // ********************
     // TAU SELECTION
     // ********************
     
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
-      jet = (Jet*) branchJet->At(iJet);
+      jet = (Jet*) branchJet->At(iJet);   
+      
+      double corr = doJetcorr(corrector,jet,rho_2,rho_1,rho_0);
       
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<30) continue;
+      if (corr*jet->PT<30) continue;
       if (jet->TauTag==0) continue;
       
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
@@ -521,7 +559,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetTau1 = (Jet*) branchJet->At(iT1); 
 	tauCat1=hadron;
       }
-      else if (jet->PT > jetTau1->PT) { 
+      else if (corr*jet->PT > doJetcorr(corrector,jetTau1,rho_2,rho_1,rho_0)*jetTau1->PT) { 
 	iT2=iT1; 
 	jetTau2 = (Jet*) branchJet->At(iT2); 
 	tauCat2=hadron; 
@@ -534,7 +572,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetTau2 = (Jet*) branchJet->At(iT2); 
 	tauCat2=hadron;
       }
-      else if (jet->PT > jetTau2->PT) { 
+      else if (corr*jet->PT > doJetcorr(corrector,jetTau2,rho_2,rho_1,rho_0)*jetTau2->PT) { 
 	iT2=iJet; 
 	jetTau2 = (Jet*) branchJet->At(iT2); 
 	tauCat2=hadron;
@@ -611,9 +649,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
+      double corr = doJetcorr(corrector,jet,rho_2,rho_1,rho_0);
 
       if (fabs(jet->Eta)>4.0) continue;
-      if (jet->PT<30) continue;
+      if (corr*jet->PT<30) continue;
       if (jet->BTag==0) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
@@ -628,7 +667,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetB1 = (Jet*) branchJet->At(iB1); 
 	bTag1=jetB1->BTag;
       }
-      else if (jet->PT > jetB1->PT) {
+      else if (corr*jet->PT > doJetcorr(corrector,jetB1,rho_2,rho_1,rho_0)*jetB1->PT) {
 	if (jetB3) {
 	  iB4=iB3;
 	  jetB4 = (Jet*) branchJet->At(iB4);
@@ -651,7 +690,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetB2 = (Jet*) branchJet->At(iB2); 
 	bTag2=jetB2->BTag;
       }
-      else if (jet->PT > jetB2->PT) { 
+      else if (corr*jet->PT >  doJetcorr(corrector,jetB2,rho_2,rho_1,rho_0)*jetB2->PT) { 
 	if (jetB3) {
 	  iB4=iB3;
 	  jetB4 = (Jet*) branchJet->At(iB4);
@@ -669,7 +708,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetB3 = (Jet*) branchJet->At(iB3);
 	bTag3=jetB3->BTag;
       }
-      else if (jet->PT > jetB3->PT) {
+      else if (corr*jet->PT > doJetcorr(corrector,jetB4,rho_2,rho_1,rho_0)*jetB4->PT) {
 	iB4=iB3;
 	jetB4 = (Jet*) branchJet->At(iB4);
 	bTag4=jetB4->BTag;
@@ -682,7 +721,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	jetB4 = (Jet*) branchJet->At(iB4);
 	bTag4=jetB4->BTag;
       }
-      else if (jet->PT > jetB4->PT) {
+      else if (corr*jet->PT >  doJetcorr(corrector,jetB4,rho_2,rho_1,rho_0)*jetB4->PT) {
 	iB4=iJet;
 	jetB4 = (Jet*) branchJet->At(iB4);
 	bTag4=jetB4->BTag;
@@ -695,13 +734,14 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
-
-      if (jet->BTag>0) nBtag++;
-
+      double corr = doJetcorr(corrector,jet,rho_2,rho_1,rho_0);
+       
       if (fabs(jet->Eta)>4.7) continue;
-      if (jet->PT<30) continue;
+      if (corr*jet->PT<30) continue;
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+
+      if (jet->BTag>0) nBtag++;
 
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
@@ -713,7 +753,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
         jet_tt1 = (Jet*) branchJet->At(iJ1);
         jbTag_tt1=jet_tt1->BTag;
       }
-      else if (jet->PT > jet_tt1->PT) {
+      else if (corr*jet->PT >  doJetcorr(corrector,jet_tt1,rho_2,rho_1,rho_0)*jet_tt1->PT) {
         iJ2=iJ1;
         jet_tt2 = (Jet*) branchJet->At(iJ2);
         jbTag_tt2=jet_tt2->BTag;
@@ -726,18 +766,20 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
         jet_tt2 = (Jet*) branchJet->At(iJ2);
         jbTag_tt2=jet_tt2->BTag;
       }
-      else if (jet->PT > jet_tt2->PT) {
+      else if (corr*jet->PT >  doJetcorr(corrector,jet_tt2,rho_2,rho_1,rho_0)*jet_tt2->PT) {
         iJ2=iJet;
         jet_tt2 = (Jet*) branchJet->At(iJ2);
         jbTag_tt2=jet_tt2->BTag;
       }
     }
-
+    
     for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop
       jet = (Jet*) branchJet->At(iJet);
-
+      double corr = doJetcorr(corrector,jet,rho_2,rho_1,rho_0);
+      
       if (fabs(jet->Eta)>4.7) continue;
-      if (jet->PT<30) continue;
+      if (corr*jet->PT<30) continue;
+      if(fabs(jet->Eta)>4.0) 
 
       if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
 
@@ -751,7 +793,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
         jet_6j1 = (Jet*) branchJet->At(iJ3);
         jbTag_6j1=jet_6j1->BTag;
       }
-      else if (jet->PT > jet_6j1->PT) {
+      else if (corr*jet->PT > doJetcorr(corrector,jet_6j1,rho_2,rho_1,rho_0)*jet_6j1->PT) {
 	iJ4=iJ3;
 	jet_6j2 = (Jet*) branchJet->At(iJ4);
         jbTag_6j2=jet_6j2->BTag;
@@ -764,7 +806,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
         jet_6j2 = (Jet*) branchJet->At(iJ4);
         jbTag_6j2=jet_6j2->BTag;
       }
-      else if (jet->PT > jet_6j2->PT) {
+      else if (corr*jet->PT > doJetcorr(corrector,jet_6j2,rho_2,rho_1,rho_0)*jet_6j2->PT) {
         iJ4=iJet;
         jet_6j2 = (Jet*) branchJet->At(iJ4);
         jbTag_6j2=jet_6j2->BTag;
@@ -779,23 +821,28 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     // fill 4-vector for leading tau
     LorentzVector vRecoTau1(0,0,0,0);
     LorentzVector vRecoTau2(0,0,0,0);
-    if(jetTau2 ? (jetTau2->PT > (muTau ? muTau->PT : 0) && jetTau2->PT > (eleTau? eleTau->PT : 0)) : 0) {
-      vRecoTau1.SetPt(jetTau1->PT);
+    double corrtau1=0, corrtau2=0;
+    if(jetTau1)
+      corrtau1 = doJetcorr(corrector,jetTau1,rho_2,rho_1,rho_0);
+    if(jetTau2)
+      corrtau2 = doJetcorr(corrector,jetTau2,rho_2,rho_1,rho_0);
+    if(jetTau2 ? (corrtau2*jetTau2->PT > (muTau ? muTau->PT : 0) && corrtau2*jetTau2->PT > (eleTau? eleTau->PT : 0)) : 0) {
+      vRecoTau1.SetPt(corrtau1*jetTau1->PT);
       vRecoTau1.SetEta(jetTau1->Eta);
       vRecoTau1.SetPhi(jetTau1->Phi);
-      vRecoTau1.SetM(jetTau1->Mass);
-      ptTau1=jetTau1->PT;
+      vRecoTau1.SetM(corrtau1*jetTau1->Mass);
+      ptTau1=corrtau1*jetTau1->PT;
       etaTau1=jetTau1->Eta;
       phiTau1=jetTau1->Phi;
-      mTau1=jetTau1->Mass;
-      vRecoTau2.SetPt(jetTau2->PT);
+      mTau1=corrtau1*jetTau1->Mass;
+      vRecoTau2.SetPt(corrtau2*jetTau2->PT);
       vRecoTau2.SetEta(jetTau2->Eta);
       vRecoTau2.SetPhi(jetTau2->Phi);
-      vRecoTau2.SetM(jetTau2->Mass);
-      ptTau2=jetTau2->PT;
+      vRecoTau2.SetM(corrtau2*jetTau2->Mass);
+      ptTau2=corrtau2*jetTau2->PT;
       etaTau2=jetTau2->Eta;
       phiTau2=jetTau2->Phi;
-      mTau2=jetTau2->Mass;
+      mTau2=corrtau2*jetTau2->Mass;
     }
     else if ((muTau ? muTau->PT : 0) > (jetTau1 ? jetTau1->PT : 0) && (eleTau ? eleTau->PT : 0) > (jetTau1 ? jetTau1->PT : 0)) {
       vRecoTau1.SetPt(muTau->PT);
@@ -819,15 +866,15 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       tauCat2=electron;
       tauIso2=eleTau->IsolationVar;
     }
-    else if (jetTau1 && (muTau? muTau->PT : 0) > (jetTau2 ? jetTau2->PT : 0) && (muTau ? muTau->PT : 0) > (eleTau ? eleTau->PT : 0)) {
-      vRecoTau1.SetPt(jetTau1->PT);
+    else if (jetTau1 && (muTau? muTau->PT : 0) > (jetTau2 ? corrtau2*jetTau2->PT : 0) && (muTau ? muTau->PT : 0) > (eleTau ? eleTau->PT : 0)) {
+      vRecoTau1.SetPt(corrtau1*jetTau1->PT);
       vRecoTau1.SetEta(jetTau1->Eta);
       vRecoTau1.SetPhi(jetTau1->Phi);
-      vRecoTau1.SetM(jetTau1->Mass);
-      ptTau1=jetTau1->PT;
+      vRecoTau1.SetM(corrtau1*jetTau1->Mass);
+      ptTau1=corrtau1*jetTau1->PT;
       etaTau1=jetTau1->Eta;
       phiTau1=jetTau1->Phi;
-      mTau1=jetTau1->Mass;
+      mTau1=corrtau1*jetTau1->Mass;
       vRecoTau2.SetPt(muTau->PT);
       vRecoTau2.SetEta(muTau->Eta);
       vRecoTau2.SetPhi(muTau->Phi);
@@ -839,15 +886,15 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       tauCat2=muon;
       tauIso2=muTau->IsolationVar;
     }
-    else if (jetTau1 && (eleTau ? eleTau->PT : 0) > (jetTau2 ? jetTau2->PT : 0) && (eleTau ? eleTau->PT : 0) > (muTau ? muTau->PT : 0)) {
-      vRecoTau1.SetPt(jetTau1->PT);
+    else if (jetTau1 && (eleTau ? eleTau->PT : 0) > (jetTau2 ? corrtau2*jetTau2->PT : 0) && (eleTau ? eleTau->PT : 0) > (muTau ? muTau->PT : 0)) {
+      vRecoTau1.SetPt(corrtau1*jetTau1->PT);
       vRecoTau1.SetEta(jetTau1->Eta);
       vRecoTau1.SetPhi(jetTau1->Phi);
-      vRecoTau1.SetM(jetTau1->Mass);
-      ptTau1=jetTau1->PT;
+      vRecoTau1.SetM(corrtau1*jetTau1->Mass);
+      ptTau1=corrtau1*jetTau1->PT;
       etaTau1=jetTau1->Eta;
       phiTau1=jetTau1->Phi;
-      mTau1=jetTau1->Mass;
+      mTau1=corrtau1*jetTau1->Mass;
       vRecoTau2.SetPt(eleTau->PT);
       vRecoTau2.SetEta(eleTau->Eta);
       vRecoTau2.SetPhi(eleTau->Phi);
@@ -863,53 +910,57 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     // fill 4-vector for leading b-jet
     LorentzVector vRecoB1(0,0,0,0);
     if (jetB1) {
-      vRecoB1.SetPt(jetB1->PT);
+      double corrb1 = doJetcorr(corrector,jetB1,rho_2,rho_1,rho_0);
+      vRecoB1.SetPt(corrb1*jetB1->PT);
       vRecoB1.SetEta(jetB1->Eta);
       vRecoB1.SetPhi(jetB1->Phi);
-      vRecoB1.SetM(jetB1->Mass);
-      ptB1=jetB1->PT;
+      vRecoB1.SetM(corrb1*jetB1->Mass);
+      ptB1=corrb1*jetB1->PT;
       etaB1=jetB1->Eta;
       phiB1=jetB1->Phi;
-      mB1=jetB1->Mass;
+      mB1=corrb1*jetB1->Mass;
     }
 
     // fill 4-vector for second b-jet
     LorentzVector vRecoB2(0,0,0,0);
     if (jetB2) {
-      vRecoB2.SetPt(jetB2->PT);
+      double corrb2 = doJetcorr(corrector,jetB2,rho_2,rho_1,rho_0);
+      vRecoB2.SetPt(corrb2*jetB2->PT);
       vRecoB2.SetEta(jetB2->Eta);
       vRecoB2.SetPhi(jetB2->Phi);
-      vRecoB2.SetM(jetB2->Mass);
-      ptB2=jetB2->PT;
+      vRecoB2.SetM(corrb2*jetB2->Mass);
+      ptB2=corrb2*jetB2->PT;
       etaB2=jetB2->Eta;
       phiB2=jetB2->Phi;
-      mB2=jetB2->Mass;
+      mB2=corrb2*jetB2->Mass;
     }
 
     // fill 4-vector for b-jet
     LorentzVector vRecoB3(0,0,0,0);
     if (jetB3) {
-      vRecoB3.SetPt(jetB3->PT);
+      double corrb3 = doJetcorr(corrector,jetB3,rho_2,rho_1,rho_0);
+      vRecoB3.SetPt(corrb3*jetB3->PT);
       vRecoB3.SetEta(jetB3->Eta);
       vRecoB3.SetPhi(jetB3->Phi);
-      vRecoB3.SetM(jetB3->Mass);
-      ptB3=jetB3->PT;
+      vRecoB3.SetM(corrb3*jetB3->Mass);
+      ptB3=corrb3*jetB3->PT;
       etaB3=jetB3->Eta;
       phiB3=jetB3->Phi;
-      mB3=jetB3->Mass;
+      mB3=corrb3*jetB3->Mass;
     }
 
     // fill 4-vector for b-jet
     LorentzVector vRecoB4(0,0,0,0);
     if (jetB4) {
-      vRecoB4.SetPt(jetB4->PT);
+      double corrb4 = doJetcorr(corrector,jetB4,rho_2,rho_1,rho_0);
+      vRecoB4.SetPt(corrb4*jetB4->PT);
       vRecoB4.SetEta(jetB4->Eta);
       vRecoB4.SetPhi(jetB4->Phi);
-      vRecoB4.SetM(jetB4->Mass);
-      ptB4=jetB4->PT;
+      vRecoB4.SetM(corrb4*jetB4->Mass);
+      ptB4=corrb4*jetB4->PT;
       etaB4=jetB4->Eta;
       phiB4=jetB4->Phi;
-      mB4=jetB4->Mass;
+      mB4=corrb4*jetB4->Mass;
     }
 
     // fill 4-vector for leading photon
@@ -941,51 +992,55 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     // fill 4-vector for leading VBF jet
     LorentzVector vRecoJet_tt1(0,0,0,0);
     if (jet_tt1) {
-      vRecoJet_tt1.SetPt(jet_tt1->PT);
+      double corrj1 = doJetcorr(corrector,jet_tt1,rho_2,rho_1,rho_0);
+      vRecoJet_tt1.SetPt(corrj1*jet_tt1->PT);
       vRecoJet_tt1.SetEta(jet_tt1->Eta);
       vRecoJet_tt1.SetPhi(jet_tt1->Phi);
-      vRecoJet_tt1.SetM(jet_tt1->Mass);
-      ptJet_tt1=jet_tt1->PT;
+      vRecoJet_tt1.SetM(corrj1*jet_tt1->Mass);
+      ptJet_tt1=corrj1*jet_tt1->PT;
       etaJet_tt1=jet_tt1->Eta;
       phiJet_tt1=jet_tt1->Phi;
-      mJet_tt1=jet_tt1->Mass;
+      mJet_tt1=corrj1*jet_tt1->Mass;
     }
 
     LorentzVector vRecoJet_tt2(0,0,0,0);
     if (jet_tt2) {
-      vRecoJet_tt2.SetPt(jet_tt2->PT);
+      double corrj2 = doJetcorr(corrector,jet_tt2,rho_2,rho_1,rho_0);
+      vRecoJet_tt2.SetPt(corrj2*jet_tt2->PT);
       vRecoJet_tt2.SetEta(jet_tt2->Eta);
       vRecoJet_tt2.SetPhi(jet_tt2->Phi);
-      vRecoJet_tt2.SetM(jet_tt2->Mass);
-      ptJet_tt2=jet_tt2->PT;
+      vRecoJet_tt2.SetM(corrj2*jet_tt2->Mass);
+      ptJet_tt2=corrj2*jet_tt2->PT;
       etaJet_tt2=jet_tt2->Eta;
       phiJet_tt2=jet_tt2->Phi;
-      mJet_tt2=jet_tt2->Mass;
+      mJet_tt2=corrj2*jet_tt2->Mass;
     }
 
     // fill 4-vector for leading VBF jet
     LorentzVector vRecoJet_6j1(0,0,0,0);
     if (jet_6j1) {
-      vRecoJet_6j1.SetPt(jet_6j1->PT);
+      double corrj1 = doJetcorr(corrector,jet_6j1,rho_2,rho_1,rho_0);
+      vRecoJet_6j1.SetPt(corrj1*jet_6j1->PT);
       vRecoJet_6j1.SetEta(jet_6j1->Eta);
       vRecoJet_6j1.SetPhi(jet_6j1->Phi);
-      vRecoJet_6j1.SetM(jet_6j1->Mass);
-      ptJet_6j1=jet_6j1->PT;
+      vRecoJet_6j1.SetM(corrj1*jet_6j1->Mass);
+      ptJet_6j1=corrj1*jet_6j1->PT;
       etaJet_6j1=jet_6j1->Eta;
       phiJet_6j1=jet_6j1->Phi;
-      mJet_6j1=jet_6j1->Mass;
+      mJet_6j1=corrj1*jet_6j1->Mass;
     }
 
     LorentzVector vRecoJet_6j2(0,0,0,0);
     if (jet_6j2) {
-      vRecoJet_6j2.SetPt(jet_6j2->PT);
+      double corrj2 = doJetcorr(corrector,jet_6j2,rho_2,rho_1,rho_0);
+      vRecoJet_6j2.SetPt(corrj2*jet_6j2->PT);
       vRecoJet_6j2.SetEta(jet_6j2->Eta);
       vRecoJet_6j2.SetPhi(jet_6j2->Phi);
-      vRecoJet_6j2.SetM(jet_6j2->Mass);
-      ptJet_6j2=jet_6j2->PT;
+      vRecoJet_6j2.SetM(corrj2*jet_6j2->Mass);
+      ptJet_6j2=corrj2*jet_6j2->PT;
       etaJet_6j2=jet_6j2->Eta;
       phiJet_6j2=jet_6j2->Phi;
-      mJet_6j2=jet_6j2->Mass;
+      mJet_6j2=corrj2*jet_6j2->Mass;
     }
 
     // ********************
@@ -1047,7 +1102,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       etaHH=vHH.Eta();
       phiHH=vHH.Phi();
     }
-
+    
     LorentzVector vJJ;
     if (vRecoJet_tt1.Pt()>0 && vRecoJet_tt2.Pt()>0) {
       vJJ = vRecoJet_tt1+vRecoJet_tt2;
@@ -1059,11 +1114,12 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       
       for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // reconstructed jet loop                                                                                                  
 	jet = (Jet*) branchJet->At(iJet);
-	
-	if (fabs(jet->Eta)>4.7) continue;
-	if (jet->PT<30) continue;
-	if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+	double corr = doJetcorr(corrector,jet,rho_2,rho_1,rho_0);
 
+	if (fabs(jet->Eta)>4.7) continue;
+	if (corr*jet->PT<30) continue;
+	if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+	
 	if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
 	if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
 	if ((muTau)&&(deltaR(jet->Eta, muTau->Eta, jet->Phi, muTau->Phi) < MAX_MATCH_DIST)) continue;
@@ -1254,13 +1310,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	  else
 	    channel=1;
 	}
-      //m_sv = fitter->integrate(&svfit,met,metPhi,channel);
+      m_sv = fitter->integrate(&svfit,met,metPhi,channel);
       svfit.cov_00=lcov00pp;
       svfit.cov_01=lcov01pp;
       svfit.cov_10=lcov10pp;
       svfit.cov_11=lcov11pp;
       m_svpileup = fitter->integrate(&svfit,pileupMet,pileupMetPhi,channel);
-      //m_svpuppi = fitter->integrate(&svfit,ppMet,ppMetPhi,channel);
+      m_svpuppi = fitter->integrate(&svfit,ppMet,ppMetPhi,channel);
       std::cout << tauCat1 << "  " <<  tauCat2 << "   " << channel  << "  "  << m_sv << "  "  <<  m_svpileup <<  "  " <<  m_svpuppi << "  " << std::endl; 
     }
     
@@ -1633,7 +1689,7 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
   return TMath::Sqrt(deltaRSquared);
 
 }
-
+ 
 Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
   
   Float_t MeanSqDeltaRMaxBarrel=0.07;
@@ -1660,4 +1716,17 @@ Int_t puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
 
   return 1;
 
+}
+
+double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,double rho_0)
+{
+  double area = TMath::Sqrt(ijet->AreaX*ijet->AreaX+ijet->AreaY*ijet->AreaY);
+  //std::cout << "Area pT  "  << area  << std::endl;
+  double rrho=0;
+  if(fabs(ijet->Eta)>4.0) rrho=rho_2;
+  else if(fabs(ijet->Eta)>2.5) rrho=rho_1;
+  else rrho=rho_0;
+  double corr = corrector->getCorrection(ijet->PT,ijet->Eta,rrho,area);
+  //std::cout << ijet->PT << "  " <<  corr << std::endl;
+  return corr;
 }
