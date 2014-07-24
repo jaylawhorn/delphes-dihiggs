@@ -98,7 +98,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
   Long64_t numberOfEntries = treeReader->GetEntries();
 
-  TClonesArray *branchJet = treeReader->UseBranch("Jet");
+  TClonesArray *branchJet = treeReader->UseBranch("RawJet");
 
   if (!(branchJet)) {
     cout << "File broken" << endl;
@@ -1728,5 +1728,6 @@ double doJetcorr(mithep::jcorr *corrector,Jet* ijet,double rho_2,double rho_1,do
   else rrho=rho_0;
   double corr = corrector->getCorrection(ijet->PT,ijet->Eta,rrho,area);
   //std::cout << ijet->PT << "  " <<  corr << std::endl;
+  //return 1.0;
   return corr;
 }
