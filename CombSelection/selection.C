@@ -98,14 +98,14 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
   Long64_t numberOfEntries = treeReader->GetEntries();
 
-  TClonesArray *branchRawJet = treeReader->UseBranch("RawJet");
-  TClonesArray *branchJet = treeReader->UseBranch("Jet");
 
+  TClonesArray *branchJet = treeReader->UseBranch("Jet");
   if (!(branchJet)) {
     cout << "File broken" << endl;
     return;
   }
 
+  TClonesArray *branchRawJet = treeReader->UseBranch("RawJet");
   TClonesArray *branchElectron = treeReader->UseBranch("Electron");
   TClonesArray *branchMuon = treeReader->UseBranch("Muon");
   TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
@@ -584,10 +584,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
     for (Int_t iMuon=0; iMuon<branchMuon->GetEntries(); iMuon++) { // reco muon loop
       mu = (Muon*) branchMuon->At(iMuon);
-
+      
       if (fabs(mu->Eta)>4.0) continue;
       if (mu->PT<10) continue;
-
+      
       if(!muTau)
 	muTau = (Muon*) branchMuon->At(iMuon);
       else
@@ -598,10 +598,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 	}
     }
     
-      // get electronic taus
+    // get electronic taus
     for (Int_t iEle=0; iEle<branchElectron->GetEntries(); iEle++) { // reco ele loop
       ele = (Electron*) branchElectron->At(iEle);
-
+      
       if (fabs(ele->Eta)>4.0) continue;
       if (ele->PT<10) continue;
       
