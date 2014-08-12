@@ -43,6 +43,7 @@ void whbb_abs() {
   cout << "(mt)   " << 100*tree->GetEntries(wm+"*"+wt)/tot << "%" << endl;
   cout << "(et)   " << 100*tree->GetEntries(we+"*"+wt)/tot << "%" << endl;
   cout << "(emt)  " << 100*tree->GetEntries(we+"*"+wt+"*"+wm)/tot << "%" << endl;
+  /*
   cout << endl;
 
   cout << "** 126kHz menu" << endl;
@@ -58,7 +59,7 @@ void whbb_abs() {
   cout <<     "kDoubleJet: " << 100*tree->GetEntries("(triggerBits126&8192)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuJet    : " << 100*tree->GetEntries("(triggerBits126&65536)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuMet    : " << 100*tree->GetEntries("(triggerBits126&262144)*"+wm)/tree->GetEntries(wm) << "%" << endl;
-
+  */
   cout << endl;
   cout << "** 180kHz menu" << endl;
   cout << endl;
@@ -68,13 +69,22 @@ void whbb_abs() {
   cout <<     "kDoubleJet: " << 100*tree->GetEntries("(triggerBits180&8192)*"+we)/tree->GetEntries(we) << "%" << endl;
   cout <<     "kEleJet   : " << 100*tree->GetEntries("(triggerBits180&32768)*"+we)/tree->GetEntries(we) << "%" << endl;
   cout <<     "kEleMet   : " << 100*tree->GetEntries("(triggerBits180&131072)*"+we)/tree->GetEntries(we) << "%" << endl;
+  cout <<     "kSingleEle+kEleJet: " << 100*tree->GetEntries("(triggerBits126&16)*(triggerBits126&32768)*"+we)/tree->GetEntries("(triggerBits126&32768)*"+we) << "%" << endl;
+  cout <<     "kSingleEle+kEleJet: " << 100*tree->GetEntries("(triggerBits180&16)*(triggerBits180&32768)*"+we)/tree->GetEntries("(triggerBits180&32768)*"+we) << "%" << endl;
+  cout <<     "kSingleEle+kEleJet: " << 100*tree->GetEntries("(triggerBits250&16)*(triggerBits250&32768)*"+we)/tree->GetEntries("(triggerBits250&32768)*"+we) << "%" << endl;
+  cout <<     "kSingleEle+kEleJet: " << 100*tree->GetEntries("(triggerBits350&16)*(triggerBits350&32768)*"+we)/tree->GetEntries("(triggerBits350&32768)*"+we) << "%" << endl;
+
   cout << "W->munu --" << endl;
   cout <<     "kSingleMu : " << 100*tree->GetEntries("(triggerBits180&1)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kDoubleJet: " << 100*tree->GetEntries("(triggerBits180&8192)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuJet    : " << 100*tree->GetEntries("(triggerBits180&65536)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuMet    : " << 100*tree->GetEntries("(triggerBits180&262144)*"+wm)/tree->GetEntries(wm) << "%" << endl;
+  cout <<     "kSingleMu+kMuJet: " << 100*tree->GetEntries("(triggerBits126&1)*(triggerBits126&65536)*"+wm)/tree->GetEntries("(triggerBits126&65536)*"+wm) << "%" << endl;
+  cout <<     "kSingleMu+kMuJet: " << 100*tree->GetEntries("(triggerBits180&1)*(triggerBits180&65536)*"+wm)/tree->GetEntries("(triggerBits180&65536)*"+wm) << "%" << endl;
+  cout <<     "kSingleMu+kMuJet: " << 100*tree->GetEntries("(triggerBits250&1)*(triggerBits250&65536)*"+wm)/tree->GetEntries("(triggerBits250&65536)*"+wm) << "%" << endl;
+  cout <<     "kSingleMu+kMuJet: " << 100*tree->GetEntries("(triggerBits350&1)*(triggerBits350&65536)*"+wm)/tree->GetEntries("(triggerBits350&65536)*"+wm) << "%" << endl;
 
-  cout << endl;
+  /*cout << endl;
   cout << "** 250kHz menu" << endl;
   cout << endl;
 
@@ -103,5 +113,5 @@ void whbb_abs() {
   cout <<     "kDoubleJet: " << 100*tree->GetEntries("(triggerBits350&8192)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuJet    : " << 100*tree->GetEntries("(triggerBits350&65536)*"+wm)/tree->GetEntries(wm) << "%" << endl;
   cout <<     "kMuMet    : " << 100*tree->GetEntries("(triggerBits350&262144)*"+wm)/tree->GetEntries(wm) << "%" << endl;
-
+  */
 }
