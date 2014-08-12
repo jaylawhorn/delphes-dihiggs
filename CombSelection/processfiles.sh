@@ -23,6 +23,6 @@ do
     fi
     ls ${folder}/*.root > ${folder}temp.txt
     echo root -l -q combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
-    root -l -q combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
-    rm ${folder}temp.txt
+   root -l -q combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
+    #rm ${folder}temp.txt
 done

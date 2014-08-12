@@ -18,19 +18,27 @@
       str.ReplaceAll("g++", "g++ -m32");
       gSystem->SetMakeSharedLib(str);
     }
+    str.ReplaceAll(" -c ", " -std=c++0x -c ");
+    gSystem->SetMakeSharedLib(str);
+    
+    str = gSystem->GetMakeExe();
+    str.ReplaceAll(" -c ", " -std=c++0x -c ");
+    gSystem->SetMakeExe(str);
+
     cout << " CMSSW environment is set up." << endl;
     TString addedLibs(gSystem->GetLibraries());
     if(!addedLibs.Contains("setRootEnv_C.so")) {
-      gROOT->Macro("$CMSSW_BASE/src/delphes-dihiggs/CombSelection/setRootEnv.C+");
+      gROOT->Macro("setRootEnv.C+");
     }
     gSystem->Load("$CMSSW_BASE/src/Delphes/libDelphes.so");
     loadLibraries("libTauAnalysisSVFitHelper.so");
     loadLibraries("libTauAnalysisCandidateTools.so");
     loadLibraries("libJECJECHelper.so");
-    gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/Delphes");
-    gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/Delphes/external");
-    //gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/CondFormats");
-    //gROOT->ProcessLine(".include /afs/cern.ch/work/a/arapyan/Upgrades/CMSSW_5_3_6/src/CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h");
+    loadLibraries("libPhysicsToolsKinFitter.so");
+    gROOT->ProcessLine(".include $CMSSW_BASE/src/Delphes");
+    gROOT->ProcessLine(".include $CMSSW_BASE/src/Delphes/external");
+    gROOT->Macro("../Utils/hhMVA.c+");
+    //gROOT->Macro("DelWeight.cc+");
     //gROOT->Macro("../Utils/HttStyles.cc+");
     //gROOT->Macro("../Utils/CPlot.cc+");
   }

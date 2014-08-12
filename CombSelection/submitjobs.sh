@@ -1,8 +1,10 @@
 #!/bin/bash
 
 #master submission script
-
 conf_dir=/afs/cern.ch/work/j/jlawhorn/public/conf-files
+#runMacro=ttbar_hack.C
+runMacro=selection.C
+outputBase=/afs/cern.ch/work/j/jlawhorn/public/ntuples
 
 echo "Checking for new samples and"
 echo "remaking config files."
@@ -62,10 +64,8 @@ do
     info=( $(head -n 1 $file) )
     outname=${file%.*}
     outname=${outname##*/}
-    outputDir=/afs/cern.ch/work/j/jlawhorn/public/ntuples/${outname}
+    outputDir=${outputBase}/${outname}
     workDir=$CMSSW_BASE #`pwd`                                                                              
-    #runMacro=selection.C
-    runMacro=ttbar_hack.C
     soFile=`echo $runMacro | sed 's/\./_/'`.so
     script=runjobs.sh
     
@@ -88,10 +88,10 @@ do
     
     sed 1d ${file} | while read line
     do
-	if [[ ! -e ${outputDir} ]]; then
-	    continue
+	#if [[ ! -e ${outputDir} ]]; then
+	    #continue
 	    #echo "Output directory doesn't exist. Not submitting."
-	elif [[ `bjobs -w 2> /dev/null | grep ${line}` ]]; then
+	if [[ `bjobs -w 2> /dev/null | grep ${line}` ]]; then
 	    continue
 	    #echo "Job is currently running. Not submitting."
 	elif [[ `grep "File broken" ${outputDir}/out.${line%.*}.txt` ]]; then
@@ -100,14 +100,12 @@ do
 	elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" ${outputDir}/out.${line%.*}.txt` ]]; then
 	    continue
 	    #echo "Output file exists and selection completed gracefully. Not submitting."
-	elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" \`egrep -lir "${line}" /afs/cern.ch/work/j/jlawhorn/public/ntuples/orphans/\`` ]]; then
+	#elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" \`egrep -lir "${line}" /afs/cern.ch/work/j/jlawhorn/public/ntuples/orphans/\`` ]]; then
 	    #echo "Output is in orphaned folder... Not submitting."
-	    continue
+	    #continue
 	else
 	    echo $script $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
-	    #./${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
-	    bsub -o ${outputDir}/out.${line%.*}.txt -e ${outputDir}/err.${line%.*}.txt -q 2nd ${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
-	    #bsub -q 8nh ${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
+	    bsub -o ${outputDir}/out.${line%.*}.txt -e ${outputDir}/err.${line%.*}.txt -q 8nh ${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
 	fi
     done 
 done

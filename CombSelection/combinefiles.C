@@ -12,9 +12,63 @@
 #include <iomanip>
 #include <fstream>
 
-//#include "../Utils/ttMVA.h"
+#include "PhysicsTools/KinFitter/interface/TFitConstraintM.h"
+#include "PhysicsTools/KinFitter/interface/TFitParticleEtEtaPhi.h"
+#include "PhysicsTools/KinFitter/interface/TKinFitter.h"
+
+#include "../Utils/hhMVA.h"
+
 
 #endif
+
+Double_t ErrEt(Float_t Et, Float_t Eta) {
+  Double_t InvPerr2, a, b, c;
+  if(fabs(Eta) < 1.4){
+    a = 5.6;
+    b = 1.25;
+    c = 0.033;
+  }
+  else{
+    a = 4.8;
+    b = 0.89;
+    c = 0.043;
+  }
+  InvPerr2 = (a * a) + (b * b) * Et + (c * c) * Et * Et;
+  return InvPerr2;
+}
+
+Double_t ErrEta(Float_t Et, Float_t Eta) {
+  Double_t InvPerr2, a, b, c;
+  if(fabs(Eta) < 1.4){
+    a = 1.215;
+    b = 0.037;
+    c = 7.941 * 0.0001;
+  }
+  else{
+    a = 1.773;
+    b = 0.034;
+    c = 3.56 * 0.0001;
+  }
+  InvPerr2 = a/(Et * Et) + b/Et + c;
+  return InvPerr2;
+}
+
+Double_t ErrPhi(Float_t Et, Float_t Eta) {
+  Double_t InvPerr2, a, b, c;
+  if(fabs(Eta) < 1.4){
+    a = 6.65;
+    b = 0.04;
+    c = 8.49 * 0.00001;
+  }
+  else{
+    a = 2.908;
+    b = 0.021;
+    c = 2.59 * 0.0001;
+  }
+  InvPerr2 = a/(Et * Et) + b/Et + c;
+  return InvPerr2;
+}
+
 
 void combinefiles(const TString input="temp.txt",
 		  const TString outputfile="test.root") {
@@ -72,6 +126,9 @@ void combinefiles(const TString input="temp.txt",
   Float_t dEta_tt=0, dEta_6j=0; Int_t n;
   Float_t bdtVal=0;
 
+  Float_t chi2=0, corrMet=0, corrMetPhi=0;
+  Int_t conv=-999;
+
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
   countChain->SetBranchAddress("n", &n);
@@ -118,13 +175,13 @@ void combinefiles(const TString input="temp.txt",
   eventChain->SetBranchAddress("etaG1",          &etaG1);
   eventChain->SetBranchAddress("phiG1",          &phiG1);
   eventChain->SetBranchAddress("eG1",            &eG1);
-  eventChain->SetBranchAddress("gamIso1",        &gamIso1);
+  //eventChain->SetBranchAddress("gamIso1",        &gamIso1);
 
   eventChain->SetBranchAddress("ptG2",           &ptG2);
   eventChain->SetBranchAddress("etaG2",          &etaG2);
   eventChain->SetBranchAddress("phiG2",          &phiG2);
   eventChain->SetBranchAddress("eG2",            &eG2);
-  eventChain->SetBranchAddress("gamIso2",        &gamIso2);
+  //eventChain->SetBranchAddress("gamIso2",        &gamIso2);
 
   eventChain->SetBranchAddress("ptB1",           &ptB1);
   eventChain->SetBranchAddress("etaB1",          &etaB1);
@@ -282,7 +339,7 @@ void combinefiles(const TString input="temp.txt",
   eventChain->SetBranchAddress("etaJJ_tt",       &etaJJ_tt);
   eventChain->SetBranchAddress("phiJJ_tt",       &phiJJ_tt);
   eventChain->SetBranchAddress("mJJ_tt",         &mJJ_tt);
-
+  
   eventChain->SetBranchAddress("ptJJ_6j",        &ptJJ_6j);
   eventChain->SetBranchAddress("etaJJ_6j",       &etaJJ_6j);
   eventChain->SetBranchAddress("phiJJ_6j",       &phiJJ_6j);
@@ -312,26 +369,114 @@ void combinefiles(const TString input="temp.txt",
   TTree *outTree=(TTree*)eventChain->GetTree()->CloneTree(0);
 
   outTree->Branch("bdtVal", &bdtVal, "bdtVal/f");
+  outTree->Branch("chi2", &chi2, "chi2/f");
+  outTree->Branch("corrMet", &corrMet, "corrMet/f");
+  outTree->Branch("corrMetPhi", &corrMetPhi, "corrMetPhi/f");
+  outTree->Branch("conv", &conv, "conv/i");
 
-  /*  ttMVA::MVAType why=ttMVA::kMuTau;
+  //hhMVA::MVAType why1=hhMVA::kTauTau;
+  hhMVA::MVAType why2=hhMVA::kMuTau;
+  hhMVA::MVAType why3=hhMVA::kElTau;
+  hhMVA::MVAType why4=hhMVA::kElMu;
+  
+  //hhMVA *ttMVA = new hhMVA();
+  hhMVA *mtMVA = new hhMVA();
+  hhMVA *etMVA = new hhMVA();
+  hhMVA *emMVA = new hhMVA();
 
-  ttMVA *testMVA = new ttMVA();
-  testMVA->Intialize(why);*/
+  //ttMVA->Intialize(why1);
+  mtMVA->Intialize(why2);
+  etMVA->Intialize(why3);
+  emMVA->Intialize(why4);
 
   for (Int_t i=0; i<eventChain->GetEntries(); i++) {
     eventChain->GetEntry(i);
-
-    if (isBBTT==0) continue;
-
+    
     eventWeight/=float(nevents);
     bdtVal=999;
-    //bdtVal=testMVA->GetBDTValue(mTT, mBB1, mHH, mt2, met, m_sv, ptHH, TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)));
-    //cout << bdtVal << endl;
+
+    if (isBBTT!=1) continue;
+    if (TMath::Sqrt((etaTau1-etaTau2)*(etaTau1-etaTau2)+(phiTau1-phiTau2)*(phiTau1-phiTau2))<0.4) continue;
+    if ( bTag1==0 || bTag2==0 || ptB1<20 || ptB2<20 ) continue;
+    
+    TLorentzVector v1;
+    TLorentzVector v2;
+    
+    v1.SetPtEtaPhiM(ptB1, etaB1, phiB1, mB1);
+    v2.SetPtEtaPhiM(ptB2, etaB2, phiB2, mB2);
+    
+    TMatrixD m1(3,3);
+    TMatrixD m2(3,3);
+
+    m1.Zero();
+    m2.Zero();
+    m1(0,0) = ErrEt (v1.Et(), v1.Eta()); // et                                                                                                                         
+    m1(1,1) = ErrEta(v1.Et(), v1.Eta()); // eta                                                                                                                        
+    m1(2,2) = ErrPhi(v1.Et(), v1.Eta()); // phi                                                                                                                        
+    m2(0,0) = ErrEt (v2.Et(), v2.Eta()); // et                                                                                                                         
+    m2(1,1) = ErrEta(v2.Et(), v2.Eta()); // eta                                                                                                                        
+    m2(2,2) = ErrPhi(v2.Et(), v2.Eta()); // phi                                                                                                                        
+
+    TFitParticleEtEtaPhi *jet1 = new TFitParticleEtEtaPhi( "Jet1", "Jet1", &v1, &m1 );
+    TFitParticleEtEtaPhi *jet2 = new TFitParticleEtEtaPhi( "Jet2", "Jet2", &v2, &m2 );
+
+    TFitConstraintM *mCons1 = new TFitConstraintM( "HMassConstraint", "HMass-Constraint", 0, 0 , 125.);
+    mCons1->addParticles1( jet1, jet2 );
+
+    TKinFitter* fitter = new TKinFitter("fitter", "fitter");
+    fitter->addMeasParticle( jet1 );
+    fitter->addMeasParticle( jet2 );
+    fitter->addConstraint( mCons1 );
+
+    //Set convergence criteria                                                                                                                                         
+    fitter->setMaxNbIter( 30 );
+    fitter->setMaxDeltaS( 1e-2 );
+    fitter->setMaxF( 1e-1 );
+    fitter->setVerbosity(1);
+
+    TVector2 b1_i; b1_i.SetMagPhi(fitter->get4Vec(0)->Pt(), fitter->get4Vec(0)->Phi());
+    TVector2 b2_i; b2_i.SetMagPhi(fitter->get4Vec(1)->Pt(), fitter->get4Vec(1)->Phi());
+
+    //Perform the fit
+    conv=fitter->fit();
+
+    chi2=fitter->getS();
+
+    TVector2 metTemp; metTemp.SetMagPhi(pileupMet,pileupMetPhi);
+    TVector2 b1_f; b1_f.SetMagPhi(fitter->get4Vec(0)->Pt(), fitter->get4Vec(0)->Phi());
+    TVector2 b2_f; b2_f.SetMagPhi(fitter->get4Vec(1)->Pt(), fitter->get4Vec(1)->Phi());
+
+    metTemp=metTemp+b1_i+b2_i-b1_f-b2_f;
+    corrMet=metTemp.Mod();
+    corrMetPhi=metTemp.Phi();
+
+    if (tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45) {
+      bdtVal=0;
+    }
+    else if (tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && tauIso2<0.4) {
+      bdtVal=mtMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    }
+    else if (tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>20 && tauIso2<0.4) {
+      bdtVal=etMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    }
+    else if (tauCat1==3 && tauCat2==2 && ptTau1>20 && ptTau2>20 && tauIso1<0.4 && tauIso2<0.4) {
+      bdtVal=emMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
+				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    }
+    else continue;
 
     outTree->Fill();
   }
-
+  
   outFile->Write();
   outFile->Save();
-
+  
 }
