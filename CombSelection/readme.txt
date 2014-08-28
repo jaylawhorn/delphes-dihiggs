@@ -18,8 +18,9 @@ getall.C: opens all ROOT files in a text file and finds the total number of even
 1) Setup cmssw
 2) cmsenv
 3) Clone git@github.com:arapyan/TauAnalysis.git
-4) Clote git@github.com:arapyan/JEC.git
-5) compile
-6) make sure there are no hard coded directories in submitjobs.sh,rootlogon.C
-7) submit jobs with master_sv.sh
+4) Clone git@github.com:arapyan/JEC.git
+5) Clone https://github.com/sethzenz/Delphes.git
+6) compile
+7) make sure there are no hard coded directories in submitjobs.sh,rootlogon.C
+8) submit jobs with master_sv.sh
 
