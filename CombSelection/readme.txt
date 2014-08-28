@@ -20,6 +20,6 @@ getall.C: opens all ROOT files in a text file and finds the total number of even
 3) Clone git@github.com:arapyan/TauAnalysis.git
 4) Clote git@github.com:arapyan/JEC.git
 5) compile
-6) make sure there are no hard coded directories in master_sv.sh,rootlogon.C
+6) make sure there are no hard coded directories in submitjobs.sh,rootlogon.C
 7) submit jobs with master_sv.sh
 

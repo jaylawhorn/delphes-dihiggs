@@ -37,7 +37,7 @@
     loadLibraries("libPhysicsToolsKinFitter.so");
     gROOT->ProcessLine(".include $CMSSW_BASE/src/Delphes");
     gROOT->ProcessLine(".include $CMSSW_BASE/src/Delphes/external");
-    gROOT->Macro("../Utils/hhMVA.c+");
+    //gROOT->Macro("../Utils/hhMVA.c+");
     //gROOT->Macro("DelWeight.cc+");
     //gROOT->Macro("../Utils/HttStyles.cc+");
     //gROOT->Macro("../Utils/CPlot.cc+");
