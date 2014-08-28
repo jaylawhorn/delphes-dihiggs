@@ -22,5 +22,5 @@ getall.C: opens all ROOT files in a text file and finds the total number of even
 5) Clone https://github.com/sethzenz/Delphes.git
 6) compile
 7) make sure there are no hard coded directories in submitjobs.sh,rootlogon.C
-8) submit jobs with master_sv.sh
+8) submit jobs with submitjobs.sh 
 
