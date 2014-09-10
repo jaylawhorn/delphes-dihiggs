@@ -75,7 +75,7 @@ void TMVAbbtt()
    // --- Here the preparation phase begins
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "bbet.root" );
+   TString outfileName( "bbem.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object. Later you can choose the methods
@@ -100,14 +100,14 @@ void TMVAbbtt()
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
 
-   factory->AddVariable( "ptTau1", 'F' );
+   //factory->AddVariable( "ptTau1", 'F' );
    //factory->AddVariable( "etaTau1", 'F' );
-   factory->AddVariable( "ptTau2", 'F' );
+   //factory->AddVariable( "ptTau2", 'F' );
    //factory->AddVariable( "etaTau2", 'F' );
 
-   factory->AddVariable( "ptB1", 'F' );
+   //factory->AddVariable( "ptB1", 'F' );
    //factory->AddVariable( "etaB1", 'F' );
-   factory->AddVariable( "ptB2", 'F' );
+   //factory->AddVariable( "ptB2", 'F' );
    //factory->AddVariable( "etaB2", 'F' );
 
    factory->AddVariable( "mTT", 'F' ); //*
@@ -122,13 +122,15 @@ void TMVAbbtt()
 
    factory->AddVariable( "mt2pileup", 'F' ); //*
    //factory->AddVariable( "pileupmet", 'F' );
+   //factory->AddVariable( "ptTrk1", 'F' );
+   //factory->AddVariable( "ptTrk2", 'F' );
    //factory->AddVariable( "conv", 'I' );
    //factory->AddVariable( "corrMet", 'F' );
    //factory->AddVariable( "dMet := sqrt((corrMet-pileupmet)**2+(corrMetPhi-pileupmetPhi)**2)", 'F' );
 
-   factory->AddVariable( "dRbb := sqrt((etaB1-etaB2)**2+(phiB1-phiB2)**2)", 'F' ); //*
-   factory->AddVariable( "dRtt := sqrt((etaTau1-etaTau2)**2+(phiTau1-phiTau2)**2)", 'F' ); //*
-   factory->AddVariable( "dRhh := sqrt((etaBB1-etaTT)**2+(phiBB1-phiTT)**2)", 'F' ); //*
+   factory->AddVariable( "dRBB1", 'F' ); //*
+   factory->AddVariable( "dRTT", 'F' ); //*
+   factory->AddVariable( "dRHH", 'F' ); //*
 
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
@@ -137,7 +139,8 @@ void TMVAbbtt()
 
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   TString fname = "/afs/cern.ch/work/j/jlawhorn/public/mva-training/et.root";
+   //TString fname = "/afs/cern.ch/work/j/jlawhorn/public/mva-training/em.root";
+   TString fname = "em.root";
    
    TFile *input = new TFile(fname, "READ");
    
@@ -228,7 +231,7 @@ void TMVAbbtt()
    //"!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" );
 
    factory->BookMethod( TMVA::Types::kBDT, "BDT",
-			"!H:!V:NTrees=500" ); //was 850 trees originally
+			"!H:!V:NTrees=850" ); //was 850 trees originally
 
 //factory->BookMethod( TMVA::Types::kBDT, "BDTB",
 //			"!H:!V:NTrees=400:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20" );

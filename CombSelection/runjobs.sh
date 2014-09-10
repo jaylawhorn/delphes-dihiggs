@@ -23,8 +23,10 @@ cp ${scramdir}/rootlogon.C .
 cp ${scramdir}/$runMacro  .
 cp ${scramdir}/$soFile  .
 
-echo root -l -b -q ${runMacro}+\(\"${inputDir}${inputFile}\",${xsec},${id},\"${outputDir}/${inputFile}\"\)
-root -l -b -q ${runMacro}+\(\"${inputDir}${inputFile}\",${xsec},${id},\"${outputDir}/${inputFile}\"\)
+echo root -l -b -q ${runMacro}+\(\"${inputDir}${inputFile}\",${xsec},${id},\"${inputFile}\"\)
+root -l -b -q ${runMacro}+\(\"${inputDir}${inputFile}\",${xsec},${id},\"${inputFile}\"\)
+
+cp ${inputFile} $outputDir/${inputFile}
 
 status=`echo $?`
 echo "Status - $status"

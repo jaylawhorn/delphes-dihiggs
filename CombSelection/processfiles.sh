@@ -4,6 +4,8 @@ indir=$1
 
 for folder in $( ls -d ${indir}*/ )
 do
+    #find ${folder}/*.root -size -1k 
+    find ${folder}/*.root -size -1k -delete
     files=(${folder}/*.root)
     if [[ ! ${#files[@]} -gt 1 ]]; then
 	echo "no files in folder... skipping" ${folder}
@@ -22,7 +24,7 @@ do
 	echo "combining" ${folder}
     fi
     ls ${folder}/*.root > ${folder}temp.txt
-    echo root -l -q combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
-   root -l -q combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
+    echo root -l -q rootlogon.bdt.C combinefiles.C+\\\(\\\"${folder}temp.txt\\\",\\\"${folder%/*}.root\\\"\\\)
+    root -l -q rootlogon.bdt.C combinefiles.C+\(\"${folder}temp.txt\",\"${folder%/*}.root\"\)
     #rm ${folder}temp.txt
 done

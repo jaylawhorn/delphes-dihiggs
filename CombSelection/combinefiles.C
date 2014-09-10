@@ -12,9 +12,9 @@
 #include <iomanip>
 #include <fstream>
 
-#include "PhysicsTools/KinFitter/interface/TFitConstraintM.h"
-#include "PhysicsTools/KinFitter/interface/TFitParticleEtEtaPhi.h"
-#include "PhysicsTools/KinFitter/interface/TKinFitter.h"
+//#include "PhysicsTools/KinFitter/interface/TFitConstraintM.h"
+//#include "PhysicsTools/KinFitter/interface/TFitParticleEtEtaPhi.h"
+//#include "PhysicsTools/KinFitter/interface/TKinFitter.h"
 
 #include "../Utils/hhMVA.h"
 
@@ -92,7 +92,7 @@ void combinefiles(const TString input="temp.txt",
   Int_t eventType; Int_t genInfo; Float_t eventWeight; Int_t sampleNo;
   Int_t isBBTT; Int_t isBBGG; Int_t isBBBB; Int_t isVBFTT; Int_t isVBF4B;
   Float_t met, metPhi; Float_t ppMet, ppMetPhi; Float_t pileupMet, pileupMetPhi;
-  Int_t nCentral=0, nBtag=0; Int_t centB=0;
+  Int_t nCentral=0, nBtag=0; Int_t centB=0; Int_t nJets=0;
 
   Int_t tauCat1=0, tauCat2=0;
   Int_t bTag1=0, bTag2=0, bTag3=0, bTag4=0;
@@ -101,10 +101,10 @@ void combinefiles(const TString input="temp.txt",
   Double_t mt2=0; Double_t mt2puppi=0; Double_t mt2pileup=0;
   Double_t m_sv=0; Double_t m_svpileup=0; Double_t m_svpuppi=0;
   
-  Float_t ptTau1, ptTau2, ptB1, ptB2, ptB3, ptB4, ptG1, ptG2, ptJet_tt1, ptJet_tt2, ptJet_6j1, ptJet_6j2, tauIso1, tauIso2;
-  Float_t etaTau1, etaTau2, etaB1, etaB2, etaB3, etaB4, etaG1, etaG2, etaJet_tt1, etaJet_tt2, etaJet_6j1, etaJet_6j2;
-  Float_t phiTau1, phiTau2, phiB1, phiB2, phiB3, phiB4, phiG1, phiG2, phiJet_tt1, phiJet_tt2, phiJet_6j1, phiJet_6j2;
-  Float_t mTau1, mTau2, mB1, mB2, mB3, mB4, eG1, eG2, mJet_tt1, mJet_tt2, mJet_6j1, mJet_6j2;
+  Float_t ptTau1, ptTau2, ptTrk1, ptTrk2, ptB1, ptB2, ptB3, ptB4, ptG1, ptG2, ptJet_tt1, ptJet_tt2, ptJet_6j1, ptJet_6j2, tauIso1, tauIso2;
+  Float_t etaTau1, etaTau2, etaTrk1, etaTrk2, etaB1, etaB2, etaB3, etaB4, etaG1, etaG2, etaJet_tt1, etaJet_tt2, etaJet_6j1, etaJet_6j2;
+  Float_t phiTau1, phiTau2, phiTrk1, phiTrk2, phiB1, phiB2, phiB3, phiB4, phiG1, phiG2, phiJet_tt1, phiJet_tt2, phiJet_6j1, phiJet_6j2;
+  Float_t mTau1, mTau2, mTrk1, mTrk2, mB1, mB2, mB3, mB4, eG1, eG2, mJet_tt1, mJet_tt2, mJet_6j1, mJet_6j2;
 
   Float_t ptTau1_gen, ptTau2_gen, ptB1_gen, ptB2_gen, ptB3_gen, ptB4_gen, ptG1_gen, ptG2_gen, ptJet_tt1_gen, ptJet_tt2_gen, ptJet_6j1_gen, ptJet_6j2_gen;
   Float_t etaTau1_gen, etaTau2_gen, etaB1_gen, etaB2_gen, etaB3_gen, etaB4_gen, etaG1_gen, etaG2_gen, etaJet_tt1_gen, etaJet_tt2_gen, etaJet_6j1_gen, etaJet_6j2_gen;
@@ -124,6 +124,13 @@ void combinefiles(const TString input="temp.txt",
   Float_t mTT, mBB1, mBB2, mGG, mJJ_tt, mJJ_6j, mHH;
 
   Float_t dEta_tt=0, dEta_6j=0; Int_t n;
+
+  Float_t rho_0=0, rho_1=0, rho_2=0;
+
+  Float_t dEtaBB1=0, dEtaTT=0, dEtaHH=0;
+  Float_t dPhiBB1=0, dPhiTT=0, dPhiHH=0;
+  Float_t dRBB1=0, dRTT=0, dRHH=0;
+
   Float_t bdtVal=0;
 
   Float_t chi2=0, corrMet=0, corrMetPhi=0;
@@ -170,6 +177,16 @@ void combinefiles(const TString input="temp.txt",
   eventChain->SetBranchAddress("mTau2",          &mTau2);
   eventChain->SetBranchAddress("tauCat2",        &tauCat2);
   eventChain->SetBranchAddress("tauIso2",        &tauIso2);
+
+  eventChain->SetBranchAddress("ptTrk1",         &ptTrk1);
+  eventChain->SetBranchAddress("etaTrk1",        &etaTrk1);
+  eventChain->SetBranchAddress("phiTrk1",        &phiTrk1);
+  eventChain->SetBranchAddress("mTrk1",          &mTrk1);
+
+  eventChain->SetBranchAddress("ptTrk2",         &ptTrk2);
+  eventChain->SetBranchAddress("etaTrk2",        &etaTrk2);
+  eventChain->SetBranchAddress("phiTrk2",        &phiTrk2);
+  eventChain->SetBranchAddress("mTrk2",          &mTrk2);
 
   eventChain->SetBranchAddress("ptG1",           &ptG1);
   eventChain->SetBranchAddress("etaG1",          &etaG1);
@@ -361,8 +378,25 @@ void combinefiles(const TString input="temp.txt",
   eventChain->SetBranchAddress("nBtag",          &nBtag);
   eventChain->SetBranchAddress("nCentral",       &nCentral);
   eventChain->SetBranchAddress("centB",          &centB);
+  eventChain->SetBranchAddress("nJets",          &nJets);
+
   eventChain->SetBranchAddress("dEta_tt",        &dEta_tt);
   eventChain->SetBranchAddress("dEta_6j",        &dEta_6j);
+  eventChain->SetBranchAddress("rho_0",          &rho_0);
+  eventChain->SetBranchAddress("rho_1",          &rho_1);
+  eventChain->SetBranchAddress("rho_2",          &rho_2);
+
+  eventChain->SetBranchAddress("dEtaBB1",         &dEtaBB1);
+  eventChain->SetBranchAddress("dPhiBB1",         &dPhiBB1);
+  eventChain->SetBranchAddress("dRBB1",           &dRBB1);
+
+  eventChain->SetBranchAddress("dEtaTT",          &dEtaTT);
+  eventChain->SetBranchAddress("dPhiTT",          &dPhiTT);
+  eventChain->SetBranchAddress("dRTT",            &dRTT);
+
+  eventChain->SetBranchAddress("dEtaHH",          &dEtaHH);
+  eventChain->SetBranchAddress("dPhiHH",          &dPhiHH);
+  eventChain->SetBranchAddress("dRHH",            &dRHH);
   
   eventChain->GetEntry(0);
 
@@ -395,10 +429,13 @@ void combinefiles(const TString input="temp.txt",
     eventWeight/=float(nevents);
     bdtVal=999;
 
+    // hack to fix modified SM samples
+    //if (sampleNo>95 && sampleNo<100) eventWeight=2.92/float(nevents);
+
     if (isBBTT!=1) continue;
-    if (TMath::Sqrt((etaTau1-etaTau2)*(etaTau1-etaTau2)+(phiTau1-phiTau2)*(phiTau1-phiTau2))<0.4) continue;
-    if ( bTag1==0 || bTag2==0 || ptB1<20 || ptB2<20 ) continue;
-    
+    if (ptB1<30 || ptB2<30) continue;
+    //if (TMath::Sqrt((etaTau1-etaTau2)*(etaTau1-etaTau2)+(phiTau1-phiTau2)*(phiTau1-phiTau2))<0.4) continue;
+    /*    
     TLorentzVector v1;
     TLorentzVector v2;
     
@@ -449,30 +486,20 @@ void combinefiles(const TString input="temp.txt",
     metTemp=metTemp+b1_i+b2_i-b1_f-b2_f;
     corrMet=metTemp.Mod();
     corrMetPhi=metTemp.Phi();
-
+    */
     if (tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45) {
-      bdtVal=0;
+      bdtVal=999;//ttMVA->GetBDTValue(mTT, ptTT, mBB1, ptBB1, dRBB1, dRTT);
     }
-    else if (tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && tauIso2<0.4) {
-      bdtVal=mtMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    else if (tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20) {
+      bdtVal=mtMVA->GetBDTValue(mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, dRBB1, dRTT, dRHH);
     }
-    else if (tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>20 && tauIso2<0.4) {
-      bdtVal=etMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    else if (tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>20) {
+      bdtVal=etMVA->GetBDTValue(mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, dRBB1, dRTT, dRHH);
     }
-    else if (tauCat1==3 && tauCat2==2 && ptTau1>20 && ptTau2>20 && tauIso1<0.4 && tauIso2<0.4) {
-      bdtVal=emMVA->GetBDTValue(ptTau1, ptTau2, ptB1, ptB2, mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaB1-etaB2)*(etaB1-etaB2)+(phiB1-phiB2)*(phiB1-phiB2)), 
-				TMath::Sqrt((etaBB1-etaTT)*(etaBB1-etaTT)+(phiBB1-phiTT)*(phiBB1-phiTT)));
+    else if (tauCat1==3 && tauCat2==2 && ptTau1>20 && ptTau2>20) {
+      bdtVal=emMVA->GetBDTValue(mTT, ptTT, mBB1, ptBB1, mHH, ptHH, mt2pileup, dRBB1, dRTT, dRHH);
     }
     else continue;
-
     outTree->Fill();
   }
   

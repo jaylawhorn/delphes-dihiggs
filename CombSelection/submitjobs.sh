@@ -2,8 +2,8 @@
 
 #master submission script
 conf_dir=/afs/cern.ch/work/j/jlawhorn/public/conf-files
-#runMacro=ttbar_hack.C
-runMacro=selection.C
+runMacro=lam_selection.C
+#runMacro=selection.C
 outputBase=/afs/cern.ch/work/j/jlawhorn/public/ntuples
 
 echo "Checking for new samples and"
@@ -91,21 +91,19 @@ do
 	#if [[ ! -e ${outputDir} ]]; then
 	    #continue
 	    #echo "Output directory doesn't exist. Not submitting."
-	if [[ `bjobs -w 2> /dev/null | grep ${line}` ]]; then
-	    continue
-	    #echo "Job is currently running. Not submitting."
-	elif [[ `grep "File broken" ${outputDir}/out.${line%.*}.txt` ]]; then
-	    continue
-	    #echo "Input file is broken. Not submitting."
-	elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" ${outputDir}/out.${line%.*}.txt` ]]; then
-	    continue
-	    #echo "Output file exists and selection completed gracefully. Not submitting."
-	#elif [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" \`egrep -lir "${line}" /afs/cern.ch/work/j/jlawhorn/public/ntuples/orphans/\`` ]]; then
-	    #echo "Output is in orphaned folder... Not submitting."
+	#if [[ `bjobs -w 2> /dev/null | grep ${line}` ]]; then
 	    #continue
+	    #echo "Job is currently running. Not submitting."
+	#if [[ `grep "File broken" ${outputDir}/out.${line%.*}.txt` ]]; then
+	    #continue
+	    #echo "Input file is broken. Not submitting."
+	#if [[ -e ${outputDir}/${line} ]] && [[ `grep "Selection complete" ${outputDir}/out.${line%.*}.txt` ]]; then
+	if [[ -e ${outputDir}/${line} ]]; then
+	    continue
+	    #echo "Output file exists. Not submitting."
 	else
 	    echo $script $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
-	    bsub -o ${outputDir}/out.${line%.*}.txt -e ${outputDir}/err.${line%.*}.txt -q 8nh ${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
+	    bsub -o ${outputDir}/out.${line%.*}.txt -e ${outputDir}/err.${line%.*}.txt -q 2nd ${script} $workDir $outputDir ${info[0]} ${line} ${info[1]} ${info[2]} $runMacro $soFile 
 	fi
     done 
 done
