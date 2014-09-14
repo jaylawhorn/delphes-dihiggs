@@ -75,9 +75,10 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::stringstream lumi; lumi << luminosity;
   std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
   std::string objcutQ = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && bTag1==1 && bTag2==1)*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
-  std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
   //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
-  std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
   //std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
 
   //signal region
@@ -308,9 +309,9 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   outDC->cd();
   TDirectory* lTD = outDC->mkdir("tautau");
   outDC->cd(lTD->GetPath());
-  ttbar->SetName("data_obs");
-  ttbar->SetTitle("data_obs");
-  ttbar->Write();
+  Ztt->SetName("data_obs");
+  Ztt->SetTitle("data_obs");
+  Ztt->Write();
   Ztt->SetName("ZTT");
   Ztt->SetTitle("ZTT");
   Ztt->Write();
