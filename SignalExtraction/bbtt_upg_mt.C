@@ -74,8 +74,9 @@ void bbtt_upg_mt(std::string var,int nbins, double xmin, double xmax,std::string
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
-  std::string objcut = "(tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==1||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)";
-  std::string jetcut = objcut+"*(ptTrk1>0)*(mTT>40 && mTT<100)*(mBB1>80 && mBB1<140)*(mt2pileup>125)";
+  std::string objcut = "(tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.1)";//*(tauIso2<0.15)";
+  std::string jetcut = objcut+"*(ptTrk1>0)*(m_svpileup>90 && m_svpileup<140)*(mBB1>80 && mBB1<140)*(mt2pileup>125)*(mHH>300)";
+  //std::string jetcut = objcut+"*(ptTrk1>0)*(mTT>40 && mTT<100)*(mBB1>80 && mBB1<140)*(mt2pileup>125)";
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
   std::string sigcut = jetcut+"*eventWeight*"+lumi.str();
@@ -287,7 +288,7 @@ void bbtt_upg_mt(std::string var,int nbins, double xmin, double xmax,std::string
   //ggh->Draw("histsame");
   ttbar->Draw("histsame");
   //data->Draw("esame");
-  errorBand->Draw("e2same");
+  //errorBand->Draw("e2same");
   smhh->Draw("histsame");
   canv->RedrawAxis();
   //canv->SetLogy(1);
@@ -301,7 +302,7 @@ void bbtt_upg_mt(std::string var,int nbins, double xmin, double xmax,std::string
   leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
-  leg->AddEntry(errorBand,"bkg. uncertainty","F");
+  //leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
    

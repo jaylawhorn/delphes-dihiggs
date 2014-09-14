@@ -73,9 +73,13 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
-  std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==1||bTag2==3||bTag2==6||bTag2==7))";
-  std::string jetcut = objcut+"*(mTT>50&&mTT<130)*(ptBB1>150)";
-  //std::string jetcut = objcut+"*(ptTrk1>0 && ptTrk2>0)*(mTT>50&&mTT<130)*(mBB1>80&&mBB1<140)*(ptBB1>150)*(mHH>300)";
+  std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
+  std::string objcutQ = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && bTag1==1 && bTag2==1)*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
+  std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
+  std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  //std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
+
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
   std::string vbfcut = jetcut+"*eventWeight*49470*0.0632*"+lumi.str();
@@ -83,13 +87,17 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string zjetcut = jetcut+"*eventWeight*(eventType!=3&&eventType!=1)*"+lumi.str();
   std::string wjetcut = jetcut+"*eventWeight*(eventType==3&&eventType!=1)*"+lumi.str();
   std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
+  std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
 
-  std::string sigcutS = sigcut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
-  std::string mccutS = mccut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
-  std::string vbfcutS = vbfcut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
-  std::string zjetcutS = zjetcut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
-  std::string wjetcutS = wjetcut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
-  std::string ewkcutS = ewkcut+"*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)";
+  std::string addl="*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+
+  std::string sigcutS = sigcut+addl;
+  std::string mccutS = mccut+addl;
+  std::string vbfcutS = vbfcut+addl;
+  std::string zjetcutS = zjetcut+addl;
+  std::string wjetcutS = wjetcut+addl;
+  std::string ewkcutS = ewkcut+addl;
+  std::string qcdcutS = qcdcut+addl;
   //--------------------------------------------------------------------------
   
   //Get the trees
@@ -151,11 +159,11 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   ewk->Scale(scaleD);
   TH1F *qcd = new TH1F("Qcd","",nbins,xmin,xmax);
   vardraw = var+">>"+"Qcd";
-  qcdtree->Draw(vardraw.c_str(),mccut.c_str());
+  qcdtree->Draw(vardraw.c_str(),qcdcut.c_str());
   InitHist(qcd, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *qcdS = new TH1F("QcdS","",nbins,xmin,xmax);
   vardraw = var+">>"+"QcdS";
-  qcdtree->Draw(vardraw.c_str(),mccutS.c_str());
+  qcdtree->Draw(vardraw.c_str(),qcdcutS.c_str());
   scaleD=qcdS->Integral(0,qcdS->GetNbinsX())/qcd->Integral(0,qcd->GetNbinsX());
   qcd->Scale(scaleD);
   TH1F *vbfh = new TH1F("VBFH","",nbins,xmin,xmax);
@@ -228,7 +236,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //ofstream outfile;
   //outfile.open("yields.txt");
   //outfile << "Yields for the signal region." << std::endl;
-  cout << jetcut << endl;
+  cout << sigcutS << endl;
   cout << "SM hh   "  << smhh->IntegralAndError(0,smhh->GetNbinsX(),error) << "+/-";
   cout << error << endl; error=999;
   cout << "SM hh S "  << smhhS->IntegralAndError(0,smhhS->GetNbinsX(),error) << "+/-";
@@ -347,8 +355,8 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   hh_p5->Write();
   outDC->Close();
   //stack some  histtograms together
+  ggh->Add(assoh);
   vbfh->Add(ggh); 
-  vbfh->Add(assoh);
   wjets->Add(ewk); 
   //-----------------------------------------------------------------------
   smhh->Scale(sigscale);
@@ -380,7 +388,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //ggh->Draw("histsame");
   ttbar->Draw("histsame");
   //data->Draw("esame");
-  errorBand->Draw("e2same");
+  //errorBand->Draw("e2same");
   smhh->Draw("histsame");
   canv->RedrawAxis();
   //canv->SetLogy(1);
@@ -394,7 +402,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
-  leg->AddEntry(errorBand,"bkg. uncertainty","F");
+  //leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
    
@@ -415,7 +423,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //-------------------------------------------------------------------------
   //Save histograms
   canv->Print((var+"_tt.png").c_str());
-  
+
   /*
     Ratio Data over MC
   */
