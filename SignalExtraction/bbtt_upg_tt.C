@@ -76,10 +76,9 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
   std::string objcutQ = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && bTag1==1 && bTag2==1)*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
   std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(mt2pileup>100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
+  //std::string jetcut = objcut+"*(mTT>40 && mTT<100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
   std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  //std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptBB1>150)";
+  //std::string jetcutQ = objcutQ+"*(mTT>40 && mTT<100)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
 
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
@@ -90,7 +89,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
   std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
 
-  std::string addl="*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
+  std::string addl="";//*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
 
   std::string sigcutS = sigcut+addl;
   std::string mccutS = mccut+addl;
