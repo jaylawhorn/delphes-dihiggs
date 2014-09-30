@@ -1375,28 +1375,28 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     }
 
     if (isBBBB==1 || isVBF4B==1) {
-      mindR4B=min(min(min(min(min(dRB1B2,dRB1B3),dRB1B4),dRB2B3),dRB2B4),dRB3B4);
-      if(90<mB1B2<135)
+      mindR4B=std::min(std::min(std::min(std::min(std::min(dRB1B2,dRB1B3),dRB1B4),dRB2B3),dRB2B4),dRB3B4);
+      if(90<mB1B2&&mB1B2<135)
 	{
 	  nBJetsComb++;
 	}
-      if(90<mB1B3<135)
+      if(90<mB1B3&&mB1B3<135)
 	{
 	  nBJetsComb++;
 	}
-      if(90<mB1B4<135)
+      if(90<mB1B4&&mB1B4<135)
 	{
 	  nBJetsComb++;
 	}
-      if(90<mB2B3<135)
+      if(90<mB2B3&&mB2B3<135)
 	{
 	  nBJetsComb++;
 	}
-      if(90<mB2B4<135)
+      if(90<mB2B4&&mB2B4<135)
 	{
 	  nBJetsComb++;
 	}
-      if(90<mB3B4<135)
+      if(90<mB3B4&&mB3B4<135)
 	{
 	  nBJetsComb++;
 	}
