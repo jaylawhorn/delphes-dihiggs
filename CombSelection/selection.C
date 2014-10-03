@@ -189,6 +189,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   Int_t nCentral=0, nBtag=0, nJets=0;
   Int_t centB=0;
 
+  Int_t nLep=0;
+
   Int_t tauCat1=0, tauCat2=0;
   Int_t bTag1=0, bTag2=0, bTag3=0, bTag4=0;
   Int_t jbTag_tt1=0, jbTag_tt2=0, jbTag_6j1=0, jbTag_6j2=0;
@@ -208,18 +210,22 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   Float_t ptTau1_genJet, ptTau2_genJet, etaTau1_genJet, etaTau2_genJet, phiTau1_genJet, phiTau2_genJet, mTau1_genJet, mTau2_genJet;
 
-  Float_t ptTT, ptBB1, ptBB2, ptGG, ptJJ_tt, ptJJ_6j, ptHH;
-  Float_t etaTT, etaBB1, etaBB2, etaGG, etaJJ_tt, etaJJ_6j, etaHH;
-  Float_t phiTT, phiBB1, phiBB2, phiGG, phiJJ_tt, phiJJ_6j, phiHH;
-  Float_t mTT, mBB1, mBB2, mGG, mJJ_tt, mJJ_6j, mHH;
+  Float_t ptTT, ptBB1, ptBB2, ptB1B2, ptB1B3, ptB1B4, ptB2B3, ptB2B4, ptB3B4, ptGG, ptJJ_tt, ptJJ_6j, ptHH;
+  Float_t etaTT, etaBB1, etaBB2, etaB1B2, etaB1B3, etaB1B4, etaB2B3, etaB2B4, etaB3B4, etaGG, etaJJ_tt, etaJJ_6j, etaHH;
+  Float_t phiTT, phiBB1, phiBB2, phiB1B2, phiB1B3, phiB1B4, phiB2B3, phiB2B4, phiB3B4,phiGG, phiJJ_tt, phiJJ_6j, phiHH;
+  Float_t mTT, mBB1, mBB2, mB1B2, mB1B3, mB1B4, mB2B3, mB2B4, mB3B4,mGG, mJJ_tt, mJJ_6j, mHH;
 
   Float_t dEta_tt=0, dEta_6j=0;
 
   Float_t rho_0=0, rho_1=0, rho_2=0;
 
-  Float_t dEtaBB1=0, dEtaTT=0, dEtaHH=0;
-  Float_t dPhiBB1=0, dPhiTT=0, dPhiHH=0;
-  Float_t dRBB1=0, dRTT=0, dRHH=0;
+  Float_t dEtaBB1=0, dEtaBB2=0, dEtaB1B2=0, dEtaB1B3=0, dEtaB1B4=0, dEtaB2B3=0, dEtaB2B4=0, dEtaB3B4=0, dEtaTT=0, dEtaHH=0;
+  Float_t dPhiBB1=0, dPhiBB2=0, dPhiB1B2=0, dPhiB1B3=0, dPhiB1B4=0, dPhiB2B3=0, dPhiB2B4=0, dPhiB3B4=0, dPhiTT=0, dPhiHH=0;
+  Float_t dRBB1=0, dRBB2=0, dRB1B2=0, dRB1B3=0, dRB1B4=0, dRB2B3=0, dRB2B4=0, dRB3B4=0, dRTT=0, dRHH=0;
+
+  Float_t mindR4B=0;
+  Int_t nBJetsComb=0;
+
 
   TFile *outFile = new TFile(outputfile, "RECREATE");
 
@@ -429,6 +435,36 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("phiBB2",         &phiBB2,         "phiBB2/f");       // phi(BB2)
   outTree->Branch("mBB2",           &mBB2,           "mBB2/f");         // m(BB2)
 
+  outTree->Branch("ptB1B2",          &ptB1B2,          "ptB1B2/f");        // pt(B1B2)
+  outTree->Branch("etaB1B2",         &etaB1B2,         "etaB1B2/f");       // eta(B1B2)
+  outTree->Branch("phiB1B2",         &phiB1B2,         "phiB1B2/f");       // phi(B1B2)
+  outTree->Branch("mB1B2",           &mB1B2,           "mB1B2/f");         // m(B1B2)
+
+  outTree->Branch("ptB1B3",          &ptB1B3,          "ptB1B3/f");        // pt(B1B3)
+  outTree->Branch("etaB1B3",         &etaB1B3,         "etaB1B3/f");       // eta(B1B3)
+  outTree->Branch("phiB1B3",         &phiB1B3,         "phiB1B3/f");       // phi(B1B3)
+  outTree->Branch("mB1B3",           &mB1B3,           "mB1B3/f");         // m(B1B3)
+
+  outTree->Branch("ptB1B4",          &ptB1B4,          "ptB1B4/f");        // pt(B1B4)
+  outTree->Branch("etaB1B4",         &etaB1B4,         "etaB1B4/f");       // eta(B1B4)
+  outTree->Branch("phiB1B4",         &phiB1B4,         "phiB1B4/f");       // phi(B1B4)
+  outTree->Branch("mB1B4",           &mB1B4,           "mB1B4/f");         // m(B1B4)
+
+  outTree->Branch("ptB2B3",          &ptB2B3,          "ptB2B3/f");        // pt(B2B3)
+  outTree->Branch("etaB2B3",         &etaB2B3,         "etaB2B3/f");       // eta(B2B3)
+  outTree->Branch("phiB2B3",         &phiB2B3,         "phiB2B3/f");       // phi(B2B3)
+  outTree->Branch("mB2B3",           &mB2B3,           "mB2B3/f");         // m(B2B3)
+
+  outTree->Branch("ptB2B4",          &ptB2B4,          "ptB2B4/f");        // pt(B2B4)
+  outTree->Branch("etaB2B4",         &etaB2B4,         "etaB2B4/f");       // eta(B2B4)
+  outTree->Branch("phiB2B4",         &phiB2B4,         "phiB2B4/f");       // phi(B2B4)
+  outTree->Branch("mB2B4",           &mB2B4,           "mB2B4/f");         // m(B2B4)
+
+  outTree->Branch("ptB3B4",          &ptB3B4,          "ptB3B4/f");        // pt(B3B4)
+  outTree->Branch("etaB3B4",         &etaB3B4,         "etaB3B4/f");       // eta(B3B4)
+  outTree->Branch("phiB3B4",         &phiB3B4,         "phiB3B4/f");       // phi(B3B4)
+  outTree->Branch("mB3B4",           &mB3B4,           "mB3B4/f");         // m(B3B4)
+
   outTree->Branch("ptGG",           &ptGG,           "ptGG/f");         // pt(GG)
   outTree->Branch("etaGG",          &etaGG,          "etaGG/f");        // eta(GG)
   outTree->Branch("phiGG",          &phiGG,          "phiGG/f");        // phi(GG)
@@ -461,6 +497,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("nCentral",       &nCentral,       "nCentral/i");     // number of central jets (VBF)
   outTree->Branch("centB",          &centB,          "centB/i");        // how many b's between VBF jets?
   outTree->Branch("nJets",          &nJets,          "nJets/i");        // number of jets
+  outTree->Branch("nLep",           &nLep,           "nLep/i");        // number of leptons
   outTree->Branch("dEta_tt",        &dEta_tt,        "dEta_tt/f");      // delta Eta (VBF)
   outTree->Branch("dEta_6j",        &dEta_6j,        "dEta_6j/f");      // delta Eta (VBF)
   outTree->Branch("rho_0",          &rho_0,          "rho_0/f");        // central rho, 0-2.5
@@ -470,6 +507,37 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("dEtaBB1",         &dEtaBB1,        "dEtaBB1/f");
   outTree->Branch("dPhiBB1",         &dPhiBB1,        "dPhiBB1/f");
   outTree->Branch("dRBB1",           &dRBB1,          "dRBB1/f");
+
+  outTree->Branch("dEtaBB2",         &dEtaBB2,        "dEtaBB2/f");
+  outTree->Branch("dPhiBB2",         &dPhiBB2,        "dPhiBB2/f");
+  outTree->Branch("dRBB2",           &dRBB2,          "dRBB2/f");
+
+  outTree->Branch("dEtaB1B2",         &dEtaB1B2,        "dEtaB1B2/f");
+  outTree->Branch("dPhiB1B2",         &dPhiB1B2,        "dPhiB1B2/f");
+  outTree->Branch("dRB1B2",           &dRB1B2,          "dRB1B2/f");
+
+  outTree->Branch("dEtaB1B3",         &dEtaB1B3,        "dEtaB1B3/f");
+  outTree->Branch("dPhiB1B3",         &dPhiB1B3,        "dPhiB1B3/f");
+  outTree->Branch("dRB1B3",           &dRB1B3,          "dRB1B3/f");
+
+  outTree->Branch("dEtaB1B4",         &dEtaB1B4,        "dEtaB1B4/f");
+  outTree->Branch("dPhiB1B4",         &dPhiB1B4,        "dPhiB1B4/f");
+  outTree->Branch("dRB1B4",           &dRB1B4,          "dRB1B4/f");
+
+  outTree->Branch("dEtaB2B3",         &dEtaB2B3,        "dEtaB2B3/f");
+  outTree->Branch("dPhiB2B3",         &dPhiB2B3,        "dPhiB2B3/f");
+  outTree->Branch("dRB2B3",           &dRB2B3,          "dRB2B3/f");
+
+  outTree->Branch("dEtaB2B4",         &dEtaB2B4,        "dEtaB2B4/f");
+  outTree->Branch("dPhiB2B4",         &dPhiB2B4,        "dPhiB2B4/f");
+  outTree->Branch("dRB2B4",           &dRB2B4,          "dRB2B4/f");
+
+  outTree->Branch("dEtaB3B4",         &dEtaB3B4,        "dEtaB3B4/f");
+  outTree->Branch("dPhiB3B4",         &dPhiB3B4,        "dPhiB3B4/f");
+  outTree->Branch("dRB3B4",           &dRB3B4,          "dRB3B4/f");
+
+  outTree->Branch("mindR4B",           &mindR4B,          "mindR4B/f");
+  outTree->Branch("nBJetsComb",        &nBJetsComb,       "nBJetsComb/f");
 
   outTree->Branch("dEtaTT",          &dEtaTT,         "dEtaTT/f");
   outTree->Branch("dPhiTT",          &dPhiTT,         "dPhiTT/f");
@@ -507,10 +575,10 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     jbTag_tt1=0; jbTag_tt2=0;
     jbTag_6j1=0; jbTag_6j2=0;
     
-    mTT=-999; mBB1=-999; mBB2=-999; mGG=-999; mHH=-999; mJJ_tt=-999; mJJ_6j=-999; 
-    ptTT=-999; ptBB1=-999; ptBB2=-999; ptGG=-999; ptHH=-999; ptJJ_tt=-999; ptJJ_6j=-999; 
-    etaTT=-999; etaBB1=-999; etaBB2=-999; etaGG=-999; etaHH=-999; etaJJ_tt=-999; etaJJ_6j=-999; 
-    phiTT=-999; phiBB1=-999; phiBB2=-999; phiGG=-999; phiHH=-999; phiJJ_tt=-999; phiJJ_6j=-999; 
+    mTT=-999; mBB1=-999; mBB2=-999; mB1B2=-999; mB1B3=-999; mB1B4=-999; mB2B3=-999; mB2B4=-999; mB3B4=-999; mGG=-999; mHH=-999; mJJ_tt=-999; mJJ_6j=-999; 
+    ptTT=-999; ptBB1=-999; ptBB2=-999; ptB1B2=-999; ptB1B3=-999; ptB1B4=-999; ptB2B3=-999; ptB2B4=-999; ptB3B4=-999; ptGG=-999; ptHH=-999; ptJJ_tt=-999; ptJJ_6j=-999; 
+    etaTT=-999; etaBB1=-999; etaBB2=-999; etaB1B2=-999; etaB1B3=-999; etaB1B4=-999; etaB2B3=-999; etaB2B4=-999; etaB3B4=-999; etaGG=-999; etaHH=-999; etaJJ_tt=-999; etaJJ_6j=-999; 
+    phiTT=-999; phiBB1=-999; phiBB2=-999; phiB1B2=-999; phiB1B3=-999; phiB1B4=-999; phiB2B3=-999; phiB2B4=-999; phiB3B4=-999; phiGG=-999; phiHH=-999; phiJJ_tt=-999; phiJJ_6j=-999; 
 
     ptTau1=-999; etaTau1=-999; phiTau1=-999; mTau1=-999; tauIso1=-999;
     ptTau2=-999; etaTau2=-999; phiTau2=-999; mTau2=-999; tauIso2=-999;
@@ -538,7 +606,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     eventType=-1;
 
     dEta_tt=-999; dEta_6j=-999; 
-    nBtag=0; nCentral=0; nJets=0; centB=0;
+    nBtag=0; nCentral=0; nJets=0; centB=0; nLep=0;
     iHmatch1=0; iHmatch2=0; iHmatch3=0; iHmatch4=0;
 
     isBBTT=0; isBBGG=0; isBBBB=0;
@@ -557,8 +625,18 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     rho_0=-999; rho_1=-999; rho_2=-999;
 
     dEtaBB1=-999; dPhiBB1=-999; dRBB1=-999;
+    dEtaBB2=-999; dPhiBB2=-999; dRBB2=-999;
+    dEtaB1B2=-999; dPhiB1B2=-999; dRB1B2=-999;
+    dEtaB1B3=-999; dPhiB1B3=-999; dRB1B3=-999;
+    dEtaB1B4=-999; dPhiB1B4=-999; dRB1B4=-999;
+    dEtaB2B3=-999; dPhiB2B3=-999; dRB2B3=-999;
+    dEtaB2B4=-999; dPhiB2B4=-999; dRB2B4=-999;
+    dEtaB3B4=-999; dPhiB3B4=-999; dRB3B4=-999;
     dEtaTT=-999; dPhiTT=-999; dRTT=-999;
     dEtaHH=-999; dPhiHH=-999; dRHH=-999;
+
+    mindR4B=-999;
+    nBJetsComb=0;
 
     // ********************
     // EVENT WEIGHT
@@ -640,6 +718,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       if (mu->PT<20) continue;
       if (mu->IsolationVar>0.4) continue;
 
+      nLep++;
+
       if ((jetTau1)&&(deltaR(mu->Eta, jetTau1->Eta, mu->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(mu->Eta, jetTau2->Eta, mu->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;      
 
@@ -660,6 +740,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       if (fabs(ele->Eta)>4.0) continue;
       if (ele->PT<20) continue;
       if (ele->IsolationVar>0.4) continue;
+
+      nLep++;
 
       if ((jetTau1)&&(deltaR(ele->Eta, jetTau1->Eta, ele->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(ele->Eta, jetTau2->Eta, ele->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;      
@@ -705,6 +787,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       }
     } // end reco photon loop
 
+        
     // ********************
     // B-JET SELECTION
     // ********************
@@ -720,12 +803,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
       if (fabs(jet->Eta)>4.0) continue;
       if (corr*jet->PT<20) continue;
+
+      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
       
       nJets++;
 
       if (jet->BTag==0) continue;
-
-      if (puJetID(jet->Eta, jet->MeanSqDeltaR, jet->BetaStar)==1) continue;
+      
       if ((jetTau1)&&(deltaR(jet->Eta, jetTau1->Eta, jet->Phi, jetTau1->Phi) < MAX_MATCH_DIST)) continue;
       if ((jetTau2)&&(deltaR(jet->Eta, jetTau2->Eta, jet->Phi, jetTau2->Phi) < MAX_MATCH_DIST)) continue;
       if ((muTau)&&(deltaR(jet->Eta, muTau->Eta, jet->Phi, muTau->Phi) < MAX_MATCH_DIST)) continue;
@@ -1195,7 +1279,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     }
     
     LorentzVector vBB1;
-    if (isBBTT==1 || isBBGG==1) {
+    if (isBBTT==1 || isBBGG==1 || isBBBB==1 || isVBF4B==1) {
       vBB1 = vRecoB1+vRecoB2;
       mBB1=vBB1.M();
       ptBB1=vBB1.Pt();
@@ -1204,6 +1288,118 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
       dEtaBB1=abs(vRecoB1.Eta()-vRecoB2.Eta());
       dPhiBB1=deltaPhi(vRecoB1.Phi(), vRecoB2.Phi());
       dRBB1=deltaR(vRecoB1.Eta(), vRecoB2.Eta(), vRecoB1.Phi(), vRecoB2.Phi());
+    }
+
+    LorentzVector vBB2;
+    if (isBBBB==1 || isVBF4B==1) {
+      vBB2 = vRecoB3+vRecoB4;
+      mBB2=vBB2.M();
+      ptBB2=vBB2.Pt();
+      etaBB2=vBB2.Eta();
+      phiBB2=vBB2.Phi();
+      dEtaBB2=abs(vRecoB3.Eta()-vRecoB4.Eta());
+      dPhiBB2=deltaPhi(vRecoB3.Phi(), vRecoB4.Phi());
+      dRBB2=deltaR(vRecoB3.Eta(), vRecoB4.Eta(), vRecoB3.Phi(), vRecoB4.Phi());
+    }
+
+    LorentzVector vB1B2;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB1B2 = vRecoB1+vRecoB2;
+      mB1B2=vB1B2.M();
+      ptB1B2=vB1B2.Pt();
+      etaB1B2=vB1B2.Eta();
+      phiB1B2=vB1B2.Phi();
+      dEtaB1B2=abs(vRecoB1.Eta()-vRecoB2.Eta());
+      dPhiB1B2=deltaPhi(vRecoB1.Phi(), vRecoB2.Phi());
+      dRB1B2=deltaR(vRecoB1.Eta(), vRecoB2.Eta(), vRecoB1.Phi(), vRecoB2.Phi());
+    }
+    
+    LorentzVector vB1B3;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB1B3 = vRecoB1+vRecoB3;
+      mB1B3=vB1B3.M();
+      ptB1B3=vB1B3.Pt();
+      etaB1B3=vB1B3.Eta();
+      phiB1B3=vB1B3.Phi();
+      dEtaB1B3=abs(vRecoB1.Eta()-vRecoB3.Eta());
+      dPhiB1B3=deltaPhi(vRecoB1.Phi(), vRecoB3.Phi());
+      dRB1B3=deltaR(vRecoB1.Eta(), vRecoB3.Eta(), vRecoB1.Phi(), vRecoB3.Phi());
+    }
+
+    LorentzVector vB1B4;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB1B4 = vRecoB1+vRecoB4;
+      mB1B4=vB1B4.M();
+      ptB1B4=vB1B4.Pt();
+      etaB1B4=vB1B4.Eta();
+      phiB1B4=vB1B4.Phi();
+      dEtaB1B4=abs(vRecoB1.Eta()-vRecoB4.Eta());
+      dPhiB1B4=deltaPhi(vRecoB1.Phi(), vRecoB4.Phi());
+      dRB1B4=deltaR(vRecoB1.Eta(), vRecoB4.Eta(), vRecoB1.Phi(), vRecoB4.Phi());
+    }
+
+    LorentzVector vB2B3;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB2B3 = vRecoB2+vRecoB3;
+      mB2B3=vB2B3.M();
+      ptB2B3=vB2B3.Pt();
+      etaB2B3=vB2B3.Eta();
+      phiB2B3=vB2B3.Phi();
+      dEtaB2B3=abs(vRecoB2.Eta()-vRecoB3.Eta());
+      dPhiB2B3=deltaPhi(vRecoB2.Phi(), vRecoB3.Phi());
+      dRB2B3=deltaR(vRecoB2.Eta(), vRecoB3.Eta(), vRecoB2.Phi(), vRecoB3.Phi());
+    }
+
+    LorentzVector vB2B4;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB2B4 = vRecoB2+vRecoB4;
+      mB2B4=vB2B4.M();
+      ptB2B4=vB2B4.Pt();
+      etaB2B4=vB2B4.Eta();
+      phiB2B4=vB2B4.Phi();
+      dEtaB2B4=abs(vRecoB2.Eta()-vRecoB4.Eta());
+      dPhiB2B4=deltaPhi(vRecoB2.Phi(), vRecoB4.Phi());
+      dRB2B4=deltaR(vRecoB2.Eta(), vRecoB4.Eta(), vRecoB2.Phi(), vRecoB4.Phi());
+    }
+
+    LorentzVector vB3B4;
+    if (isBBBB==1 || isVBF4B==1) {
+      vB3B4 = vRecoB3+vRecoB4;
+      mB3B4=vB3B4.M();
+      ptB3B4=vB3B4.Pt();
+      etaB3B4=vB3B4.Eta();
+      phiB3B4=vB3B4.Phi();
+      dEtaB3B4=abs(vRecoB3.Eta()-vRecoB4.Eta());
+      dPhiB3B4=deltaPhi(vRecoB3.Phi(), vRecoB4.Phi());
+      dRB3B4=deltaR(vRecoB3.Eta(), vRecoB4.Eta(), vRecoB3.Phi(), vRecoB4.Phi());
+    }
+
+    if (isBBBB==1 || isVBF4B==1) {
+      mindR4B=std::min(std::min(std::min(std::min(std::min(dRB1B2,dRB1B3),dRB1B4),dRB2B3),dRB2B4),dRB3B4);
+      if(90<mB1B2&&mB1B2<135)
+	{
+	  nBJetsComb++;
+	}
+      if(90<mB1B3&&mB1B3<135)
+	{
+	  nBJetsComb++;
+	}
+      if(90<mB1B4&&mB1B4<135)
+	{
+	  nBJetsComb++;
+	}
+      if(90<mB2B3&&mB2B3<135)
+	{
+	  nBJetsComb++;
+	}
+      if(90<mB2B4&&mB2B4<135)
+	{
+	  nBJetsComb++;
+	}
+      if(90<mB3B4&&mB3B4<135)
+	{
+	  nBJetsComb++;
+	}
     }
 
     LorentzVector vHH;
@@ -1219,6 +1415,13 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     }
     else if (isBBGG==1) {
       vHH = vTT+vGG;
+      mHH=vHH.M();
+      ptHH=vHH.Pt();
+      etaHH=vHH.Eta();
+      phiHH=vHH.Phi();
+    }
+    else if (isBBBB==1 || isVBF4B==1) {
+      vHH = vBB1+vBB2;
       mHH=vHH.M();
       ptHH=vHH.Pt();
       etaHH=vHH.Eta();
