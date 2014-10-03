@@ -23,6 +23,7 @@
 #include "TCanvas.h"
 
 #include "../Utils/HttStyles.h"
+#include "../Utils/CMS_lumi_v2.h"
 
 #endif
 
@@ -62,20 +63,21 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
 
   TFile *outDC = new TFile("hh_et_inputs.root","RECREATE");
 
-  SetStyle(); gStyle->SetLineStyleString(11,"20 10");
+  //SetStyle(); gStyle->SetLineStyleString(11,"20 10");
+  setTDRStyle();
   TH1::SetDefaultSumw2(1);
  
-  std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/ntuples/";
-  //std::string dir = "root://eoscms.cern.ch//eos/cms/store/user/jlawhorn/ntuples/";
-  //std::string dir = "~/eos/cms/store/user/jlawhorn/ntuples/";
-  
+  std::string dir = "/data/blue/Bacon/029a/Upgrade/sep-2-bbtt/";
   std::stringstream scale; scale << sigscale;
   
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
-  std::string objcut = "(tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>20 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==1||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.1)";//*(tauIso2<0.15)";
-  std::string jetcut = objcut+"*(ptTrk1>0)*(m_svpileup>90 && m_svpileup<140)*(mBB1>80 && mBB1<140)*(mt2pileup>125)*(mHH>300)";
+  std::string objcut = "(tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>20 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.5 && ptTrk1>0)";//*(tauIso2<0.15)";
+  std::string objcutQ = "(tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && (bTag1==1 && bTag2==1) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.5 && ptTrk1>0)";
+  //std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90 && mBB1<130)";
+  std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90 && mBB1<130 && mt2pileup>100)";
+  std::string jetcutQ = objcutQ+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90 && mBB1<130)";
   //std::string jetcut = objcut+"*(ptTrk1>0)*(mTT>40 && mTT<100)*(mBB1>80 && mBB1<140)*(mt2pileup>125)*(mHH>300)";
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
@@ -84,6 +86,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   std::string wjetcut = jetcut+"*eventWeight*(eventType==3&&eventType!=1)*"+lumi.str();
   std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
   std::string vbfcut = jetcut+"*eventWeight*49470*0.0632*"+lumi.str();
+  std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
   //--------------------------------------------------------------------------
   
   //Get the trees
@@ -124,7 +127,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   InitHist(ewk, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *qcd = new TH1F("Qcd","",nbins,xmin,xmax);
   vardraw = var+">>"+"Qcd";
-  qcdtree->Draw(vardraw.c_str(),mccut.c_str());
+  qcdtree->Draw(vardraw.c_str(),qcdcut.c_str());
   InitHist(qcd, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *vbfh = new TH1F("VBFH","",nbins,xmin,xmax);
   vardraw = var+">>"+"VBFH";
@@ -258,11 +261,15 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   //stack some  histtograms together
   vbfh->Add(ggh);
   vbfh->Add(assoh);
-  wjets->Add(ewk); 
+  cout << "Single H    "  << vbfh->IntegralAndError(0,vbfh->GetNbinsX(),error) << "+/-";
+   cout << error << endl; error=999;
+   wjets->Add(ewk); 
+   cout << "Total  Electroweak    "  << wjets->IntegralAndError(0,wjets->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; 
   //-----------------------------------------------------------------------
   smhh->Scale(sigscale);
   //Draw the histograms
-  TCanvas *canv = MakeCanvas("canv", "histograms", 600, 600);
+  TCanvas *canv = MakeCanvas("canv", "histograms", 800, 600);
   canv->cd();
   wjets->Add(ttbar);
   Ztt->Add(wjets);
@@ -288,7 +295,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   //ggh->Draw("histsame");
   ttbar->Draw("histsame");
   //data->Draw("esame");
-  //errorBand->Draw("e2same");
+  errorBand->Draw("e2same");
   smhh->Draw("histsame");
   canv->RedrawAxis();
   //canv->SetLogy(1);
@@ -302,14 +309,15 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
-  //leg->AddEntry(errorBand,"bkg. uncertainty","F");
+  leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
    
   //CMS preliminary 
-  const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
+  CMS_lumi_v2( canv, 14, 11 );
+  //const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
   const char* category = "";
-  CMSPrelim(dataset, "#tau_{e}#tau_{h}", 0.17, 0.835);
+  //CMSPrelim(dataset, "#tau_{e}#tau_{h}", 0.17, 0.835);
   //CMSPrelim(dataset, "", 0.16, 0.835);
   TPaveText* chan     = new TPaveText(0.52, 0.35, 0.91, 0.55, "tlbrNDC");
   chan->SetBorderSize(   0 );
@@ -319,7 +327,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   chan->SetTextColor(    1 );
   chan->SetTextFont (   62 );
   chan->AddText(category);
-  chan->Draw();
+  //chan->Draw();
   //-------------------------------------------------------------------------
   //Save histograms
   canv->Print((var+"_et.png").c_str());
