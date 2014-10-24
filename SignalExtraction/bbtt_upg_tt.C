@@ -68,31 +68,38 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //SetStyle(); gStyle->SetLineStyleString(11,"20 10");
   TH1::SetDefaultSumw2(1);
   setTDRStyle();
-  std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/ntuples/";
+  std::string dir = "/data/blue/Bacon/029a/Upgrade/sep-2-bbtt/";
   
   std::stringstream scale; scale << sigscale;
   
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
-  std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
-  std::string objcutQ = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && bTag1==1 && bTag2==1)*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5 &&  ptTrk1>0 && ptTrk2>0)";
-  //std::string jetcut = objcut+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<120 && mBB1>90&&mBB1<140)";
+  std::string objcut = "(tauCat1==1 && tauCat2==1 && (ptTau1>45 && ptTau2>45) && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5 && ptTrk1>0 && ptTrk2>0)";
+  //std::string objcut = "(tauCat1==1 && tauCat2==1 && ((ptTau1>60 && ptTau2>60) || (ptTau1>90 && ptTau2>20) || (ptTau1>20 && ptTau2>90)) && ptB1>30 && ptB2>30 && ((bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7)))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5 && ptTrk1>0 && ptTrk2>0)";
+  std::string objcutewk = "(tauCat1==1 && tauCat2==1 && (ptTau1>45 && ptTau2>45)  && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
+  //std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140))";
+  std::string jetcut = objcut+"*((m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140)))";
+  std::string jetcutewk = objcutewk+"*((m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140)))";
+  //std::string jetcutewk = objcutewk+"*(1.0)";
+  //std::string jetcut = objcut+"*(1.0)";
   //std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  std::string jetcutQ = objcutQ+"*(m_svpileup>90 && m_svpileup<120)";
+  //std::string jetcutQ = objcutQ+"*(m_svpileup>90 && m_svpileup<120)";
 
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
-  std::string vbfcut = jetcut+"*eventWeight*49470*0.0632*"+lumi.str();
+  std::string vbfcut = jetcut+"*eventWeight*"+lumi.str();
   std::string sigcut = jetcut+"*eventWeight*"+lumi.str();
   std::string zjetcut = jetcut+"*eventWeight*(eventType!=3&&eventType!=1)*"+lumi.str();
   std::string wjetcut = jetcut+"*eventWeight*(eventType==3&&eventType!=1)*"+lumi.str();
   std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
-  std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
+  std::string ewkcutR = jetcutewk+"*eventWeight*(eventType!=1)*"+lumi.str();
+  std::string ttcut = jetcutewk+"*eventWeight*"+lumi.str();
+  //std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
 
-  std::string addl="*(ptTrk1>0 && ptTrk2>0)";
-  //std::string addl="*(mBB1>80&&mBB1<140)";
+  std::string addl="*(1.0)";
+  //std::string addl="*(mBB1>90&&mBB1<140)";
+  //std::string addl="*(1.0)";
 
   std::string sigcutS = sigcut+addl;
   std::string mccutS = mccut+addl;
@@ -100,23 +107,23 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string zjetcutS = zjetcut+addl;
   std::string wjetcutS = wjetcut+addl;
   std::string ewkcutS = ewkcut+addl;
-  std::string qcdcutS = qcdcut+addl;
+  //std::string qcdcutS = qcdcut+addl;
   //--------------------------------------------------------------------------
   
   //Get the trees
-  TTree *hhtree = load(dir+"HHToTTBB_14TeV.root"); 
+  TTree *hhtree = load(dir+"gFHHTobbtautau.root"); 
   TTree *hhtree_m1 = load(dir+"gFHHTobbtautaulam1m.root");
   TTree *hhtree_m5 = load(dir+"gFHHTobbtautaulam5m.root");
   TTree *hhtree_0 = load(dir+"gFHHTobbtautaulam0.root");
   TTree *hhtree_p5 = load(dir+"gFHHTobbtautaulam5p.root");
-  TTree *hhtree_vbf = load("/data/blue/Bacon/029a/Upgrade/sep-10-bbtt/vbfHHTobbtautau.root");
+  TTree *hhtree_vbf = load(dir+"vbfHHTobbtautau.root");
   TTree *tttree = load(dir+"tt.root"); 
   TTree *vbfhtree = load(dir+"VBFHToTauTau.root");
   TTree *gfhtree = load(dir+"ggFHToTauTau.root");
   TTree *assohtree = load(dir+"vH_ttH.root");
   TTree *vjettree = load(dir+"Bjets.root");
   TTree *ewktree = load(dir+"ewk.root");
-  TTree *qcdtree = load(dir+"qcd.root");
+  //TTree *qcdtree = load(dir+"qcd.root");
   
   //-------------------------------------------------------------------------
   
@@ -127,16 +134,16 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   Float_t scaleD=1;
   TH1F *Ztt = new TH1F("DY","",nbins,xmin,xmax);
   vardraw = var+">>"+"DY";
-  vjettree->Draw(vardraw.c_str(),zjetcut.c_str());
+  vjettree->Draw(vardraw.c_str(),zjetcutS.c_str());
   InitHist(Ztt  , xtitle.c_str(), ytitle.c_str(), TColor::GetColor(248,206,104), 1001);
   TH1F *ZttS = new TH1F("DYS","",nbins,xmin,xmax);
   vardraw = var+">>"+"DYS";
   vjettree->Draw(vardraw.c_str(),zjetcutS.c_str());
-  scaleD=ZttS->Integral(0,ZttS->GetNbinsX())/Ztt->Integral(0,Ztt->GetNbinsX());
-  Ztt->Scale(scaleD);
+  //scaleD=ZttS->Integral(0,ZttS->GetNbinsX())/Ztt->Integral(0,Ztt->GetNbinsX());
+  //Ztt->Scale(scaleD);
   TH1F *ttbar = new TH1F("TTbar","",nbins,xmin,xmax);
   vardraw = var+">>"+"TTbar";
-  tttree->Draw(vardraw.c_str(),mccutS.c_str());
+  tttree->Draw(vardraw.c_str(),ttcut.c_str());
   InitHist(ttbar, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(155,152,204), 1001);
   TH1F *ttbarS = new TH1F("TTbarS","",nbins,xmin,xmax);
   vardraw = var+">>"+"TTbarS";
@@ -145,91 +152,91 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   ttbar->Scale(scaleD);
   TH1F *wjets = new TH1F("Wjets","",nbins,xmin,xmax);
   vardraw = var+">>"+"Wjets";
-  vjettree->Draw(vardraw.c_str(),wjetcut.c_str());
+  vjettree->Draw(vardraw.c_str(),wjetcutS.c_str());
   InitHist(wjets, xtitle.c_str(), ytitle.c_str(), TColor::GetColor(222,90,106), 1001);
   TH1F *wjetsS = new TH1F("WjetsS","",nbins,xmin,xmax);
   vardraw = var+">>"+"WjetsS";
   vjettree->Draw(vardraw.c_str(),wjetcutS.c_str());
-  scaleD=wjetsS->Integral(0,wjetsS->GetNbinsX())/wjets->Integral(0,wjets->GetNbinsX());
+  //scaleD=wjetsS->Integral(0,wjetsS->GetNbinsX())/wjets->Integral(0,wjets->GetNbinsX());
   //wjets->Scale(scaleD);
   TH1F *ewk = new TH1F("Ewk","",nbins,xmin,xmax);
   vardraw = var+">>"+"Ewk";
-  ewktree->Draw(vardraw.c_str(),ewkcut.c_str());
+  ewktree->Draw(vardraw.c_str(),ewkcutS.c_str());
   InitHist(ewk, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
   TH1F *ewkS = new TH1F("EwkS","",nbins,xmin,xmax);
   vardraw = var+">>"+"EwkS";
   ewktree->Draw(vardraw.c_str(),ewkcutS.c_str());
   scaleD=ewkS->Integral(0,ewkS->GetNbinsX())/ewk->Integral(0,ewk->GetNbinsX());
   ewk->Scale(scaleD);
-  TH1F *qcd = new TH1F("Qcd","",nbins,xmin,xmax);
-  vardraw = var+">>"+"Qcd";
-  qcdtree->Draw(vardraw.c_str(),qcdcut.c_str());
-  InitHist(qcd, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
-  TH1F *qcdS = new TH1F("QcdS","",nbins,xmin,xmax);
-  vardraw = var+">>"+"QcdS";
-  qcdtree->Draw(vardraw.c_str(),qcdcutS.c_str());
-  scaleD=qcdS->Integral(0,qcdS->GetNbinsX())/qcd->Integral(0,qcd->GetNbinsX());
+  //TH1F *qcd = new TH1F("Qcd","",nbins,xmin,xmax);
+  //vardraw = var+">>"+"Qcd";
+  //qcdtree->Draw(vardraw.c_str(),qcdcut.c_str());
+  //InitHist(qcd, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(222,90,106), 1001);
+  //TH1F *qcdS = new TH1F("QcdS","",nbins,xmin,xmax);
+  //vardraw = var+">>"+"QcdS";
+  //qcdtree->Draw(vardraw.c_str(),qcdcutS.c_str());
+  //scaleD=qcdS->Integral(0,qcdS->GetNbinsX())/qcd->Integral(0,qcd->GetNbinsX());
   //qcd->Scale(scaleD);
   TH1F *vbfh = new TH1F("VBFH","",nbins,xmin,xmax);
   vardraw = var+">>"+"VBFH";
-  vbfhtree->Draw(vardraw.c_str(),vbfcut.c_str());
+  vbfhtree->Draw(vardraw.c_str(),vbfcutS.c_str());
   InitHist(vbfh, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(250,202,255), 1001);
   TH1F *vbfhS = new TH1F("VbfhS","",nbins,xmin,xmax);
   vardraw = var+">>"+"VbfhS";
   vbfhtree->Draw(vardraw.c_str(),vbfcutS.c_str());
-  scaleD=vbfhS->Integral(0,vbfhS->GetNbinsX())/vbfh->Integral(0,vbfh->GetNbinsX());
-  vbfh->Scale(scaleD);
+  //scaleD=vbfhS->Integral(0,vbfhS->GetNbinsX())/vbfh->Integral(0,vbfh->GetNbinsX());
+  //vbfh->Scale(scaleD);
   TH1F *ggh = new TH1F("GGH","",nbins,xmin,xmax);
   vardraw = var+">>"+"GGH";
-  gfhtree->Draw(vardraw.c_str(),mccut.c_str());
+  gfhtree->Draw(vardraw.c_str(),mccutS.c_str());
   InitHist(ggh, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(250,202,255), 1001);
   TH1F *gghS = new TH1F("GghS","",nbins,xmin,xmax);
   vardraw = var+">>"+"GghS";
   gfhtree->Draw(vardraw.c_str(),mccutS.c_str());
-  scaleD=gghS->Integral(0,gghS->GetNbinsX())/ggh->Integral(0,ggh->GetNbinsX());
-  ggh->Scale(scaleD);
+  //scaleD=gghS->Integral(0,gghS->GetNbinsX())/ggh->Integral(0,ggh->GetNbinsX());
+  //ggh->Scale(scaleD);
   TH1F *assoh = new TH1F("AH","",nbins,xmin,xmax);
   vardraw = var+">>"+"AH";
-  assohtree->Draw(vardraw.c_str(),mccut.c_str());
+  assohtree->Draw(vardraw.c_str(),mccutS.c_str());
   InitHist(assoh, xtitle.c_str(), ytitle.c_str(),  TColor::GetColor(250,202,255), 1001);
   TH1F *assohS = new TH1F("AssohS","",nbins,xmin,xmax);
   vardraw = var+">>"+"AssohS";
   assohtree->Draw(vardraw.c_str(),mccutS.c_str());
-  scaleD=assohS->Integral(0,assohS->GetNbinsX())/assoh->Integral(0,assoh->GetNbinsX());
-  assoh->Scale(scaleD);
+  //scaleD=assohS->Integral(0,assohS->GetNbinsX())/assoh->Integral(0,assoh->GetNbinsX());
+  //assoh->Scale(scaleD);
   TH1F *smhh = new TH1F("SMhh","",nbins,xmin,xmax);
   vardraw = var+">>"+"SMhh";
-  hhtree->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(smhh);
   smhh->SetLineColor(kBlack);
   TH1F *smhhS = new TH1F("SMhhS","",nbins,xmin,xmax);
   vardraw = var+">>"+"SMhhS";
   hhtree->Draw(vardraw.c_str(),sigcutS.c_str());
-  scaleD=smhhS->Integral(0,smhhS->GetNbinsX())/smhh->Integral(0,smhh->GetNbinsX());
-  smhh->Scale(scaleD);
+  //scaleD=smhhS->Integral(0,smhhS->GetNbinsX())/smhh->Integral(0,smhh->GetNbinsX());
+  //smhh->Scale(scaleD);
   TH1F *hh_0 = new TH1F("hh_0","",nbins,xmin,xmax);
   vardraw = var+">>"+"hh_0";
-  hhtree_0->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree_0->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(hh_0);
   hh_0->SetLineColor(kBlack);
   TH1F *hh_m1 = new TH1F("hh_m1","",nbins,xmin,xmax);
   vardraw = var+">>"+"hh_m1";
-  hhtree_m1->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree_m1->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(hh_m1);
   hh_m1->SetLineColor(kBlack);
   TH1F *hh_m5 = new TH1F("hh_m5","",nbins,xmin,xmax);
   vardraw = var+">>"+"hh_m5";
-  hhtree_m5->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree_m5->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(hh_m5);
   hh_m5->SetLineColor(kBlack);
   TH1F *hh_p5 = new TH1F("hh_p5","",nbins,xmin,xmax);
   vardraw = var+">>"+"hh_p5";
-  hhtree_p5->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree_p5->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(hh_p5);
   hh_p5->SetLineColor(kBlack);
   TH1F *hh_vbf = new TH1F("hh_vbf","",nbins,xmin,xmax);
   vardraw = var+">>"+"hh_vbf";
-  hhtree_vbf->Draw(vardraw.c_str(),sigcut.c_str());
+  hhtree_vbf->Draw(vardraw.c_str(),sigcutS.c_str());
   InitSignal(hh_vbf);
   hh_vbf->SetLineColor(kBlue);
   delete canv0;
@@ -280,10 +287,10 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   cout << error << endl; error=999;
   bgdN+=ewk->IntegralAndError(0,ewk->GetNbinsX(),error); bgdSig+=error*error;
   bgdN1+=ewkS->IntegralAndError(0,ewkS->GetNbinsX(),error); bgdSig1+=error*error;
-  cout << "qcd     "  << qcd->IntegralAndError(0,qcd->GetNbinsX(),error) << "+/-";
-  cout << error << endl; error=999;
-  cout << "qcd S   "  << qcdS->IntegralAndError(0,qcdS->GetNbinsX(),error) << "+/-";
-  cout << error << endl; error=999;
+  //cout << "qcd     "  << qcd->IntegralAndError(0,qcd->GetNbinsX(),error) << "+/-";
+  //cout << error << endl; error=999;
+  //cout << "qcd S   "  << qcdS->IntegralAndError(0,qcdS->GetNbinsX(),error) << "+/-";
+  //cout << error << endl; error=999;
   //bgdN+=qcd->IntegralAndError(0,qcd->GetNbinsX(),error);
   cout << "wjets   "  << wjets->IntegralAndError(0,wjets->GetNbinsX(),error) << "+/-";
   cout << error << endl; error=999;
@@ -337,9 +344,9 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   ewk->SetName("VV");
   ewk->SetTitle("VV");
   ewk->Write();
-  qcd->SetName("QCD");
-  qcd->SetTitle("QCD");
-  qcd->Write();
+  //qcd->SetName("QCD");
+  //qcd->SetTitle("QCD");
+  //qcd->Write();
   vbfh->SetName("qqH");
   vbfh->SetTitle("qqH");
   vbfh->Write();
@@ -398,7 +405,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //       break;
   //     }
   //}
-  vbfh->SetMaximum(1.5*std::max(maximum(vbfh, 0), maximum(hh_vbf, 0)));
+  vbfh->SetMaximum(1.0*std::max(maximum(vbfh, 0), maximum(smhh, 0)));
   //blind(data,75,150);
   //data->Draw("e");
   vbfh->Draw("hist");
@@ -410,7 +417,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //data->Draw("esame");
   errorBand->Draw("e2same");
   smhh->Draw("histsame");
-  hh_vbf->Draw("histsame");
+  //hh_vbf->Draw("histsame");
   canv->RedrawAxis();
   //canv->SetLogy(1);
   //---------------------------------------------------------------------------
@@ -418,7 +425,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   TLegend* leg = new TLegend(0.65, 0.65, 0.95, 0.90);
   SetLegendStyle(leg);
   leg->AddEntry(smhh  , TString::Format("%.0f#timesgghh#rightarrow#tau#tau bb", sigscale) , "L" );
-  leg->AddEntry(hh_vbf  , TString::Format("%.0f#timesqqhh#rightarrow#tau#tau bb", sigscale) , "L" );
+  //leg->AddEntry(hh_vbf  , TString::Format("%.0f#timesqqhh#rightarrow#tau#tau bb", sigscale) , "L" );
   //leg->AddEntry(data , "Observed"                       , "LP");
   leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
   leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
@@ -457,7 +464,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   canv1->cd();
 
   TH1F* model = (TH1F*)Ztt ->Clone("model");
-  TH1F* test1 = (TH1F*)vbfh->Clone("test1"); 
+  TH1F* tes1 = (TH1F*)vbfh->Clone("test1"); 
   for(int ibin=0; ibin<test1->GetNbinsX(); ++ibin){
     //the small value in case of 0 entries in the model is added to prevent the chis2 test from failing
     model->SetBinContent(ibin+1, model->GetBinContent(ibin+1)>0 ? model->GetBinContent(ibin+1)*model->GetBinWidth(ibin+1) : 0.01);
