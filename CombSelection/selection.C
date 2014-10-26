@@ -47,7 +47,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
 
   const Int_t TAU_ID_CODE = 15;
   const Int_t B_ID_CODE = 5;
-  const Int_t G_ID_CODE = 21;
+  const Int_t G_ID_CODE = 22;
 
   const Float_t MAX_MATCH_DIST = 0.4;
 
@@ -61,7 +61,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   const Float_t lcov11pp = 225;
 
   // event categories
-  enum { HH=0, H, TT, WJET, ZJET, EWK, ETC };
+  enum { HH=0, H, TT, WJET, ZJET, EWK, T, ETC };
 
   // tau decay modes
   enum { hadron=1, electron, muon };
@@ -546,7 +546,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
   outTree->Branch("dRB3B4",           &dRB3B4,          "dRB3B4/f");
 
   outTree->Branch("mindR4B",           &mindR4B,          "mindR4B/f");
-  outTree->Branch("nBJetsComb",        &nBJetsComb,       "nBJetsComb/f");
+  outTree->Branch("nBJetsComb",        &nBJetsComb,       "nBJetsComb/i");
 
   outTree->Branch("dEtaTT",          &dEtaTT,         "dEtaTT/f");
   outTree->Branch("dPhiTT",          &dPhiTT,         "dPhiTT/f");
@@ -1669,6 +1669,8 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     Int_t nH=0, nW=0, nZ=0, nT=0, nB=0, nQ=0, nG=0, nP=0, nL=0;
     for (Int_t iParticle=0; iParticle<branchParticle->GetEntries(); iParticle++) { // generator particle loop
       genParticle = (GenParticle*) branchParticle->At(iParticle);
+
+      if (genParticle->Status!=3) continue;
       
       Int_t pid=fabs(genParticle->PID);
       if (pid==2212) continue;
@@ -2002,6 +2004,7 @@ void selection(const TString inputfile="root://eoscms.cern.ch//store/group/upgra
     if ( nH>2 ) eventType=HH;
     else if ( nH>0 ) eventType=H;
     else if ( nT==2 ) eventType=TT;
+    else if ( nT==1 ) eventType=T;
     else if ( nZ>0 && nW==0 && (nG+nQ)>0 ) eventType=ZJET;
     else if ( nW>0 && nZ==0 && (nG+nQ)>0 ) eventType=WJET;
     else if ( nW+nZ+nT+nL>0 ) eventType=EWK;
