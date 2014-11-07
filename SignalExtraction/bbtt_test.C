@@ -19,27 +19,13 @@
 #include <TPaveText.h>
 #include <TColor.h>
 
-#include "TList.h"
 #include "TTree.h"
 #include "TCanvas.h"
 
 #include "../Utils/HttStyles.h"
+//#include "../Utils/CMS_lumi_v2.h"
 
 #endif
-
-// RooFit headers
-#include "RooWorkspace.h"
-#include "RooRealVar.h"
-#include "RooCategory.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooFormulaVar.h"
-#include "RooSimultaneous.h"
-#include "RooAddPdf.h"
-#include "RooFitResult.h"
-#include "RooExtendPdf.h"
-#include "RooKeysPdf.h"
-#include "RooPlot.h"
 
 TTree * load(std::string iName) { 
   TFile *lFile = new TFile(iName.c_str());
@@ -72,107 +58,122 @@ void blind(TH1F* iH,double low,double high) {
   }
 }
 
-
-void bbtt_test(std::string var="mt2pileup",int nbins=24, double xmin=0, double xmax=600,std::string xtitle="", std::string ytitle="", double sigscale=10)
+void bbtt_test(std::string var="mt2pileup",int nbins=8, double xmin=0, double xmax=200,std::string xtitle="mt2pileup", std::string ytitle="Events", double sigscale=1,int hist=1)
 {
+  double massLEdges[14]    = {-0.5,-0.45,-0.4,-0.35,-0.3,-0.25,-0.2,-0.15,-0.1,-0.05,0.0,0.05,0.1,0.2};
 
-  //TFile *outDC = new TFile("hh_tt_inputs_2.root","RECREATE");
-
-  SetStyle(); gStyle->SetLineStyleString(11,"20 10");
+  //SetStyle(); gStyle->SetLineStyleString(11,"20 10");
+  //setTDRStyle();
   TH1::SetDefaultSumw2(1);
- 
-  std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/ntuples/";
+
+  std::string dir = "/afs/cern.ch/work/j/jlawhorn/public/holding/";
+  //std::string dir = "/afs/cern.ch/user/j/jlawhorn/delphes-dihiggs/CombSelection/";
   
   std::stringstream scale; scale << sigscale;
   
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
-  std::string objcut = "(tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==1||bTag2==3||bTag2==6||bTag2==7))";
-  std::string jetcut = objcut+"*(ptTrk1>0 && ptTrk2>0)*(mTT>50&&mTT<130)*(mBB1>80&&mBB1<140)*(ptBB1>150)";//*(mHH>300)";
+  std::string objN = "(isBBTT==1 && tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && ptTrk1>0 && ptTrk2>0)*eventWeight*"+lumi.str();
+  std::string objT = "(isBBTT==1 && tauCat1==1 && tauCat2==1 && ptTau1>45 && ptTau2>45 && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau1)<2.5 && ptTrk1>0 && ptTrk2>0)*eventWeight*"+lumi.str();
+  std::string jetN = objN+"*(m_svpileup>90 && m_svpileup<120 && mBB1>90 && mBB1<140)";
+  std::string jetT = objT+"*(m_svpileup>90 && m_svpileup<120 && mBB1>90 && mBB1<140)";
   //signal region
-  std::string mccut = jetcut+"*eventWeight*"+lumi.str();
-  std::string vbfcut = jetcut+"*eventWeight*49470*0.0632*"+lumi.str();
-  std::string sigcut = jetcut+"*eventWeight*"+lumi.str();
-  std::string zjetcut = jetcut+"*eventWeight*(eventType!=3&&eventType!=1)*"+lumi.str();
-  std::string wjetcut = jetcut+"*eventWeight*(eventType==3&&eventType!=1)*"+lumi.str();
-  std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
+  
   //--------------------------------------------------------------------------
   
   //Get the trees
-  TTree *hhtree = load(dir+"HHToTTBB_14TeV.root"); 
-  TTree *hhtree_m1 = load(dir+"gFHHTobbtautaulam1m.root");
-  TTree *hhtree_m5 = load(dir+"gFHHTobbtautaulam5m.root");
-  TTree *hhtree_0 = load(dir+"gFHHTobbtautaulam0.root");
-  TTree *hhtree_p5 = load(dir+"gFHHTobbtautaulam5p.root");
-  TTree *tttree = load(dir+"tt.root"); 
-  TTree *vbfhtree = load(dir+"VBFHToTauTau.root");
-  TTree *gfhtree = load(dir+"ggFHToTauTau.root");
-  TTree *assohtree = load(dir+"vH_ttH.root");
-  TTree *vjettree = load(dir+"Bjets.root");
-  TTree *ewktree = load(dir+"ewk.root");
-  TTree *qcdtree = load(dir+"qcd.root");
+  //TTree *tt_nom = load(dir+"tt-4p-0-600-v1510_14TEV_nov.root");
+  TTree *tt_nom = load(dir+"tt-BLUE.root");
+  TTree *tt_test = load(dir+"tt_test.root");
+  TTree *tt_wpuid = load(dir+"tt_wpuid.root");
+  //TTree *tt_nom = load(dir+"tt-4p-2500-100000-v1510_14TEV.root");
+  //TTree *tt_test = load(dir+"tt-4p-2500-100000-v1510_14TEV_test.root");
+  //TTree *tt_wpuid = load(dir+"tt-4p-2500-100000-v1510_14TEV_puid.root");
   
   //-------------------------------------------------------------------------
   
   //Get histograms
+  TCanvas *canv0 = MakeCanvas("canv", "histograms", 600, 600);
+  canv0->cd();
   std::string vardraw;
-  TTree *smhh = (TTree*)hhtree->CopyTree(sigcut.c_str());
+  TH1F *h_nom;
+  if(hist)
+    h_nom = new TH1F("TTnom","",nbins,xmin,xmax);
+  else 
+    h_nom = new TH1F("TTnom","",13, massLEdges);
+  vardraw = var+">>"+"TTnom";
+  tt_nom->Draw(vardraw.c_str(),jetN.c_str());
+  InitSignal(h_nom);
+  TH1F *h_test;
+  if(hist)
+    h_test = new TH1F("TTtest","",nbins,xmin,xmax);
+  else 
+    h_test = new TH1F("TTtest","",13, massLEdges);
+  vardraw = var+">>"+"TTtest";
+  tt_test->Draw(vardraw.c_str(),objT.c_str());
+  InitSignal(h_test);
+  TH1F *h_puid;
+  if(hist)
+    h_puid = new TH1F("TTpuid","",nbins,xmin,xmax);
+  else 
+    h_puid = new TH1F("TTpuid","",13, massLEdges);
+  vardraw = var+">>"+"TTpuid";
+  tt_wpuid->Draw(vardraw.c_str(),objT.c_str());
+  InitSignal(h_puid);
 
-  TTree *ztt = (TTree*)vjettree->CopyTree(zjetcut.c_str());
-  TTree *ttbar = (TTree*)tttree->CopyTree(mccut.c_str());
-  TTree *wjets = (TTree*)vjettree->CopyTree(wjetcut.c_str());
-  TTree *ewk = (TTree*) ewktree->CopyTree(ewkcut.c_str());
-  TTree *vbfh = (TTree*) vbfhtree->CopyTree(mccut.c_str());
-  TTree *ggh = (TTree*) gfhtree->CopyTree(mccut.c_str());
-  TTree *assoh = (TTree*) assohtree->CopyTree(mccut.c_str());
-  TTree *qcd = (TTree*) qcdtree->CopyTree(mccut.c_str());
+  delete canv0;
 
-  //---------------------------------------------------------------------------
+  Double_t error=999;
+  //cout << objN << endl;
+  //cout << objT << endl;
+  cout << jetN << endl;
+  cout << jetT << endl;
+  cout << "Nominal   "  << h_nom->IntegralAndError(0,h_nom->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_nom->GetEntries() << endl;
+  cout << "Testing   "  << h_test->IntegralAndError(0,h_test->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_test->GetEntries() << endl;
+  cout << "Test+PU   "  << h_puid->IntegralAndError(0,h_puid->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_puid->GetEntries() << endl;
 
-  RooRealVar drawVar(var.c_str(),var.c_str(),xmin,xmax);
-  drawVar.setBins(nbins);
+  Float_t sc_test=h_test->Integral();
+  Float_t sc_nom=h_nom->Integral();
+  Float_t sc_puid=h_puid->Integral();
+  h_test->Scale(sc_nom/sc_test);
+  h_puid->Scale(sc_nom/sc_puid);
+
+  cout << "----" << endl;
+  cout << "Nominal   "  << h_nom->IntegralAndError(0,h_nom->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_nom->GetEntries() << endl;
+  cout << "Testing   "  << h_test->IntegralAndError(0,h_test->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_test->GetEntries() << endl;
+  cout << "Test+PU   "  << h_puid->IntegralAndError(0,h_puid->GetNbinsX(),error) << "+/-";
+  cout << error << endl; error=999; cout << h_puid->GetEntries() << endl;
+
+  TCanvas *canv = MakeCanvas("canv", "histograms", 800, 600);
+  canv->cd();
   
-  RooDataSet *sigDat = new RooDataSet("ggHH", "ggHH", smhh, RooArgSet(drawVar));
-  RooDataSet *zttDat   = new RooDataSet("ZTT", "ZTT", ztt, RooArgSet(drawVar));
-  RooDataSet *ttbarDat   = new RooDataSet("TT", "TT", ttbar, RooArgSet(drawVar));
-  RooDataSet *wjetsDat   = new RooDataSet("W", "W", wjets, RooArgSet(drawVar));
-  RooDataSet *ewkDat   = new RooDataSet("VV", "VV", ewk, RooArgSet(drawVar));
-  RooDataSet *vbfhDat   = new RooDataSet("qqH", "qqH", vbfh, RooArgSet(drawVar));
-  RooDataSet *gghDat   = new RooDataSet("ggH", "ggH", ggh, RooArgSet(drawVar));
-  RooDataSet *assohDat   = new RooDataSet("VH", "VH", assoh, RooArgSet(drawVar));
-  RooDataSet *qcdDat   = new RooDataSet("QCD", "QCD", qcd, RooArgSet(drawVar));
+  h_test->SetLineColor(kBlue);
+  h_test->SetLineWidth(2.0);
+  h_puid->SetLineColor(kRed);
+  h_puid->SetLineWidth(2.0);
+  h_nom->SetLineColor(kBlack);
+  h_nom->SetLineWidth(2.0);
 
-  TList *list = new TList;
-  list->Add(smhh); list->Add(ztt); list->Add(ttbar);
-  list->Add(wjets); list->Add(ewk); list->Add(vbfh); 
-  list->Add(ggh); list->Add(assoh); list->Add(qcd);
-  TTree *all_of_it = TTree::MergeTrees(list);
+  h_nom->SetMaximum(std::max(maximum(h_puid,0), maximum(h_nom,0)));
+  h_nom->GetXaxis()->SetTitle(xtitle.c_str());
+  h_nom->GetYaxis()->SetTitle(ytitle.c_str());
+  h_nom->Draw("hist");
+  h_test->Draw("histsame");
+  h_puid->Draw("histsame");
 
-  RooDataSet *data_obsDat   = new RooDataSet("data_obs", "data_obs", all_of_it, RooArgSet(drawVar));
+  TLegend* leg = new TLegend(0.65, 0.65, 0.95, 0.90);
+  SetLegendStyle(leg);
+  leg->AddEntry(h_nom, "Nominal Selection", "L");
+  leg->AddEntry(h_test, "Generator Matching", "L");
+  leg->AddEntry(h_puid, "Generator w/PU-ID", "L");
+  leg->Draw();
 
-  RooKeysPdf sig_est("ggHH_shape", "ggHH_shape", drawVar, *sigDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf ztt_est("ZTT_shape", "ZTT_shape", drawVar, *zttDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf ttbar_est("TT_shape", "TT_shape", drawVar, *ttbarDat, RooKeysPdf::MirrorBoth,2);
-  //RooKeysPdf data_obs_est("data_obs_shape", "data_obs_shape", drawVar, *data_obsDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf wjets_est("W_shape", "W_shape", drawVar, *wjetsDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf ewk_est("VV_shape", "VV_shape", drawVar, *ewkDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf vbfh_est("qqH_shape", "qqH_shape", drawVar, *vbfhDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf ggh_est("ggH_shape", "ggH_shape", drawVar, *gghDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf assoh_est("VH_shape", "VH_shape", drawVar, *assohDat, RooKeysPdf::MirrorBoth,2);
-  RooKeysPdf qcd_est("QCD_shape", "QCD_shape", drawVar, *qcdDat, RooKeysPdf::MirrorBoth,2);
-
-  RooWorkspace *w = new RooWorkspace("tautau", "workspace");
-  w->import(sig_est);
-  w->import(ztt_est);
-  w->import(ttbar_est);
-  w->import(*data_obsDat);
-  w->import(wjets_est);
-  w->import(ewk_est);
-  w->import(vbfh_est);
-  w->import(ggh_est);
-  w->import(assoh_est);
-  w->import(qcd_est);
-  w->writeToFile("hh_tt_inputs_2.root");
+  canv->Print((var+"_test.png").c_str());
 
 }
