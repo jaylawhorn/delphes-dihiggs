@@ -74,8 +74,9 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
   std::string objcut = "(tauCat1==1 && tauCat2==2 && ptTau1>30 && ptTau2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.5 && ptTrk1>0)";//*(tauIso2<0.15)";
-  std::string objcutQ = "(tauCat1==1 && tauCat2==3 && ptTau1>30 && ptTau2>20 && (bTag1==1 && bTag2==1) && ptB1>30 && ptB2>30)*(abs(etaB1)<2.5 && abs(etaB2)<2.5 && abs(etaTau1)<2.1 && abs(etaTau2)<2.5 && ptTrk1>0)";
-  // std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90)";
+
+  //std::string jetcut = objcut;
+  //std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90)";
   std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<140 && mBB1>90 && mBB1<130 && mt2pileup>100)";
  
   //signal region
@@ -230,6 +231,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   cout << "SM hh   "  << smhh->IntegralAndError(0,smhh->GetNbinsX(),error) << "+/-";
   sigN+=smhh->IntegralAndError(0,smhh->GetNbinsX(),error);
   sigSig+=error;
+  cout << error << endl; error=999;
   cout << " VBF HH "  << hh_vbf->IntegralAndError(0,hh_vbf->GetNbinsX(),error) << "+/-";
   sigN+=smhh->IntegralAndError(0,smhh->GetNbinsX(),error);
   sigSig+=error;
@@ -335,7 +337,7 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   //       break;
   //     }
   //}
-  vbfh->SetMaximum(3000.0*std::max(maximum(vbfh, 0), maximum(smhh, 0)));
+  vbfh->SetMaximum(1.0*std::max(maximum(vbfh, 0), maximum(smhh, 0)));
   //blind(data,75,150);
   //data->Draw("e");
   vbfh->Draw("hist");
@@ -347,23 +349,23 @@ void bbtt_upg_et(std::string var,int nbins, double xmin, double xmax,std::string
   errorBand->Draw("e2same");
   smhh->Draw("histsame");
   canv->RedrawAxis();
-  canv->SetLogy(1);
+  //canv->SetLogy(1);
   //---------------------------------------------------------------------------
   //Adding a legend
   TLegend* leg = new TLegend(0.65, 0.65, 0.95, 0.90);
   SetLegendStyle(leg);
   leg->AddEntry(smhh  , TString::Format("%.0f#timeshh#rightarrow#tau#tau bb", sigscale) , "L" );
   //leg->AddEntry(data , "Observed"                       , "LP");
-  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
-  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
-  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
+  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
+  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
+  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
    
   //CMS preliminary 
-  CMS_lumi_v2( canv, 14, 11 );
+  //CMS_lumi_v2( canv, 14, 11 );
   //const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
   const char* category = "";
   //CMSPrelim(dataset, "#tau_{e}#tau_{h}", 0.17, 0.835);

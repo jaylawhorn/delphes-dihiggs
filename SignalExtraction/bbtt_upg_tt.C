@@ -75,16 +75,11 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //Cut definitions
   double luminosity = 3000;
   std::stringstream lumi; lumi << luminosity;
+
   std::string objcut = "(tauCat1==1 && tauCat2==1 && (ptTau1>45 && ptTau2>45) && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5 && ptTrk1>0 && ptTrk2>0)";
-  //std::string objcut = "(tauCat1==1 && tauCat2==1 && ((ptTau1>60 && ptTau2>60) || (ptTau1>90 && ptTau2>20) || (ptTau1>20 && ptTau2>90)) && ptB1>30 && ptB2>30 && ((bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7)))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5 && ptTrk1>0 && ptTrk2>0)";
-  std::string objcutewk = "(tauCat1==1 && tauCat2==1 && (ptTau1>45 && ptTau2>45)  && ptB1>30 && ptB2>30 && (bTag1==2||bTag1==3||bTag1==6||bTag1==7) && (bTag2==2||bTag2==3||bTag2==6||bTag2==7))*(abs(etaTau1)<2.1 && abs(etaTau2)<2.1 && abs(etaB1)<2.5 && abs(etaB2)<2.5)";
-  //std::string jetcut = objcut+"*(m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140))";
+
   std::string jetcut = objcut+"*((m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140)))";
-  std::string jetcutewk = objcutewk+"*((m_svpileup>90 && m_svpileup<120 && (mBB1>90&&mBB1<140)))";
-  //std::string jetcutewk = objcutewk+"*(1.0)";
-  //std::string jetcut = objcut+"*(1.0)";
-  //std::string jetcutQ = objcutQ+"*(m_svpileup>70 && m_svpileup<120)*(ptTrk1>0 && ptTrk2>0)*(mBB1>80&&mBB1<140)*(mHH>300)";
-  //std::string jetcutQ = objcutQ+"*(m_svpileup>90 && m_svpileup<120)";
+  //std::string jetcut = objcut;
 
   //signal region
   std::string mccut = jetcut+"*eventWeight*"+lumi.str();
@@ -93,13 +88,9 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string zjetcut = jetcut+"*eventWeight*(eventType!=3&&eventType!=1)*"+lumi.str();
   std::string wjetcut = jetcut+"*eventWeight*(eventType==3&&eventType!=1)*"+lumi.str();
   std::string ewkcut = jetcut+"*eventWeight*(eventType!=1)*"+lumi.str();
-  std::string ewkcutR = jetcutewk+"*eventWeight*(eventType!=1)*"+lumi.str();
-  std::string ttcut = jetcutewk+"*eventWeight*"+lumi.str();
-  //std::string qcdcut = jetcutQ+"*eventWeight*"+lumi.str();
+  std::string ttcut = jetcut+"*eventWeight*"+lumi.str();
 
   std::string addl="*(1.0)";
-  //std::string addl="*(mBB1>90&&mBB1<140)";
-  //std::string addl="*(1.0)";
 
   std::string sigcutS = sigcut+addl;
   std::string mccutS = mccut+addl;
@@ -107,7 +98,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   std::string zjetcutS = zjetcut+addl;
   std::string wjetcutS = wjetcut+addl;
   std::string ewkcutS = ewkcut+addl;
-  //std::string qcdcutS = qcdcut+addl;
+
   //--------------------------------------------------------------------------
   
   //Get the trees
@@ -326,9 +317,9 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   outDC->cd();
   TDirectory* lTD = outDC->mkdir("tautau");
   outDC->cd(lTD->GetPath());
-  Ztt->SetName("data_obs");
-  Ztt->SetTitle("data_obs");
-  Ztt->Write();
+  ttbar->SetName("data_obs");
+  ttbar->SetTitle("data_obs");
+  ttbar->Write();
   Ztt->SetName("ZTT");
   Ztt->SetTitle("ZTT");
   Ztt->Write();
@@ -405,6 +396,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //       break;
   //     }
   //}
+  //vbfh->SetMaximum(1.5*std::max(maximum(vbfh, 0), maximum(smhh, 0)));
   vbfh->SetMaximum(1.0*std::max(maximum(vbfh, 0), maximum(smhh, 0)));
   //blind(data,75,150);
   //data->Draw("e");
@@ -424,20 +416,20 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   //Adding a legend
   TLegend* leg = new TLegend(0.65, 0.65, 0.95, 0.90);
   SetLegendStyle(leg);
-  leg->AddEntry(smhh  , TString::Format("%.0f#timesgghh#rightarrow#tau#tau bb", sigscale) , "L" );
+  leg->AddEntry(smhh  , TString::Format("%.0f#timeshh#rightarrow#tau#tau bb", sigscale) , "L" );
   //leg->AddEntry(hh_vbf  , TString::Format("%.0f#timesqqhh#rightarrow#tau#tau bb", sigscale) , "L" );
   //leg->AddEntry(data , "Observed"                       , "LP");
-  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
-  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
-  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
+  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
+  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
+  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
    
   //CMS preliminary 
-  CMS_lumi_v2( canv, 14, 11 );
-  // const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
+  //CMS_lumi_v2( canv, 14, 11 );
+  //const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
   const char* category = "";
   //CMSPrelim(dataset, "#tau_{h}#tau_{h}", 0.17, 0.835);
   //CMSPrelim(dataset, "", 0.16, 0.835);
@@ -449,7 +441,7 @@ void bbtt_upg_tt(std::string var,int nbins, double xmin, double xmax,std::string
   chan->SetTextColor(    1 );
   chan->SetTextFont (   62 );
   chan->AddText(category);
-  chan->Draw();
+  //chan->Draw();
   //-------------------------------------------------------------------------
   //Save histograms
   canv->Print((var+"_tt.png").c_str());

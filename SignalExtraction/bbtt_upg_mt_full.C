@@ -75,8 +75,8 @@ void bbtt_upg_mt_full(std::string var,int nbins, double xmin, double xmax,std::s
   double luminosity = 19172;
   std::stringstream lumi; lumi << luminosity;
   std::string objcut = "(pt_1>20 && pt_2>30 && jpt_1>30 && jpt_2>30)*(abs(jeta_1)<2.5 && abs(jeta_2)<2.5 && abs(eta_1)<2.5 && abs(eta_2)<2.1 && nprong_2==1 && byCombinedIsolationDeltaBetaCorrRaw3Hits_2<1.5 && iso_1<0.1 && jcsv_1>0.68 && jcsv_2>0.68)";
-  //std::string jetcut = objcut+"*(m_sv>100 && m_sv<150 && mjj>90 && mjj<130)";
-  std::string jetcut = objcut+"*(1.0)";
+  std::string jetcut = objcut+"*(m_sv>100 && m_sv<150 && mjj>90 && mjj<130)";
+  //std::string jetcut = objcut+"*(1.0)";
   std::string datacut = jetcut+"*(q_1*q_2<0)"; 
   //signal region
   std::string smhhcut = jetcut+"*(weight*0.71442e-3/1.972e09)*(q_1*q_2<0)*"+lumi.str();
@@ -285,7 +285,7 @@ void bbtt_upg_mt_full(std::string var,int nbins, double xmin, double xmax,std::s
   errorBand  ->SetLineWidth(1);
  
   data->SetMaximum(1.5*std::max(maximum(data, 0), maximum(data, 0)));
-  //blind(data,100,500);
+  // blind(data,0.0,0.5);
   data->Draw("e");
   vbfh->Draw("histsame");
   Ztt->Draw("histsame");
@@ -300,33 +300,33 @@ void bbtt_upg_mt_full(std::string var,int nbins, double xmin, double xmax,std::s
   //canv->SetLogy(1);
   //---------------------------------------------------------------------------
   //Adding a legend
-  TLegend* leg = new TLegend(0.65, 0.65, 0.95, 0.90);
+  TLegend* leg = new TLegend(0.6, 0.5, 0.95, 0.90);
   SetLegendStyle(leg);
   leg->AddEntry(smhh  , TString::Format("%.0f#timeshh#rightarrow#tau#tau bb", sigscale) , "L" );
   leg->AddEntry(data , "Observed"                       , "LP");
-  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
-  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
-  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
   leg->AddEntry(vbfh  , "SM H#rightarrow#tau#tau"   , "F" );
+  leg->AddEntry(Ztt  , "Z#rightarrow#tau#tau"           , "F" );
+  leg->AddEntry(wjets  , "Electroweak"                    , "F" );
+  leg->AddEntry(ttbar, "t#bar{t}"                       , "F" );
   leg->AddEntry(qcd  , "QCD Multi Jet"   , "F" );
   leg->AddEntry(errorBand,"bkg. uncertainty","F");
   leg->Draw();
   //---------------------------------------------------------------------------
-   
-  CMS_lumi_v2( canv, 8, 11 );
-  //CMS preliminary 
-  //const char* dataset = "CMS Simulation, 3000 fb^{-1} at 14 TeV";
+
+  //CMS_lumi_v2( canv, 2, 11 );
+  //CMS preliminary
+  const char* dataset = "CMS Simulation";
   const char* category = "";
   //CMSPrelim(dataset, "#tau_{#mu}#tau_{h}", 0.17, 0.835);
   //CMSPrelim(dataset, "", 0.16, 0.835);
-  TPaveText* chan     = new TPaveText(0.52, 0.35, 0.91, 0.55, "tlbrNDC");
+  TPaveText* chan     = new TPaveText(0.20, 0.8, 0.50, 0.95, "tlbrNDC");
   chan->SetBorderSize(   0 );
   chan->SetFillStyle(    0 );
   chan->SetTextAlign(   12 );
   chan->SetTextSize ( 0.05 );
   chan->SetTextColor(    1 );
   chan->SetTextFont (   62 );
-  chan->AddText(category);
+  chan->AddText(dataset);
   //chan->Draw();
   //-------------------------------------------------------------------------
   //Save histograms
