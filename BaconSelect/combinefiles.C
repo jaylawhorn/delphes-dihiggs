@@ -14,6 +14,8 @@
 
 #endif
 
+Double_t btag(Double_t pt, Double_t eta);
+
 void combinefiles(const TString input="hh_proc.txt",
 		  const TString outputfile="hh_proc.root") {
 
@@ -95,17 +97,34 @@ void combinefiles(const TString input="hh_proc.txt",
   eventChain->SetBranchAddress("mTT",            &mTT);
   eventChain->SetBranchAddress("eventWeight",    &eventWeight);
 
+  eventChain->SetBranchAddress("ptB1",           &ptB1);
+  eventChain->SetBranchAddress("ptB2",           &ptB2);
+  eventChain->SetBranchAddress("etaB1",           &etaB1);
+  eventChain->SetBranchAddress("etaB2",           &etaB2);
+
   eventChain->GetEntry(0);
 
   TTree *outTree=(TTree*)eventChain->GetTree()->CloneTree(0);
 
   outTree->Branch("m_svpileup", &m_svpileup, "m_svpileup/f");
 
+  cout << "*******************************" << endl;
+  cout << "*** did you fix the mistake?   " << endl;
+  cout << "*** cos this file doesn't know " << endl;
+  cout << "*******************************" << endl;
+
   for (Int_t i=0; i<eventChain->GetEntries(); i++) {
     eventChain->GetEntry(i);
-    
+    // for TTBAR
+    //eventWeight=1.24*341*1000;
+    // for HH
+    eventWeight=2.92;
+    //cout << eventWeight << ", ";
     eventWeight/=float(nevents);
-    m_svpileup=mTT;
+    //cout << eventWeight << ", ";
+    eventWeight*=0.65*0.65*btag(ptB1, etaB1)*btag(ptB2, etaB2);
+    //cout << eventWeight << endl;
+    //m_svpileup=mTT;
     
     outTree->Fill();
 
@@ -113,4 +132,61 @@ void combinefiles(const TString input="hh_proc.txt",
   outFile->Write();
   outFile->Save();
   
+}
+
+Double_t btag(Double_t pt, Double_t eta) {
+
+  return ( (pt <= 20.0) * (0.000) +
+           (abs(eta) <= 1.8) * (pt > 20.0 && pt <= 30) * (0.536) +
+           (abs(eta) <= 1.8) * (pt > 30.0 && pt <= 40) * (0.6439) +
+           (abs(eta) <= 1.8) * (pt > 40.0 && pt <= 50) * (0.6504) +
+           (abs(eta) <= 1.8) * (pt > 50.0 && pt <= 60) * (0.6716) +
+           (abs(eta) <= 1.8) * (pt > 60.0 && pt <= 70) * (0.6841) +
+           (abs(eta) <= 1.8) * (pt > 70.0 && pt <= 80) * (0.6896) +
+           (abs(eta) <= 1.8) * (pt > 80.0 && pt <= 90) * (0.6916) +
+           (abs(eta) <= 1.8) * (pt > 90.0 && pt <= 100) * (0.6882) +
+           (abs(eta) <= 1.8) * (pt > 100.0 && pt <= 120) * (0.6838) +
+           (abs(eta) <= 1.8) * (pt > 120.0 && pt <= 140) * (0.6715) +
+           (abs(eta) <= 1.8) * (pt > 140.0 && pt <= 160) * (0.6554) +
+           (abs(eta) <= 1.8) * (pt > 160.0 && pt <= 180) * (0.6366) +
+           (abs(eta) <= 1.8) * (pt > 180.0 && pt <= 200) * (0.6192) +
+           (abs(eta) <= 1.8) * (pt > 200.0 && pt <= 250) * (0.595) +
+           (abs(eta) <= 1.8) * (pt > 250.0 && pt <= 300) * (0.5551) +
+           (abs(eta) <= 1.8) * (pt > 300.0 && pt <= 350) * (0.5138) +
+           (abs(eta) <= 1.8) * (pt > 350.0 && pt <= 400) * (0.4884) +
+           (abs(eta) <= 1.8) * (pt > 400.0 && pt <= 500) * (0.4009) +
+           (abs(eta) <= 1.8) * (pt > 500.0 && pt <= 600) * (0.3459) +
+           (abs(eta) <= 1.8) * (pt > 600.0 && pt <= 700) * (0.2523) +
+           (abs(eta) <= 1.8) * (pt > 700.0 && pt <= 800) * (0.2404) +
+           (abs(eta) <= 1.8) * (pt > 800.0 && pt <= 1000) * (0.2198) +
+           (abs(eta) <= 1.8) * (pt > 1000.0 && pt <= 1400) * (0.2263) +
+           (abs(eta) <= 1.8) * (pt > 1400.0 && pt <= 2000) * (0.2614) +
+           (abs(eta) <= 1.8) * (pt > 2000.0) * (0.3194) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt <= 20.0) * (0.000) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 20.0 && pt <= 30) * (0.3254) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 30.0 && pt <= 40) * (0.4339) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 40.0 && pt <= 50) * (0.4499) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 50.0 && pt <= 60) * (0.4716) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 60.0 && pt <= 70) * (0.4766) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 70.0 && pt <= 80) * (0.4788) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 80.0 && pt <= 90) * (0.4863) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 90.0 && pt <= 100) * (0.4891) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 100.0 && pt <= 120) * (0.462) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 120.0 && pt <= 140) * (0.4583) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 140.0 && pt <= 160) * (0.4247) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 160.0 && pt <= 180) * (0.3775) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 180.0 && pt <= 200) * (0.3734) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 200.0 && pt <= 250) * (0.3348) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 250.0 && pt <= 300) * (0.2939) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 300.0 && pt <= 350) * (0.285) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 350.0 && pt <= 400) * (0.2421) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 400.0 && pt <= 500) * (0.1565) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 500.0 && pt <= 600) * (0.1522) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 600.0 && pt <= 700) * (0.1231) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 700.0 && pt <= 800) * (0.1607) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 800.0 && pt <= 1000) * (0.1323) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 1000.0 && pt <= 1400) * (0.0) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 1400.0 && pt <= 2000) * (0.0) +
+           (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 2000.0) * (0.0) +
+           (abs(eta) > 2.4) * (0.000));
 }
