@@ -21,8 +21,8 @@
 #include "BaconAna/DataFormats/interface/TGenJet.hh"
 #include "BaconAna/DataFormats/interface/TGenParticle.hh"
 
-//#include "TauAnalysis/SVFitHelper/interface/TSVfit.h"
-//#include "TauAnalysis/SVFitHelper/interface/TSVfitter.h"
+#include "TauAnalysis/SVFitHelper/interface/TSVfit.h"
+#include "TauAnalysis/SVFitHelper/interface/TSVfitter.h"
 #include "mt2.hh"
 
 #endif
@@ -31,9 +31,13 @@ typedef ROOT::Math::LorentzVector<ROOT::Math::PtEtaPhiM4D<double> > LorentzVecto
 
 Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, const Float_t phi2 );
 
-Double_t res(Double_t pt, Double_t eta);
+Double_t jetRes(Double_t pt, Double_t eta);
+
+Double_t muRes(Double_t pt, Double_t eta);
 
 Double_t btag(Double_t pt, Double_t eta);
+
+Double_t muEff(Double_t pt, Double_t eta);
 
 void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di_higgs_backgrounds/gFHHTobbtt_TuneZ2_14TeV_madgraph/Bacon/gfhhbbtautau_mad_1.root.root",
 	    input="root://eoscms.cern.ch//store/group/upgrade/di_higgs_backgrounds/TT_jets/Bacon/tt_mad_9956.root",
@@ -60,21 +64,21 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
   min->SetTolerance(10.0);
   min->SetPrintLevel(0);
 
-  /*  const Float_t lcov00 = 2500;
+  const Float_t lcov00 = 2500;
   const Float_t lcov10 = 500;
   const Float_t lcov01 = 500;
   const Float_t lcov11 = 2500;
   const Float_t lcov00pp = 225;
   const Float_t lcov10pp = 45;
   const Float_t lcov01pp = 45;
-  const Float_t lcov11pp = 225;*/
+  const Float_t lcov11pp = 225;
 
   TVector2 vtau1(0,0), vtau2(0,0), pumpt(0,0);
   TVector2 vb1(0,0), vb2(0,0);
   Double_t mt2pileup=0;
 
   // setup svfit
-  //mithep::TSVfitter *fitter = new mithep::TSVfitter();
+  mithep::TSVfitter *fitter = new mithep::TSVfitter();
 
   // Data structures to store info from TTrees
   baconhep::TGenEventInfo *info = new baconhep::TGenEventInfo();
@@ -99,8 +103,8 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
   Float_t metPx, metPy;
   Float_t met, metPhi;
   Float_t met2, met2Phi;
-  //Double_t m_sv;
-  //Double_t m_svpileup;
+  Double_t m_sv;
+  Double_t m_svpileup;
 
   Int_t tauCat1=0, tauCat2=0, tauIso1, tauIso2;
   Int_t nProngTau1=0, nProngTau2=0;
@@ -121,6 +125,8 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
   Int_t nBjetWithHadTau=0, nBjetWithMuon=0, nBjetWithEle=0;
   Int_t nLepHigherPt=0;
 
+  Int_t nTauTau=0, nMuTau=0;
+
   //hadronic final states and "prong-ness"
   //decayModes.push_back(20213); isOneProng.push_back(-1); // a1(1260)
   //decayModes.push_back(213); isOneProng.push_back(1); // rho
@@ -139,8 +145,8 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
   outtree->Branch("met2",      &met2,      "met2/F");
   outtree->Branch("met2Phi",   &met2Phi,   "met2Phi/F");
 
-  //outtree->Branch("m_sv",           &m_sv,           "m_sv/D");         // "SVFit mass estimate" 
-  //outtree->Branch("m_svpileup",     &m_svpileup,     "m_svpileup/D");   // "SVFit mass estimate with pileup jet ID MET"
+  outtree->Branch("m_sv",           &m_sv,           "m_sv/D");         // "SVFit mass estimate" 
+  outtree->Branch("m_svpileup",     &m_svpileup,     "m_svpileup/D");   // "SVFit mass estimate with pileup jet ID MET"
 
   outtree->Branch("ptTau1",         &ptTau1,         "ptTau1/f");       // pt(Tau1)
   outtree->Branch("etaTau1",        &etaTau1,        "etaTau1/f");      // eta(Tau1)
@@ -208,9 +214,9 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 
   for (Int_t i=0; i<chain.GetEntries(); i++) {
   //for (Int_t i=15213; i<15213+1; i++) {
-  //for (Int_t i=0; i<10; i++) {
+  //for (Int_t i=0; i<5000; i++) {
     infoBr->GetEntry(i);
-    
+    //cout << " ----" << endl;
     part->Clear(); partBr->GetEntry(i);
     jet->Clear(); jetBr->GetEntry(i);
     
@@ -263,10 +269,9 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 
     Int_t isLep=0;
     for (Int_t j=0; j<part->GetEntries(); j++) {
-      
       const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
       Int_t parentPdg=dynamic_cast<baconhep::TGenParticle *>(part->At(genloop->parent>-1 ? genloop->parent : 0))->pdgId;
-      
+
       if (!(fabs(genloop->pdgId)==15)&&!(fabs(parentPdg)==15)) continue;
       if ( (fabs(genloop->pdgId)==13||fabs(genloop->pdgId)==11||fabs(genloop->pdgId)==24) && (fabs(parentPdg)==15) ) {
 	isLep=1;
@@ -289,20 +294,49 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       }	
     }
 
-    if (isLep==1) {
-      //cout << "leptonic" << endl;
-      continue;
+    for (Int_t j=0; j<part->GetEntries(); j++) {
+      const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
+      Int_t parentPdg=dynamic_cast<baconhep::TGenParticle *>(part->At(genloop->parent>-1 ? genloop->parent : 0))->pdgId;
+      
+      if (fabs(genloop->pdgId)==13 && genloop->status==1) {
+	if (iMu1==-1) iMu1=j;
+	else if (genloop->pt>dynamic_cast<baconhep::TGenParticle *>(part->At(iMu1))->pt) iMu1=j;
+      }
     }
+    
+    /*    if (iTau1>0 && iTau2>0 && iMu1>0) {
+      //removing tau particles that decayed to muons
+      Int_t iTemp1=iTau1, iTemp2=iTau2;
+      const baconhep::TGenParticle* mu = (baconhep::TGenParticle*) ((*part)[iTemp1]); 
+      while (iTemp1>0) {
+	//cout << iTemp1 << endl;
+	const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[iTemp1]); 
+	if (iTemp1 == mu->parent) { iTemp1=0; iTau1=-1; }
+	else { iTemp1=genloop->parent; }
+      }
+      //cout << "." << endl;
+      while (iTemp2>0) {
+	//cout << iTemp2 << endl;
+	const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[iTemp2]); 
+	if (iTemp2 == mu->parent) { iTemp2=0; iTau2=-1; }
+	else { iTemp2=genloop->parent; }
+      }      
+      }*/
+    
+    //if (iTau1==-1 && iTau2>0) {iTau1=iTau2; iTau2=-1; }
 
-    if (iTau1==-1||iTau2==-1) continue;
+    if (iTau1==-1 || (iMu1==-1&&iTau2==-1)) continue;
+    if (isLep>0 && iMu1==-1) continue;
+    //else cout << "wtf? " << iTau1 << " " << iTau2 << " " << iMu1 << endl;
 
-    nHadTau+=2;
-
-    //cout << "found hadronic taus at " << iTau1 << " and " << iTau2 << endl;
+    /*    if (iTau1>0 && iTau2>0 && isLep==0) {
+      cout << i << " found hadronic taus at " << iTau1 << " and " << iTau2 << endl;
+    }
+    if (iTau1>0 && iMu1>0) {
+      cout << i << " found a hadronic tau at " << iTau1 << " and muon at " << iMu1 << endl;
+      }*/
 
     Int_t aPos1=-1, aPos2=-1;
-    Int_t aDec1=0, aDec2=0;
-
 
     for (Int_t j=0; j<part->GetEntries(); j++) {
       const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
@@ -320,13 +354,13 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 	//cout << "found an a1 decay: " << pdg << endl;
 	nProngTau1++;
       }
-      else if (genloop->parent==iTau2 && pdg>22) {
+      else if (iTau2>-1 && genloop->parent==iTau2 && pdg>22) {
 	tauDecay2=pdg;
 	//cout << "found a charged hadronic for tau 2: " << pdg << endl;
 	if (pdg==20213) aPos2=j;
 	else nProngTau2++;
       }
-      else if ((aPos2>0) && (genloop->parent==aPos2) && pdg!=111 && pdg>22) {
+      else if (iTau2>-1 && (aPos2>0) && (genloop->parent==aPos2) && pdg!=111 && pdg>22) {
 	//cout << "found an a1 decay: " << pdg << endl;
 	nProngTau2++;
       }      
@@ -336,19 +370,20 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 
     if (nProngTau1==1) nOneP++;
     else if (nProngTau1==3) nThreeP++;
-    else cout << "wtf is wrong with this tau: " << nProngTau1 << ", " << i << endl;
 
     if (nProngTau2==1) nOneP++;
     else if (nProngTau2==3) nThreeP++;
-    else cout << "wtf is wrong with this tau: " << nProngTau2 << ", " << i << endl;
-
+    
     const baconhep::TGenParticle* genTau1 = (baconhep::TGenParticle*) ((*part)[iTau1]);
-    const baconhep::TGenParticle* genTau2 = (baconhep::TGenParticle*) ((*part)[iTau2]);
-
-    if (deltaR(genTau1->eta, genTau2->eta, genTau1->phi, genTau2->phi)<0.4) continue;
-
     LorentzVector vGenTau1(genTau1->pt,genTau1->eta,genTau1->phi,genTau1->mass);
+    
+    const baconhep::TGenParticle* genTau2 = (baconhep::TGenParticle*) ((*part)[ (iTau2>0 ? iTau2 : iMu1) ]);
     LorentzVector vGenTau2(genTau2->pt,genTau2->eta,genTau2->phi,genTau2->mass);
+    
+    //cout << vGenTau1.Pt() << " " << vGenTau1.Eta() << " " << vGenTau1.Phi() << " " << vGenTau1.M() << endl;
+    //cout << vGenTau2.Pt() << " " << vGenTau2.Eta() << " " << vGenTau2.Phi() << " " << vGenTau2.M() << " " << iMu1 << endl;
+    
+    if (deltaR(genTau1->eta, genTau2->eta, genTau1->phi, genTau2->phi)<0.4) continue;
 
     for (Int_t j=0; j<part->GetEntries(); j++) {
       const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
@@ -361,7 +396,10 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 	vGenTau2=vGenTau2-vTemp;
       }
     }
-    
+
+    //cout << vGenTau1.Pt() << " " << vGenTau1.Eta() << " " << vGenTau1.Phi() << " " << vGenTau1.M() << endl;
+    //cout << vGenTau2.Pt() << " " << vGenTau2.Eta() << " " << vGenTau2.Phi() << " " << vGenTau2.M() << " " << iMu1 << endl;
+
     for (Int_t j=0; j<jet->GetEntries(); j++) {
       const baconhep::TGenJet* loop = (baconhep::TGenJet*) ((*jet)[j]);
 
@@ -373,7 +411,20 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       }
     }
 
-    if (iT1==-1||iT2==-1) continue;
+    //cout << iTau1 << " " << iTau2 << " " << iMu1 << ", " << iT1 << " " << iT2 << endl;
+
+    if (iT1==-1||(iT2==-1&&iMu1==-1)) continue;
+    if (isLep>0 && iMu1==-1) continue;
+    //if (iT2==-1) continue;
+    
+    //if (iT1>-1 && iT2>-1 && isLep==0) {
+    //nTauTau++;
+      //cout << i << ": " << iTau1 << " " << iTau2 << ", " << iT1 << " " << iT2 << endl;
+    //}
+    //else if (iT1>-1 && iMu1>-1) {
+    //nMuTau++;
+    //}
+    //else cout << iT1 << " " << iT2 << " " << iMu1 << endl;
 
     LorentzVector genSumPt(0,0,0,0);
     LorentzVector smeSumPt(0,0,0,0);
@@ -381,7 +432,7 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
     for (Int_t j=0; j<jet->GetEntries(); j++) {
       const baconhep::TGenJet* loop = (baconhep::TGenJet*) ((*jet)[j]);
       LorentzVector vTempG(loop->pt, loop->eta, loop->phi, loop->mass);
-      LorentzVector vTempS(loop->pt*(rng->Gaus(1,res(loop->pt, loop->eta))), loop->eta, loop->phi, loop->mass);
+      LorentzVector vTempS(loop->pt*(rng->Gaus(1,jetRes(loop->pt, loop->eta))), loop->eta, loop->phi, loop->mass);
       genSumPt+=vTempG;
       smeSumPt+=vTempS;
       
@@ -392,7 +443,7 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
     if (iB1>-1) {
       const baconhep::TGenJet *bjet = (baconhep::TGenJet*) ((*jet)[iB1]);
       ptB1_gen=bjet->pt;
-      ptB1=ptB1_gen*(rng->Gaus(1,res(bjet->pt, bjet->eta)));
+      ptB1=ptB1_gen*(rng->Gaus(1,jetRes(bjet->pt, bjet->eta)));
       etaB1_gen=bjet->eta;
       etaB1=bjet->eta;
       mB1_gen=bjet->mass;
@@ -404,7 +455,7 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
     if (iB2>-1) {
       const baconhep::TGenJet *bjet = (baconhep::TGenJet*) ((*jet)[iB2]);
       ptB2_gen=bjet->pt;
-      ptB2=ptB2_gen*(rng->Gaus(1,res(bjet->pt, bjet->eta)));
+      ptB2=ptB2_gen*(rng->Gaus(1,jetRes(bjet->pt, bjet->eta)));
       etaB2_gen=bjet->eta;
       etaB2=bjet->eta;
       mB2_gen=bjet->mass;
@@ -414,16 +465,87 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       eventWeight*=btag(ptB2, etaB2);
     }
 
-    const baconhep::TGenJet *taujet = (baconhep::TGenJet*) ((*jet)[iT1]);
-    const baconhep::TGenJet *taujet2 = (baconhep::TGenJet*) ((*jet)[iT2]);
-        
-    Float_t fact1=(rng->Gaus(1,res(taujet->pt, taujet->eta)));
-    Float_t fact2=(rng->Gaus(1,res(taujet2->pt, taujet2->eta)));
-    
-    Float_t ptTauJet1=taujet->pt*fact1;
-    Float_t ptTauJet2=taujet2->pt*fact2;
-    
-    if (ptTauJet1>ptTauJet2) {
+    if (iT1>-1 && iT2>-1 && isLep==0) {
+      nTauTau++;
+      const baconhep::TGenJet *taujet = (baconhep::TGenJet*) ((*jet)[iT1]);
+      const baconhep::TGenJet *taujet2 = (baconhep::TGenJet*) ((*jet)[iT2]);
+      
+      Float_t fact1=(rng->Gaus(1,jetRes(taujet->pt, taujet->eta)));
+      Float_t fact2=(rng->Gaus(1,jetRes(taujet2->pt, taujet2->eta)));
+      
+      Float_t ptTauJet1=taujet->pt*fact1;
+      Float_t ptTauJet2=taujet2->pt*fact2;
+      
+      if (ptTauJet1>ptTauJet2) {
+	ptTau1_gen=taujet->pt;
+	ptTau1=ptTauJet1;
+	etaTau1_gen=taujet->eta;
+	etaTau1=taujet->eta;
+	mTau1_gen=taujet->mass;
+	mTau1=taujet->mass;
+	phiTau1_gen=taujet->phi;
+	phiTau1=taujet->phi;
+	tauCat1=1;
+	
+	ptTau2_gen=taujet2->pt;
+	ptTau2=ptTauJet2;
+	etaTau2_gen=taujet2->eta;
+	etaTau2=taujet2->eta;
+	mTau2_gen=taujet2->mass;
+	mTau2=taujet2->mass;
+	phiTau2_gen=taujet2->phi;
+	phiTau2=taujet2->phi;
+	tauCat2=1;
+      }
+      else {
+	ptTau2_gen=taujet2->pt;
+	ptTau2=ptTauJet1;
+	etaTau2_gen=taujet->eta;
+	etaTau2=taujet->eta;
+	mTau2_gen=taujet->mass;
+	mTau2=taujet->mass;
+	phiTau2_gen=taujet->phi;
+	phiTau2=taujet->phi;
+	tauCat2=1;
+	
+	ptTau1_gen=taujet->pt;
+	ptTau1=ptTauJet2;
+	etaTau1_gen=taujet2->eta;
+	etaTau1=taujet2->eta;
+	mTau1_gen=taujet2->mass;
+	mTau1=taujet2->mass;
+	phiTau1_gen=taujet2->phi;
+	phiTau1=taujet2->phi;
+	tauCat1=1;
+      }
+
+      if (deltaR(etaB1,taujet->eta,phiB1,taujet->phi)<0.4||deltaR(etaB1,taujet2->eta,phiB1,taujet2->phi)<0.4) nBjetWithHadTau++;
+      if (deltaR(etaB2,taujet->eta,phiB2,taujet->phi)<0.4||deltaR(etaB2,taujet2->eta,phiB2,taujet2->phi)<0.4) nBjetWithHadTau++;
+
+      for (Int_t j=0; j<part->GetEntries(); j++) {
+	const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
+	if ( genloop->pt<20) continue;
+	if ( fabs(genloop->pdgId)!=13&&fabs(genloop->pdgId)!=11 ) continue;
+	
+	if ((fabs(genloop->pdgId)==11) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithEle++;
+	if ((fabs(genloop->pdgId)==13) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithMuon++;
+	
+	if (genloop->pt>TMath::Min(ptTau1,ptTau2))nLepHigherPt++;
+      }
+      
+      eventWeight*=0.65*0.65;
+    }
+    else if (iT1>-1 && iMu1>-1) {
+      nMuTau++;
+      const baconhep::TGenJet *taujet = (baconhep::TGenJet*) ((*jet)[iT1]);
+      const baconhep::TGenParticle* mutau = (baconhep::TGenParticle*) ((*part)[iMu1]);
+
+      Float_t fact1=(rng->Gaus(1,jetRes(taujet->pt, taujet->eta)));
+      Float_t fact2=(rng->Gaus(1,muRes(mutau->pt, mutau->eta)));
+
+      Float_t ptTauJet1=taujet->pt*fact1;
+      Float_t ptMuTau=mutau->pt*fact2;
+      
       ptTau1_gen=taujet->pt;
       ptTau1=ptTauJet1;
       etaTau1_gen=taujet->eta;
@@ -433,54 +555,33 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       phiTau1_gen=taujet->phi;
       phiTau1=taujet->phi;
       tauCat1=1;
+
+      ptTau2_gen=mutau->pt;
+      ptTau2=ptMuTau;
+      etaTau2_gen=mutau->eta;
+      etaTau2=mutau->eta;
+      mTau2_gen=mutau->mass;
+      mTau2=mutau->mass;
+      phiTau2_gen=mutau->phi;
+      phiTau2=mutau->phi;
+      tauCat2=3;
       
-      ptTau2_gen=taujet2->pt;
-      ptTau2=ptTauJet2;
-      etaTau2_gen=taujet2->eta;
-      etaTau2=taujet2->eta;
-      mTau2_gen=taujet2->mass;
-      mTau2=taujet2->mass;
-      phiTau2_gen=taujet2->phi;
-      phiTau2=taujet2->phi;
-      tauCat2=1;
-    }
-    else {
-      ptTau2_gen=taujet2->pt;
-      ptTau2=ptTauJet1;
-      etaTau2_gen=taujet->eta;
-      etaTau2=taujet->eta;
-      mTau2_gen=taujet->mass;
-      mTau2=taujet->mass;
-      phiTau2_gen=taujet->phi;
-      phiTau2=taujet->phi;
-      tauCat2=1;
+      if (deltaR(etaB1,taujet->eta,phiB1,taujet->phi)<0.4||deltaR(etaB2,taujet->eta,phiB2,taujet->phi)<0.4) nBjetWithHadTau++;
+
+      for (Int_t j=0; j<part->GetEntries(); j++) {
+	const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
+	if ( genloop->pt<20) continue;
+	if ( fabs(genloop->pdgId)!=13&&fabs(genloop->pdgId)!=11 ) continue;
+	
+	if ((fabs(genloop->pdgId)==11) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithEle++;
+	if ((fabs(genloop->pdgId)==13) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithMuon++;
+	
+	if (genloop->pt>TMath::Min(ptTau1,ptTau2))nLepHigherPt++;
+      }
       
-      ptTau1_gen=taujet->pt;
-      ptTau1=ptTauJet2;
-      etaTau1_gen=taujet2->eta;
-      etaTau1=taujet2->eta;
-      mTau1_gen=taujet2->mass;
-      mTau1=taujet2->mass;
-      phiTau1_gen=taujet2->phi;
-      phiTau1=taujet2->phi;
-      tauCat1=1;
+      eventWeight*=muEff(ptTau2, etaTau2)*0.65;
+
     }
-
-    if (deltaR(etaB1,taujet->eta,phiB1,taujet->phi)<0.4||deltaR(etaB1,taujet2->eta,phiB1,taujet2->phi)<0.4) nBjetWithHadTau++;
-    if (deltaR(etaB2,taujet->eta,phiB2,taujet->phi)<0.4||deltaR(etaB2,taujet2->eta,phiB2,taujet2->phi)<0.4) nBjetWithHadTau++;
-
-    for (Int_t j=0; j<part->GetEntries(); j++) {
-      const baconhep::TGenParticle* genloop = (baconhep::TGenParticle*) ((*part)[j]);
-      if ( genloop->pt<20) continue;
-      if ( fabs(genloop->pdgId)!=13&&fabs(genloop->pdgId)!=11 ) continue;
-      
-      if ((fabs(genloop->pdgId)==11) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithEle++;
-      if ((fabs(genloop->pdgId)==13) && (deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4||deltaR(etaB1,genloop->eta,phiB1,genloop->phi)<0.4)) nBjetWithMuon++;
-
-      if (genloop->pt>TMath::Min(ptTau1,ptTau2))nLepHigherPt++;
-    }
-
-    eventWeight*=0.65*0.65;
 
     if (ptB1==-999 || ptB2==-999 || ptTau1==-999 || ptTau2==-999) continue;
 
@@ -529,10 +630,10 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       
       vb1.SetMagPhi(recoB1.Pt(), recoB1.Phi());
       vb2.SetMagPhi(recoB2.Pt(), recoB2.Phi());
-
+      
       pumpt.Set(metPx, metPy);
       TVector2 puSumPt = vtau1+vtau2+pumpt;
-
+      
       smT2 calcmt2 = smT2();
       calcmt2.SetB1(vb1);
       calcmt2.SetB2(vb2);
@@ -541,7 +642,7 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       calcmt2.SetMB2(mB2);
       calcmt2.SetMT1(mTau1);
       calcmt2.SetMT2(mTau2);
-
+      
       TVector2 c1=puSumPt;
       TVector2 c2=puSumPt-c1;
       
@@ -562,8 +663,8 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
     // Let's start with SVFit calculations
     // ***********************************
     
-    /*    if (0) {
-      //if (recoTau1.Pt()>0 && recoTau2.Pt()>0) {
+    //if (0) {
+    if (recoTau1.Pt()>0 && recoTau2.Pt()>0) {
       int channel=0;
       mithep::TSVfit svfit;
       svfit.cov_00=lcov00pp;
@@ -571,17 +672,13 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
       svfit.cov_10=lcov10pp;
       svfit.cov_11=lcov11pp;
       TLorentzVector lvec1;
-      if(tauCat1==hadron)
-	lvec1.SetPtEtaPhiM(ptTau1,etaTau1,phiTau1,TAU_MASS);
-      else
-	lvec1.SetPtEtaPhiM(ptTau1,etaTau1,phiTau1,mTau1);
+      lvec1.SetPtEtaPhiM(ptTau1,etaTau1,phiTau1,mTau1);
       TLorentzVector lvec2; 
-      if(tauCat2==hadron)
-	lvec2.SetPtEtaPhiM(ptTau2,etaTau2,phiTau2,TAU_MASS);
-      else
-	lvec2.SetPtEtaPhiM(ptTau2,etaTau2,phiTau2,mTau2);
+      lvec2.SetPtEtaPhiM(ptTau2,etaTau2,phiTau2,mTau2);
+      
       mithep::FourVectorM svlep1; svlep1.SetPxPyPzE(lvec1.Px(),lvec1.Py(),lvec1.Pz(),lvec1.E());
       mithep::FourVectorM svlep2; svlep2.SetPxPyPzE(lvec2.Px(),lvec2.Py(),lvec2.Pz(),lvec2.E());
+      
       if(tauCat1!=hadron)
 	{
 	  svfit.daughter1 = svlep1;
@@ -604,25 +701,27 @@ void select(const TString //input="root://eoscms.cern.ch//store/group/upgrade/di
 	  else
 	    channel=1;
 	}
-      cout << "met " << met << " " << metPhi << endl;
-      m_sv = fitter->integrate(&svfit,met,metPhi,channel);
-      svfit.cov_00=lcov00pp;
-      svfit.cov_01=lcov01pp;
-      svfit.cov_10=lcov10pp;
-      svfit.cov_11=lcov11pp;
-      cout << "met2 " << met2 << " " << met2Phi << endl;
+      //cout << "met " << met << " " << metPhi << endl;
+      //m_sv = fitter->integrate(&svfit,met,metPhi,channel);
+      //svfit.cov_00=lcov00pp;
+      //svfit.cov_01=lcov01pp;
+      //svfit.cov_10=lcov10pp;
+      //svfit.cov_11=lcov11pp;
+      //cout << "met2 " << met2 << " " << met2Phi << endl;
       m_svpileup = fitter->integrate(&svfit,met2,met2Phi,channel);
-      std::cout << tauCat1 << "  " <<  tauCat2 << "   " << channel  << "  "  << m_sv << "  "  <<  m_svpileup << "  " << std::endl; 
-      }*/
+      //std::cout << tauCat1 << "  " <<  tauCat2 << "   " << channel  << "  "  << m_sv << "  "  <<  m_svpileup << "  " << std::endl; 
+    }
 
     outtree->Fill();
     
   }
-
-  cout << "total had. taus: " << nHadTau << endl;
-  cout << "one prong:       " << nOneP << " (" << nOneP*100/nHadTau << "%)" << endl;
-  cout << "three prong:     " << nThreeP << " (" << nThreeP*100/nHadTau << "%)" << endl;
-
+  
+  //cout << chain.GetEntries() << " " << nTauTau << " " << nMuTau << endl;
+  
+  //cout << "total had. taus: " << nHadTau << endl;
+  //cout << "one prong:       " << nOneP << " (" << nOneP*100/nHadTau << "%)" << endl;
+  //cout << "three prong:     " << nThreeP << " (" << nThreeP*100/nHadTau << "%)" << endl;
+  
   outfile->Write();
   outfile->Save();
   
@@ -642,12 +741,36 @@ Float_t deltaR( const Float_t eta1, const Float_t eta2, const Float_t phi1, cons
 
 }
 
-Double_t res(Double_t pt, Double_t eta) {
+Double_t jetRes(Double_t pt, Double_t eta) {
 
   if (fabs(eta)<3.0) return 0.15;
   else if (fabs(eta)<5.0) return 0.3;
   else return 0;
 
+}
+
+Double_t muRes(Double_t pt, Double_t eta) {
+
+  return ( (abs(eta) <= 1.5) * (pt > 0.1   && pt <= 1.0)   * (0.015) + 
+	   (abs(eta) <= 1.5) * (pt > 1.0   && pt <= 1.0e1) * (0.012) + 
+	   (abs(eta) <= 1.5) * (pt > 1.0e1 && pt <= 2.0e2) * (0.015) + 
+	   (abs(eta) <= 1.5) * (pt > 2.0e2)                * (0.03) + 
+	   (abs(eta) > 1.5 && abs(eta) <= 2.5) * (pt > 0.1   && pt <= 1.0)   * (0.015) + 
+	   (abs(eta) > 1.5 && abs(eta) <= 2.5) * (pt > 1.0   && pt <= 1.0e1) * (0.015) + 
+	   (abs(eta) > 1.5 && abs(eta) <= 2.5) * (pt > 1.0e1 && pt <= 2.0e2) * (0.025) + 
+	   (abs(eta) > 1.5 && abs(eta) <= 2.5) * (pt > 2.0e2)                * (0.03) +
+	   (abs(eta) > 2.5 && abs(eta) <= 3.0) * (pt > 0.1   && pt <= 1.0)   * (0.017) + 
+	   (abs(eta) > 2.5 && abs(eta) <= 3.0) * (pt > 1.0   && pt <= 10.0)  * (0.03) + 
+	   (abs(eta) > 2.5 && abs(eta) <= 3.0) * (pt > 10.0  && pt <= 100.0) * (0.05) + 
+	   (abs(eta) > 2.5 && abs(eta) <= 3.0) * (pt > 100.0)                * (0.30) + 
+	   (abs(eta) > 3.0 && abs(eta) <= 3.5) * (pt > 0.1   && pt <= 1.0)   * (0.02) + 
+	   (abs(eta) > 3.0 && abs(eta) <= 3.5) * (pt > 1.0   && pt <= 10.0)  * (0.04) + 
+	   (abs(eta) > 3.0 && abs(eta) <= 3.5) * (pt > 10.0  && pt <= 100.0) * (0.07) + 
+	   (abs(eta) > 3.0 && abs(eta) <= 3.5) * (pt > 100.0)                * (0.30) + 
+	   (abs(eta) > 3.5 && abs(eta) <= 4.0) * (pt > 0.1   && pt <= 1.0)   * (0.025) + 
+	   (abs(eta) > 3.5 && abs(eta) <= 4.0) * (pt > 1.0   && pt <= 10.0)  * (0.05) + 
+	   (abs(eta) > 3.5 && abs(eta) <= 4.0) * (pt > 10.0  && pt <= 100.0) * (0.20) + 
+	   (abs(eta) > 3.5 && abs(eta) <= 4.0) * (pt > 100.0)                * (0.80) );
 }
 
 Double_t btag(Double_t pt, Double_t eta) {
@@ -705,4 +828,17 @@ Double_t btag(Double_t pt, Double_t eta) {
            (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 1400.0 && pt <= 2000) * (0.0) +
            (abs(eta) > 1.8 && abs(eta) <= 2.4) * (pt > 2000.0) * (0.0) +
            (abs(eta) > 2.4) * (0.000));
+}
+
+Double_t muEff(Double_t pt, Double_t eta) {
+
+  return ((pt <= 0.2) * (0.00) + 
+	  (abs(eta) <= 1.2) * (pt > 0.2 && pt <= 1.0) * (pt * 0.998) + 
+	  (abs(eta) <= 1.2) * (pt > 1.0) * (0.998) + 
+	  (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 0.2 && pt <= 1.0) * (pt*0.99) + 
+	  (abs(eta) > 1.2 && abs(eta) <= 2.5) * (pt > 1.0) * (0.99) + 
+	  (abs(eta) > 2.5 && abs(eta) <= 4.0) * (pt > 0.2 && pt <= 1.0) * (pt*0.95) + 
+	  (abs(eta) > 2.5 && abs(eta) <= 4.0) * (pt > 1.0) * (0.95) + 
+	  (abs(eta) > 4.0) * (0.00));
+
 }
